@@ -5,6 +5,7 @@ import type { Product } from '@/payload-types'
 
 import { Grid } from '@/components/Grid'
 import { ProductGridItem } from '@/components/ProductGridItem'
+import { ScrollReveal } from '@/components/ScrollReveal'
 
 export type Props = {
   posts: Product[]
@@ -19,7 +20,9 @@ export const CollectionArchive: React.FC<Props> = (props) => {
         {posts?.map((result, index) => {
           if (typeof result === 'object' && result !== null) {
             return (
-              <ProductGridItem key={index} product={result} />
+              <ScrollReveal className="h-full" index={index % 8} key={index} staggerMs={50}>
+                <ProductGridItem product={result} />
+              </ScrollReveal>
             )
           }
 

@@ -10,12 +10,14 @@ import {
     PaginationNext,
     PaginationPrevious,
 } from '@/components/ui/pagination'
+import { EmptyState } from '@/components/illustrations'
 import { getAverageRatings } from '@/lib/getAverageRatings'
 import { getFacetsForSchema } from '@/lib/facetConfig'
 import { parseFacetFilters } from '@/lib/facetParams'
 import { searchProducts } from '@/lib/searchProducts'
 import { getServerSideURL } from '@/utilities/getURL'
 import configPromise from '@payload-config'
+import Link from 'next/link'
 import { getPayload } from 'payload'
 import { Suspense } from 'react'
 
@@ -100,18 +102,32 @@ export default async function ShopPage({ searchParams }: Props) {
           </Suspense>
         )}
 
-        {searchValue ? (
+        {searchValue && products.docs?.length > 0 ? (
           <p className="mb-6 text-sm text-muted-foreground">
-            {products.docs?.length === 0
-              ? 'There are no products that match '
-              : `Showing ${products.docs.length} ${resultsText} for `}
+            {`Showing ${products.docs.length} ${resultsText} for `}
             <span className="font-semibold text-primary">&quot;{searchValue}&quot;</span>
           </p>
         ) : null}
 
-        {!searchValue && products.docs?.length === 0 && (
-          <div className="bg-card rounded-2xl border border-border p-10 mb-6 text-center">
-            <p className="text-muted-foreground">No products found. Please try different filters.</p>
+        {products.docs?.length === 0 && (
+          <div className="border-border bg-card mb-6 flex flex-col items-center gap-4 rounded-3xl border p-10 text-center sm:p-14">
+            <EmptyState className="text-muted-foreground/40 size-24" />
+            <div>
+              <h2 className="text-foreground text-lg font-semibold">
+                {searchValue ? <>No results for &ldquo;{searchValue}&rdquo;</> : 'No products found'}
+              </h2>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {searchValue
+                  ? 'Check the spelling, try a shorter term, or search by category (e.g. "resistor").'
+                  : 'Try adjusting or clearing your filters.'}
+              </p>
+            </div>
+            <Link
+              className="border-border text-foreground hover:border-primary/40 hover:text-primary inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-colors"
+              href="/shop"
+            >
+              Browse all products
+            </Link>
           </div>
         )}
 

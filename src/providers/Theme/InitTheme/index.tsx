@@ -20,14 +20,15 @@ export const InitTheme: React.FC = () => {
       return null
     }
 
+    var validThemes = [
+      'light', 'dark', 'high-contrast', 'midnight', 'warm', 'ocean', 'circuit', 'sunset',
+      'cupcake', 'bumblebee', 'emerald', 'corporate', 'synthwave', 'retro', 'cyberpunk',
+      'valentine', 'halloween', 'garden', 'forest', 'aqua', 'autumn', 'business', 'acid',
+      'lemonade', 'night', 'coffee', 'winter', 'dim', 'nord', 'caramellatte', 'abyss', 'silk',
+    ]
+
     function themeIsValid(theme) {
-      return (
-        theme === 'light' ||
-        theme === 'dark' ||
-        theme === 'high-contrast' ||
-        theme === 'midnight' ||
-        theme === 'warm'
-      )
+      return validThemes.indexOf(theme) !== -1
     }
 
     var themeToSet = '${defaultTheme}'

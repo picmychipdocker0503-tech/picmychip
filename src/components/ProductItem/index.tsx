@@ -1,19 +1,25 @@
-import { ProductMatchingImage } from '@/components/product/ProductMatchingImage'
+import { Media } from '@/components/Media'
+import { OrderStatus } from '@/components/OrderStatus'
 import { Price } from '@/components/Price'
-import { Product, Variant } from '@/payload-types'
+import { Button } from '@/components/ui/button'
+import { Media as MediaType, Order, Product, Variant } from '@/payload-types'
+import { formatDateTime } from '@/utilities/formatDateTime'
 import Link from 'next/link'
-import React from 'react'
 
 type Props = {
   product: Product
   style?: 'compact' | 'default'
   variant?: Variant
   quantity?: number
+  /**
+   * Force all formatting to a particular currency.
+   */
   currencyCode?: string
 }
 
 export const ProductItem: React.FC<Props> = ({
   product,
+  style = 'default',
   quantity,
   variant,
   currencyCode,
@@ -53,41 +59,40 @@ export const ProductItem: React.FC<Props> = ({
   const itemURL = `/products/${product.slug}${variant ? `?variant=${variant.id}` : ''}`
 
   return (
-    <div className="flex items-center gap-4 py-2">
-      <div className="relative size-20 shrink-0 overflow-hidden rounded-2xl border border-border/80 bg-muted/20">
-        <ProductMatchingImage
-          className="w-full h-full"
-          image={image}
-          slug={product.slug}
-          title={title}
-        />
+    <div className="flex items-center gap-4">
+      <div className="flex items-stretch justify-stretch h-20 w-20 p-2 rounded-lg border">
+        <div className="relative w-full h-full">
+          {image && typeof image !== 'string' && (
+            <Media className="" fill imgClassName="rounded-lg object-cover" resource={image} />
+          )}
+        </div>
       </div>
-      <div className="flex grow justify-between items-center min-w-0">
-        <div className="flex flex-col gap-1 min-w-0">
-          <p className="font-bold text-base text-foreground hover:text-primary transition-colors truncate">
+      <div className="flex grow justify-between items-center">
+        <div className="flex flex-col gap-1">
+          <p className="font-medium text-lg">
             <Link href={itemURL}>{title}</Link>
           </p>
           {variant && (
-            <p className="text-xs font-mono text-muted-foreground capitalize truncate">
+            <p className="text-sm font-mono text-primary/50 tracking-widest">
               {variant.options
                 ?.map((option) => {
                   if (typeof option === 'object') return option.label
                   return null
                 })
-                .filter(Boolean)
                 .join(', ')}
             </p>
           )}
-          <div className="text-xs font-mono text-muted-foreground">
-            Qty: <strong className="text-foreground">{quantity}</strong>
+          <div>
+            {'x'}
+            {quantity}
           </div>
         </div>
 
         {itemPrice && quantity && (
-          <div className="text-right shrink-0">
-            <p className="text-[10px] font-mono uppercase text-muted-foreground">Subtotal</p>
+          <div className="text-right">
+            <p className="font-medium text-lg">Subtotal</p>
             <Price
-              className="font-mono font-bold text-foreground text-sm"
+              className="font-mono text-primary/50 text-sm"
               amount={itemPrice * quantity}
               currencyCode={currencyCode}
             />

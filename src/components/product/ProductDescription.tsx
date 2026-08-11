@@ -9,7 +9,8 @@ import { useCompare } from '@/providers/Compare'
 import { useLocale } from '@/providers/Locale'
 import { useWishlist } from '@/providers/Wishlist'
 import { cn } from '@/utilities/cn'
-import { CheckIcon, HeartIcon, ScaleIcon } from 'lucide-react'
+import { CheckIcon, HeartIcon, ScaleIcon, TagIcon } from 'lucide-react'
+import Link from 'next/link'
 import posthog from 'posthog-js'
 import React, { Suspense } from 'react'
 
@@ -26,9 +27,18 @@ type Props = {
   supportEmail?: string | null
   averageRating?: number
   reviewCount?: number
+  categoryName?: string
+  categorySlug?: string
 }
 
-export function ProductDescription({ product, supportEmail, averageRating = 0, reviewCount = 0 }: Props) {
+export function ProductDescription({
+  product,
+  supportEmail,
+  averageRating = 0,
+  reviewCount = 0,
+  categoryName,
+  categorySlug,
+}: Props) {
   const { currency } = useCurrency()
   const { t } = useLocale()
   const { toggle, isComparing } = useCompare()
@@ -74,10 +84,20 @@ export function ProductDescription({ product, supportEmail, averageRating = 0, r
   }
 
   return (
-    <div className="flex flex-col gap-7">
+    <div className="flex flex-col gap-6">
+      {categoryName && categorySlug && (
+        <Link
+          className="border-border bg-muted/40 text-muted-foreground hover:border-primary/40 hover:text-primary inline-flex w-fit items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold tracking-wide uppercase transition-colors"
+          href={`/category/${categorySlug}`}
+        >
+          <TagIcon className="size-3" />
+          {categoryName}
+        </Link>
+      )}
+
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <h1 className="text-3xl font-semibold tracking-tight">{product.title}</h1>
-        <div className="shrink-0 font-mono text-xl tracking-tight">
+        <h1 className="text-foreground text-2xl font-bold tracking-tight sm:text-3xl">{product.title}</h1>
+        <div className="text-primary shrink-0 font-mono text-2xl font-semibold tracking-tight">
           {hasVariants ? (
             <Price highestAmount={highestAmount} lowestAmount={lowestAmount} />
           ) : (
@@ -107,70 +127,67 @@ export function ProductDescription({ product, supportEmail, averageRating = 0, r
       {product.description ? (
         <RichText className="" data={product.description} enableGutter={false} />
       ) : null}
-      <hr />
-      {hasVariants && (
-        <>
+
+      <div className="border-border bg-muted/20 flex flex-col gap-5 rounded-2xl border p-5">
+        {hasVariants && (
           <Suspense fallback={null}>
             <VariantSelector product={product} />
           </Suspense>
+        )}
 
-          <hr />
-        </>
-      )}
-      <div className="flex items-center justify-between">
         <Suspense fallback={null}>
           <StockIndicator product={product} />
         </Suspense>
+
+        {product.stockStatus === 'out-of-stock' && !product.enableVariants && (
+          <BackInStockForm productId={product.id} />
+        )}
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Suspense fallback={null}>
+            <AddToCart product={product} />
+          </Suspense>
+
+          <button
+            aria-label={comparing ? 'Remove from compare' : 'Add to compare'}
+            className={cn(
+              'flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors',
+              comparing
+                ? 'border-primary text-primary bg-primary/5'
+                : 'border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted',
+            )}
+            onClick={() => toggle(productId)}
+            type="button"
+          >
+            {comparing ? <CheckIcon className="size-4" /> : <ScaleIcon className="size-4" />}
+            {comparing ? t('comparing') : t('compare')}
+          </button>
+
+          <button
+            aria-label={saved ? t('removeFromFavorites') : t('addToFavorites')}
+            className={cn(
+              'flex items-center justify-center rounded-full border p-2.5 transition-colors',
+              saved
+                ? 'border-primary text-primary bg-primary/5'
+                : 'border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted',
+            )}
+            onClick={() => {
+              if (!saved) {
+                posthog.capture('product_wishlisted', {
+                  product_id: product.id,
+                  product_title: product.title,
+                })
+              }
+              toggleWishlist(productId)
+            }}
+            type="button"
+          >
+            <HeartIcon className={cn('size-4', saved && 'fill-current')} />
+          </button>
+        </div>
+
+        <DeliveryEstimate />
       </div>
-
-      {product.stockStatus === 'out-of-stock' && !product.enableVariants && (
-        <BackInStockForm productId={product.id} />
-      )}
-
-      <div className="flex items-center gap-3">
-        <Suspense fallback={null}>
-          <AddToCart product={product} />
-        </Suspense>
-
-        <button
-          aria-label={comparing ? 'Remove from compare' : 'Add to compare'}
-          className={cn(
-            'flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors',
-            comparing
-              ? 'border-primary text-primary bg-primary/5'
-              : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted',
-          )}
-          onClick={() => toggle(productId)}
-          type="button"
-        >
-          {comparing ? <CheckIcon className="size-4" /> : <ScaleIcon className="size-4" />}
-          {comparing ? t('comparing') : t('compare')}
-        </button>
-
-        <button
-          aria-label={saved ? t('removeFromFavorites') : t('addToFavorites')}
-          className={cn(
-            'flex items-center justify-center rounded-full border p-2.5 transition-colors',
-            saved
-              ? 'border-primary text-primary bg-primary/5'
-              : 'border-border text-muted-foreground hover:text-foreground hover:bg-muted',
-          )}
-          onClick={() => {
-            if (!saved) {
-              posthog.capture('product_wishlisted', {
-                product_id: product.id,
-                product_title: product.title,
-              })
-            }
-            toggleWishlist(productId)
-          }}
-          type="button"
-        >
-          <HeartIcon className={cn('size-4', saved && 'fill-current')} />
-        </button>
-      </div>
-
-      <DeliveryEstimate />
 
       <BulkOrderContact supportEmail={supportEmail} />
 

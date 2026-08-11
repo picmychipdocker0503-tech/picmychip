@@ -5,6 +5,7 @@ import { getPayload } from 'payload'
 
 import { EmptyState } from '@/components/illustrations'
 import { CATEGORY_ICON_MAP } from '@/components/illustrations/categoryIcons'
+import { ScrollReveal } from '@/components/ScrollReveal'
 
 const FEATURED_CATEGORY_SLUGS = [
   'resistor',
@@ -59,31 +60,32 @@ export async function FeaturedCategories() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-        {categories.map((category) => {
+        {categories.map((category, index) => {
           const Icon = CATEGORY_ICON_MAP[category.slug] ?? EmptyState
 
           return (
-            <Link
-              key={category.id}
-              href={`/category/${category.slug}`}
-              className="group relative flex flex-col items-center gap-4 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-md px-6 py-8 text-center transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-card hover:shadow-lg hover:shadow-primary/5 overflow-hidden"
-            >
-              {/* Subtle hover background glow */}
-              <div className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/15 transition-colors" />
+            <ScrollReveal index={index} key={category.id} staggerMs={50}>
+              <Link
+                href={`/category/${category.slug}`}
+                className="group relative flex flex-col items-center gap-4 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-md px-6 py-8 text-center transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-card hover:shadow-lg hover:shadow-primary/5 overflow-hidden"
+              >
+                {/* Subtle hover background glow */}
+                <div className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/15 transition-colors" />
 
-              <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground border border-border/80 group-hover:border-primary/30 group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-110 transition-all duration-300 shadow-sm">
-                <Icon className="size-7" />
-              </div>
+                <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground border border-border/80 group-hover:border-primary/30 group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-110 transition-all duration-300 shadow-sm">
+                  <Icon className="size-7" />
+                </div>
 
-              <div>
-                <span className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors block">
-                  {category.title}
-                </span>
-                <span className="mt-1 text-[11px] font-medium text-muted-foreground block">
-                  Datasheet Verified
-                </span>
-              </div>
-            </Link>
+                <div>
+                  <span className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors block">
+                    {category.title}
+                  </span>
+                  <span className="mt-1 text-[11px] font-medium text-muted-foreground block">
+                    Datasheet Verified
+                  </span>
+                </div>
+              </Link>
+            </ScrollReveal>
           )
         })}
       </div>

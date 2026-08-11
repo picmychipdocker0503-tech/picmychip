@@ -10,13 +10,16 @@ import { useSearchParams } from 'next/navigation'
 import React, { useEffect } from 'react'
 
 import { Carousel, CarouselApi, CarouselContent, CarouselItem } from '@/components/ui/carousel'
+import { getCategoryIcon } from '@/components/illustrations/categoryIcons'
 import { DefaultDocumentIDType } from 'payload'
 
 type Props = {
   gallery: NonNullable<Product['gallery']>
+  categorySlug?: string | null
 }
 
-export const Gallery: React.FC<Props> = ({ gallery }) => {
+export const Gallery: React.FC<Props> = ({ gallery, categorySlug }) => {
+  const CategoryIcon = getCategoryIcon(categorySlug)
   const searchParams = useSearchParams()
   const [current, setCurrent] = React.useState(0)
   const [api, setApi] = React.useState<CarouselApi>()
@@ -54,34 +57,44 @@ export const Gallery: React.FC<Props> = ({ gallery }) => {
     <div>
       <button
         aria-label="Zoom image"
-        className="group relative mb-8 block w-full cursor-zoom-in overflow-hidden"
+        className="border-border bg-muted/20 group relative mb-5 block aspect-square w-full cursor-zoom-in overflow-hidden rounded-2xl border"
         onClick={() => setLightboxOpen(true)}
         type="button"
       >
-        <Media resource={gallery[current].image} className="w-full" imgClassName="w-full rounded-lg" />
+        {CategoryIcon && (
+          <CategoryIcon className="text-foreground/[0.04] pointer-events-none absolute top-1/2 left-1/2 size-[85%] -translate-x-1/2 -translate-y-1/2" />
+        )}
+        <Media
+          resource={gallery[current].image}
+          className="relative h-full w-full"
+          fill
+          imgClassName="object-contain p-6 transition-transform duration-300 group-hover:scale-[1.03]"
+        />
         <span className="bg-background/90 text-foreground absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
           <ZoomInIcon className="size-3.5" />
           Zoom
         </span>
       </button>
 
-      <Carousel setApi={setApi} className="w-full" opts={{ align: 'start', loop: false }}>
-        <CarouselContent>
-          {gallery.map((item, i) => {
-            if (typeof item.image !== 'object') return null
+      {gallery.length > 1 && (
+        <Carousel setApi={setApi} className="w-full" opts={{ align: 'start', loop: false }}>
+          <CarouselContent>
+            {gallery.map((item, i) => {
+              if (typeof item.image !== 'object') return null
 
-            return (
-              <CarouselItem
-                className="basis-1/5"
-                key={`${item.image.id}-${i}`}
-                onClick={() => setCurrent(i)}
-              >
-                <GridTileImage active={i === current} media={item.image} />
-              </CarouselItem>
-            )
-          })}
-        </CarouselContent>
-      </Carousel>
+              return (
+                <CarouselItem
+                  className="basis-1/5"
+                  key={`${item.image.id}-${i}`}
+                  onClick={() => setCurrent(i)}
+                >
+                  <GridTileImage active={i === current} media={item.image} />
+                </CarouselItem>
+              )
+            })}
+          </CarouselContent>
+        </Carousel>
+      )}
 
       <Dialog onOpenChange={setLightboxOpen} open={lightboxOpen}>
         <DialogContent className="max-w-[calc(100%-2rem)] border-none bg-transparent p-0 shadow-none sm:max-w-3xl">

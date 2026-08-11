@@ -1,7 +1,9 @@
 import type { Category, Media, Product } from '@/payload-types'
 
 import { RenderBlocks } from '@/blocks/RenderBlocks'
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb'
 import { GridTileImage } from '@/components/Grid/tile'
+import { getCategoryIcon } from '@/components/illustrations/categoryIcons'
 import { JsonLd } from '@/components/JsonLd'
 import { Datasheets } from '@/components/product/Datasheets'
 import { FrequentlyBoughtTogether } from '@/components/product/FrequentlyBoughtTogether'
@@ -13,7 +15,6 @@ import { RecentlyViewedProducts } from '@/components/product/RecentlyViewedProdu
 import { SpecTable } from '@/components/product/SpecTable'
 import { TrackProductView } from '@/components/product/TrackProductView'
 import { TrackRecentlyViewed } from '@/components/product/TrackRecentlyViewed'
-import { Button } from '@/components/ui/button'
 import { getAlsoBoughtProducts } from '@/lib/getAlsoBoughtProducts'
 import { getCategoryBreadcrumb } from '@/utilities/getCategoryBreadcrumb'
 import { getCachedGlobal } from '@/utilities/getGlobals'
@@ -21,7 +22,7 @@ import { getServerSideURL } from '@/utilities/getURL'
 import { buildBreadcrumbListJsonLd, buildProductJsonLd } from '@/utilities/jsonLd'
 import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 import configPromise from '@payload-config'
-import { ChevronLeftIcon } from 'lucide-react'
+import { ImageOffIcon } from 'lucide-react'
 import { Metadata } from 'next'
 import { draftMode } from 'next/headers'
 import Link from 'next/link'
@@ -169,27 +170,45 @@ export default async function ProductPage({ params }: Args) {
         price={price}
       />
       <TrackRecentlyViewed productId={String(product.id)} />
-      <div className="container pt-8 pb-8">
-        <Button asChild variant="ghost" className="mb-5">
-          <Link href="/shop">
-            <ChevronLeftIcon />
-            All products
-          </Link>
-        </Button>
+      <div className="container pt-6 pb-8">
+        {breadcrumb && (
+          <Breadcrumb className="mb-5">
+            <BreadcrumbList>
+              {breadcrumb.map((item, index) => (
+                <React.Fragment key={item.url}>
+                  {index > 0 && <li className="text-border">/</li>}
+                  <BreadcrumbItem>
+                    {index === breadcrumb.length - 1 ? (
+                      <BreadcrumbPage className="line-clamp-1">{item.name}</BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbLink href={new URL(item.url).pathname}>{item.name}</BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+                </React.Fragment>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+        )}
         <div className="border-border/70 bg-card flex flex-col gap-12 rounded-3xl border p-8 md:py-12 lg:flex-row lg:gap-14">
           <div className="h-full w-full basis-full lg:basis-1/2">
             <Suspense
               fallback={
-                <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden" />
+                <div className="bg-muted/30 relative aspect-square h-full w-full animate-pulse overflow-hidden rounded-2xl" />
               }
             >
-              {Boolean(gallery?.length) && <Gallery gallery={gallery} />}
+              {gallery?.length ? (
+                <Gallery categorySlug={firstCategory?.slug} gallery={gallery} />
+              ) : (
+                <ProductImagePlaceholder categorySlug={firstCategory?.slug} />
+              )}
             </Suspense>
           </div>
 
           <div className="basis-full lg:basis-1/2">
             <ProductDescription
               averageRating={averageRating}
+              categoryName={firstCategory?.title}
+              categorySlug={firstCategory?.slug}
               product={product}
               reviewCount={reviewCount}
               supportEmail={siteSettings?.supportEmail}
@@ -231,12 +250,26 @@ export default async function ProductPage({ params }: Args) {
   )
 }
 
+function ProductImagePlaceholder({ categorySlug }: { categorySlug?: string | null }) {
+  const CategoryIcon = getCategoryIcon(categorySlug)
+
+  return (
+    <div className="border-border bg-muted/20 relative flex aspect-square w-full flex-col items-center justify-center gap-3 overflow-hidden rounded-2xl border">
+      <CategoryIcon className="text-muted-foreground/50 size-28" />
+      <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-medium">
+        <ImageOffIcon className="size-3.5" />
+        Photo coming soon
+      </div>
+    </div>
+  )
+}
+
 function RelatedProducts({ heading, products }: { heading: string; products: Product[] }) {
   if (!products.length) return null
 
   return (
     <div className="py-8">
-      <h2 className="mb-5 text-2xl font-semibold tracking-tight">{heading}</h2>
+      <h2 className="mb-5 text-xl font-semibold tracking-tight sm:text-2xl">{heading}</h2>
       <ul className="flex w-full gap-4 overflow-x-auto pt-1">
         {products.map((product) => (
           <li

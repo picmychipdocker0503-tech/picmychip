@@ -1,6 +1,7 @@
 import type { Product } from '@/payload-types'
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { BadgePercent } from 'lucide-react'
 
 type Props = {
   product: Product
@@ -12,8 +13,13 @@ export const PriceTiers: React.FC<Props> = ({ product }) => {
   if (!tiers.length) return null
 
   return (
-    <div>
-      <h2 className="mb-4 text-2xl font-semibold tracking-tight">Bulk Pricing</h2>
+    <div className="border-border bg-card rounded-3xl border p-6 sm:p-8">
+      <h2 className="mb-5 flex items-center gap-3">
+        <span className="bg-primary/10 text-primary flex size-9 items-center justify-center rounded-xl">
+          <BadgePercent className="size-4.5" />
+        </span>
+        <span className="text-xl font-semibold tracking-tight sm:text-2xl">Bulk Pricing</span>
+      </h2>
       <Table>
         <TableHeader>
           <TableRow>
@@ -24,8 +30,10 @@ export const PriceTiers: React.FC<Props> = ({ product }) => {
         <TableBody>
           {tiers.map((tier) => (
             <TableRow key={tier.id ?? tier.minQuantity}>
-              <TableCell>{tier.minQuantity}+</TableCell>
-              <TableCell>₹{tier.priceInINR?.toFixed(2)}</TableCell>
+              <TableCell className="font-medium">{tier.minQuantity}+</TableCell>
+              <TableCell className="text-primary font-mono font-semibold">
+                ₹{tier.priceInINR?.toFixed(2)}
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -14,7 +14,7 @@ export function PaymentBadges() {
           key={badge.label}
           role="listitem"
           aria-label={badge.label}
-          className="flex h-6 min-w-10 items-center justify-center rounded-sm border border-neutral-800 px-1.5 text-[10px] font-semibold tracking-tight text-neutral-400"
+          className="border-border text-muted-foreground flex h-6 min-w-10 items-center justify-center rounded-sm border px-1.5 text-[10px] font-semibold tracking-tight"
         >
           {badge.text}
         </span>

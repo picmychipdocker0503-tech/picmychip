@@ -156,7 +156,7 @@ export function AddToCart({ product }: Props) {
 
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <div className="border-border flex items-center rounded-lg border">
+      <div className="border-border bg-background flex items-center rounded-lg border">
         <button
           aria-label="Decrease quantity"
           className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"

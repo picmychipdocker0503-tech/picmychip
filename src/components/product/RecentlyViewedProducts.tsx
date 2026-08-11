@@ -48,7 +48,7 @@ export const RecentlyViewedProducts: React.FC<Props> = ({ excludeProductId }) =>
       <h2 className="mb-6 text-2xl font-bold text-foreground">Recently Viewed</h2>
       <div className="flex gap-4 overflow-x-auto pb-2">
         {products.map((product) => (
-          <div className="aspect-[3/4] w-48 shrink-0" key={product.id}>
+          <div className="w-48 shrink-0" key={product.id}>
             <ProductGridItem product={product} />
           </div>
         ))}

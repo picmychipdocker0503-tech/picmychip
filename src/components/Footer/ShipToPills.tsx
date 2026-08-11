@@ -22,8 +22,8 @@ export const ShipToPills: React.FC = () => {
             className={cn(
               'flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
               active
-                ? 'border-primary bg-primary/10 text-white'
-                : 'border-neutral-700 text-neutral-300 hover:border-neutral-500 hover:text-white',
+                ? 'border-primary bg-primary/10 text-foreground'
+                : 'border-border text-muted-foreground hover:border-primary/40 hover:text-foreground',
             )}
             key={supported.code}
             onClick={() => setCurrency(supported.code)}

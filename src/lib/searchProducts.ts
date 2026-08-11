@@ -1,9 +1,9 @@
-import type { Media, Product } from '@/payload-types'
+import type { Category, Media, Product } from '@/payload-types'
 
 import { getMeiliClient, PRODUCTS_INDEX } from '@/lib/meilisearch'
 import type { ProductSearchDocument } from '@/lib/searchIndex'
 import configPromise from '@payload-config'
-import { getPayload } from 'payload'
+import { getPayload, type Where } from 'payload'
 
 export type FacetFilterValue =
   | { type: 'range'; min?: number; max?: number }
@@ -72,7 +72,9 @@ const hitToProduct = (hit: ProductSearchDocument): Partial<Product> => ({
   priceInINR: hit.priceInINR,
   compareAtPriceInINR: hit.compareAtPriceInINR,
   stockStatus: hit.stockStatus as Product['stockStatus'],
-  categories: hit.categoryIds.map(Number),
+  categories: hit.categoryIds.map(
+    (id, i) => ({ id: Number(id), title: hit.categoryTitles[i] }) as unknown as Category,
+  ),
   gallery: hit.imageUrl
     ? [{ image: { url: hit.imageUrl, alt: hit.imageAlt ?? '' } as Media, id: null }]
     : [],
@@ -129,12 +131,20 @@ const searchViaMongo = async (args: SearchProductsArgs): Promise<SearchProductsR
         { _status: { equals: 'published' } },
         // `description` is richText (jsonb) — Postgres can't `ilike` it directly
         // without a cast, so the DB fallback only matches on `title`/`tags`.
+        // Matched word-by-word (every word must appear somewhere, in any
+        // order/field) rather than as one exact phrase — "10k resistor"
+        // should still match a title like "Resistor 10k 0603", which
+        // wouldn't contain that exact two-word substring.
         ...(query
-          ? [
-              {
-                or: [{ title: { like: query } }, { tags: { like: query } }],
-              },
-            ]
+          ? query
+              .trim()
+              .split(/\s+/)
+              .filter(Boolean)
+              .map(
+                (word): Where => ({
+                  or: [{ title: { like: word } }, { tags: { like: word } }],
+                }),
+              )
           : []),
         ...(categoryId ? [{ categories: { contains: categoryId } }] : []),
         ...(typeof priceMin === 'number' ? [{ priceInINR: { greater_than_equal: priceMin } }] : []),

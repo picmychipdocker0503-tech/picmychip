@@ -226,6 +226,1059 @@
   --noise: 0;
 }
 
+@plugin "daisyui/theme" {
+  name: 'ocean';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'circuit';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'sunset';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'cupcake';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'bumblebee';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'emerald';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'corporate';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'synthwave';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'retro';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'cyberpunk';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'valentine';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'halloween';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'garden';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'forest';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'aqua';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'autumn';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'business';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'acid';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'lemonade';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'night';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'coffee';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'winter';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'dim';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'nord';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'caramellatte';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'abyss';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'silk';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
 @source inline("lg:col-span-4");
 @source inline("lg:col-span-6");
 @source inline("lg:col-span-8");
@@ -510,6 +1563,798 @@
   --orange-light: oklch(88% 0.12 45deg);
 }
 
+/* Ocean dark variant: deep navy-black background with a cool blue
+   undertone (hue 245) instead of dark's neutral gray or midnight's
+   desaturated purple — purple stays primary for cross-theme consistency. */
+[data-theme='ocean'] {
+  --background: oklch(16% 0.03 250deg);
+  --foreground: oklch(95% 0.01 240deg);
+  --card: oklch(20% 0.035 245deg);
+  --card-foreground: oklch(95% 0.01 240deg);
+  --popover: oklch(16% 0.03 250deg);
+  --popover-foreground: oklch(95% 0.01 240deg);
+  --primary: oklch(62% 0.19 300deg);
+  --primary-foreground: oklch(98% 0 0deg);
+  --secondary: oklch(24% 0.025 245deg);
+  --secondary-foreground: oklch(95% 0.01 240deg);
+  --muted: oklch(24% 0.025 245deg);
+  --muted-foreground: oklch(68% 0.02 240deg);
+  --accent: oklch(24% 0.025 245deg);
+  --accent-foreground: oklch(95% 0.01 240deg);
+  --destructive: oklch(45% 0.18 25deg);
+  --destructive-foreground: oklch(90% 0.15 25deg);
+  --border: oklch(27% 0.03 245deg);
+  --input: oklch(27% 0.03 245deg);
+  --ring: oklch(45% 0.03 245deg);
+  --success: oklch(30% 0.09 190deg);
+  --warning: oklch(35% 0.08 70deg);
+  --error: oklch(40% 0.15 25deg);
+  --purple: oklch(62% 0.19 300deg);
+  --purple-light: oklch(72% 0.14 300deg);
+  --orange: oklch(68% 0.15 45deg);
+  --orange-light: oklch(80% 0.1 45deg);
+}
+
+/* Circuit light variant: pale PCB-green background instead of pure
+   white — the accent token shifts toward copper/gold to read as solder
+   traces. Purple stays primary for cross-theme consistency. */
+[data-theme='circuit'] {
+  --background: oklch(97% 0.015 150deg);
+  --foreground: oklch(15% 0.02 150deg);
+  --card: oklch(99% 0.01 150deg);
+  --card-foreground: oklch(15% 0.02 150deg);
+  --popover: oklch(97% 0.015 150deg);
+  --popover-foreground: oklch(15% 0.02 150deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(92% 0.025 150deg);
+  --secondary-foreground: oklch(22% 0.02 150deg);
+  --muted: oklch(92% 0.025 150deg);
+  --muted-foreground: oklch(42% 0.02 150deg);
+  --accent: oklch(88% 0.06 145deg);
+  --accent-foreground: oklch(18% 0.02 150deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(85% 0.025 150deg);
+  --input: oklch(85% 0.025 150deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(72% 0.12 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(58% 0.22 25deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(68% 0.15 65deg);
+  --orange-light: oklch(88% 0.09 65deg);
+}
+
+/* Sunset dark variant: near-black background with a warm coral
+   undertone (hue 20) — distinct from midnight's cool purple-black and
+   ocean's blue-black. Purple stays primary for cross-theme consistency. */
+[data-theme='sunset'] {
+  --background: oklch(15% 0.03 20deg);
+  --foreground: oklch(95% 0.01 30deg);
+  --card: oklch(19% 0.035 20deg);
+  --card-foreground: oklch(95% 0.01 30deg);
+  --popover: oklch(15% 0.03 20deg);
+  --popover-foreground: oklch(95% 0.01 30deg);
+  --primary: oklch(65% 0.2 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(24% 0.03 20deg);
+  --secondary-foreground: oklch(95% 0.01 30deg);
+  --muted: oklch(24% 0.03 20deg);
+  --muted-foreground: oklch(68% 0.02 25deg);
+  --accent: oklch(24% 0.03 20deg);
+  --accent-foreground: oklch(95% 0.01 30deg);
+  --destructive: oklch(40% 0.15 25deg);
+  --destructive-foreground: oklch(85% 0.15 25deg);
+  --border: oklch(27% 0.035 20deg);
+  --input: oklch(27% 0.035 20deg);
+  --ring: oklch(45% 0.03 20deg);
+  --success: oklch(30% 0.09 150deg);
+  --warning: oklch(38% 0.1 60deg);
+  --error: oklch(42% 0.15 20deg);
+  --purple: oklch(65% 0.2 300deg);
+  --purple-light: oklch(75% 0.15 300deg);
+  --orange: oklch(68% 0.18 40deg);
+  --orange-light: oklch(80% 0.12 40deg);
+}
+
+[data-theme='cupcake'] {
+  --background: oklch(96% 0.02 350deg);
+  --foreground: oklch(15% 0.02 350deg);
+  --card: oklch(99% 0.012 350deg);
+  --card-foreground: oklch(15% 0.02 350deg);
+  --popover: oklch(96% 0.02 350deg);
+  --popover-foreground: oklch(15% 0.02 350deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 350deg);
+  --secondary-foreground: oklch(21% 0.02 350deg);
+  --muted: oklch(91% 0.025 350deg);
+  --muted-foreground: oklch(43% 0.02 350deg);
+  --accent: oklch(87% 0.06 350deg);
+  --accent-foreground: oklch(18% 0.02 350deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 350deg);
+  --input: oklch(86% 0.025 350deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(72% 0.13 350deg);
+  --orange-light: oklch(87% 0.13 350deg);
+}
+
+[data-theme='bumblebee'] {
+  --background: oklch(96% 0.02 90deg);
+  --foreground: oklch(15% 0.02 90deg);
+  --card: oklch(99% 0.012 90deg);
+  --card-foreground: oklch(15% 0.02 90deg);
+  --popover: oklch(96% 0.02 90deg);
+  --popover-foreground: oklch(15% 0.02 90deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 90deg);
+  --secondary-foreground: oklch(21% 0.02 90deg);
+  --muted: oklch(91% 0.025 90deg);
+  --muted-foreground: oklch(43% 0.02 90deg);
+  --accent: oklch(87% 0.06 90deg);
+  --accent-foreground: oklch(18% 0.02 90deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 90deg);
+  --input: oklch(86% 0.025 90deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(75% 0.16 85deg);
+  --orange-light: oklch(90% 0.16 85deg);
+}
+
+[data-theme='emerald'] {
+  --background: oklch(96% 0.02 160deg);
+  --foreground: oklch(15% 0.02 160deg);
+  --card: oklch(99% 0.012 160deg);
+  --card-foreground: oklch(15% 0.02 160deg);
+  --popover: oklch(96% 0.02 160deg);
+  --popover-foreground: oklch(15% 0.02 160deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 160deg);
+  --secondary-foreground: oklch(21% 0.02 160deg);
+  --muted: oklch(91% 0.025 160deg);
+  --muted-foreground: oklch(43% 0.02 160deg);
+  --accent: oklch(87% 0.06 160deg);
+  --accent-foreground: oklch(18% 0.02 160deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 160deg);
+  --input: oklch(86% 0.025 160deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(65% 0.15 155deg);
+  --orange-light: oklch(80% 0.15 155deg);
+}
+
+[data-theme='corporate'] {
+  --background: oklch(96% 0.02 240deg);
+  --foreground: oklch(15% 0.02 240deg);
+  --card: oklch(99% 0.012 240deg);
+  --card-foreground: oklch(15% 0.02 240deg);
+  --popover: oklch(96% 0.02 240deg);
+  --popover-foreground: oklch(15% 0.02 240deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 240deg);
+  --secondary-foreground: oklch(21% 0.02 240deg);
+  --muted: oklch(91% 0.025 240deg);
+  --muted-foreground: oklch(43% 0.02 240deg);
+  --accent: oklch(87% 0.06 240deg);
+  --accent-foreground: oklch(18% 0.02 240deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 240deg);
+  --input: oklch(86% 0.025 240deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(60% 0.1 240deg);
+  --orange-light: oklch(75% 0.1 240deg);
+}
+
+[data-theme='synthwave'] {
+  --background: oklch(15% 0.03 320deg);
+  --foreground: oklch(95% 0.01 320deg);
+  --card: oklch(19% 0.035 320deg);
+  --card-foreground: oklch(95% 0.01 320deg);
+  --popover: oklch(15% 0.03 320deg);
+  --popover-foreground: oklch(95% 0.01 320deg);
+  --primary: oklch(64% 0.2 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(24% 0.03 320deg);
+  --secondary-foreground: oklch(95% 0.01 320deg);
+  --muted: oklch(24% 0.03 320deg);
+  --muted-foreground: oklch(68% 0.02 320deg);
+  --accent: oklch(24% 0.03 320deg);
+  --accent-foreground: oklch(95% 0.01 320deg);
+  --destructive: oklch(42% 0.16 25deg);
+  --destructive-foreground: oklch(87% 0.15 25deg);
+  --border: oklch(27% 0.035 320deg);
+  --input: oklch(27% 0.035 320deg);
+  --ring: oklch(45% 0.03 320deg);
+  --success: oklch(30% 0.09 155deg);
+  --warning: oklch(37% 0.09 65deg);
+  --error: oklch(41% 0.15 22deg);
+  --purple: oklch(64% 0.2 300deg);
+  --purple-light: oklch(74% 0.15 300deg);
+  --orange: oklch(65% 0.22 340deg);
+  --orange-light: oklch(85% 0.22 340deg);
+}
+
+[data-theme='retro'] {
+  --background: oklch(96% 0.02 80deg);
+  --foreground: oklch(15% 0.02 80deg);
+  --card: oklch(99% 0.012 80deg);
+  --card-foreground: oklch(15% 0.02 80deg);
+  --popover: oklch(96% 0.02 80deg);
+  --popover-foreground: oklch(15% 0.02 80deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 80deg);
+  --secondary-foreground: oklch(21% 0.02 80deg);
+  --muted: oklch(91% 0.025 80deg);
+  --muted-foreground: oklch(43% 0.02 80deg);
+  --accent: oklch(87% 0.06 80deg);
+  --accent-foreground: oklch(18% 0.02 80deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 80deg);
+  --input: oklch(86% 0.025 80deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(68% 0.12 75deg);
+  --orange-light: oklch(83% 0.12 75deg);
+}
+
+[data-theme='cyberpunk'] {
+  --background: oklch(96% 0.02 95deg);
+  --foreground: oklch(15% 0.02 95deg);
+  --card: oklch(99% 0.012 95deg);
+  --card-foreground: oklch(15% 0.02 95deg);
+  --popover: oklch(96% 0.02 95deg);
+  --popover-foreground: oklch(15% 0.02 95deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 95deg);
+  --secondary-foreground: oklch(21% 0.02 95deg);
+  --muted: oklch(91% 0.025 95deg);
+  --muted-foreground: oklch(43% 0.02 95deg);
+  --accent: oklch(87% 0.06 95deg);
+  --accent-foreground: oklch(18% 0.02 95deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 95deg);
+  --input: oklch(86% 0.025 95deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(80% 0.18 100deg);
+  --orange-light: oklch(90% 0.18 100deg);
+}
+
+[data-theme='valentine'] {
+  --background: oklch(96% 0.02 10deg);
+  --foreground: oklch(15% 0.02 10deg);
+  --card: oklch(99% 0.012 10deg);
+  --card-foreground: oklch(15% 0.02 10deg);
+  --popover: oklch(96% 0.02 10deg);
+  --popover-foreground: oklch(15% 0.02 10deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 10deg);
+  --secondary-foreground: oklch(21% 0.02 10deg);
+  --muted: oklch(91% 0.025 10deg);
+  --muted-foreground: oklch(43% 0.02 10deg);
+  --accent: oklch(87% 0.06 10deg);
+  --accent-foreground: oklch(18% 0.02 10deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 10deg);
+  --input: oklch(86% 0.025 10deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(65% 0.18 10deg);
+  --orange-light: oklch(80% 0.18 10deg);
+}
+
+[data-theme='halloween'] {
+  --background: oklch(15% 0.03 45deg);
+  --foreground: oklch(95% 0.01 45deg);
+  --card: oklch(19% 0.035 45deg);
+  --card-foreground: oklch(95% 0.01 45deg);
+  --popover: oklch(15% 0.03 45deg);
+  --popover-foreground: oklch(95% 0.01 45deg);
+  --primary: oklch(64% 0.2 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(24% 0.03 45deg);
+  --secondary-foreground: oklch(95% 0.01 45deg);
+  --muted: oklch(24% 0.03 45deg);
+  --muted-foreground: oklch(68% 0.02 45deg);
+  --accent: oklch(24% 0.03 45deg);
+  --accent-foreground: oklch(95% 0.01 45deg);
+  --destructive: oklch(42% 0.16 25deg);
+  --destructive-foreground: oklch(87% 0.15 25deg);
+  --border: oklch(27% 0.035 45deg);
+  --input: oklch(27% 0.035 45deg);
+  --ring: oklch(45% 0.03 45deg);
+  --success: oklch(30% 0.09 155deg);
+  --warning: oklch(37% 0.09 65deg);
+  --error: oklch(41% 0.15 22deg);
+  --purple: oklch(64% 0.2 300deg);
+  --purple-light: oklch(74% 0.15 300deg);
+  --orange: oklch(65% 0.16 45deg);
+  --orange-light: oklch(85% 0.16 45deg);
+}
+
+[data-theme='garden'] {
+  --background: oklch(96% 0.02 140deg);
+  --foreground: oklch(15% 0.02 140deg);
+  --card: oklch(99% 0.012 140deg);
+  --card-foreground: oklch(15% 0.02 140deg);
+  --popover: oklch(96% 0.02 140deg);
+  --popover-foreground: oklch(15% 0.02 140deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 140deg);
+  --secondary-foreground: oklch(21% 0.02 140deg);
+  --muted: oklch(91% 0.025 140deg);
+  --muted-foreground: oklch(43% 0.02 140deg);
+  --accent: oklch(87% 0.06 140deg);
+  --accent-foreground: oklch(18% 0.02 140deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 140deg);
+  --input: oklch(86% 0.025 140deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(62% 0.14 140deg);
+  --orange-light: oklch(77% 0.14 140deg);
+}
+
+[data-theme='forest'] {
+  --background: oklch(15% 0.03 150deg);
+  --foreground: oklch(95% 0.01 150deg);
+  --card: oklch(19% 0.035 150deg);
+  --card-foreground: oklch(95% 0.01 150deg);
+  --popover: oklch(15% 0.03 150deg);
+  --popover-foreground: oklch(95% 0.01 150deg);
+  --primary: oklch(64% 0.2 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(24% 0.03 150deg);
+  --secondary-foreground: oklch(95% 0.01 150deg);
+  --muted: oklch(24% 0.03 150deg);
+  --muted-foreground: oklch(68% 0.02 150deg);
+  --accent: oklch(24% 0.03 150deg);
+  --accent-foreground: oklch(95% 0.01 150deg);
+  --destructive: oklch(42% 0.16 25deg);
+  --destructive-foreground: oklch(87% 0.15 25deg);
+  --border: oklch(27% 0.035 150deg);
+  --input: oklch(27% 0.035 150deg);
+  --ring: oklch(45% 0.03 150deg);
+  --success: oklch(30% 0.09 155deg);
+  --warning: oklch(37% 0.09 65deg);
+  --error: oklch(41% 0.15 22deg);
+  --purple: oklch(64% 0.2 300deg);
+  --purple-light: oklch(74% 0.15 300deg);
+  --orange: oklch(55% 0.13 150deg);
+  --orange-light: oklch(75% 0.13 150deg);
+}
+
+[data-theme='aqua'] {
+  --background: oklch(15% 0.03 200deg);
+  --foreground: oklch(95% 0.01 200deg);
+  --card: oklch(19% 0.035 200deg);
+  --card-foreground: oklch(95% 0.01 200deg);
+  --popover: oklch(15% 0.03 200deg);
+  --popover-foreground: oklch(95% 0.01 200deg);
+  --primary: oklch(64% 0.2 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(24% 0.03 200deg);
+  --secondary-foreground: oklch(95% 0.01 200deg);
+  --muted: oklch(24% 0.03 200deg);
+  --muted-foreground: oklch(68% 0.02 200deg);
+  --accent: oklch(24% 0.03 200deg);
+  --accent-foreground: oklch(95% 0.01 200deg);
+  --destructive: oklch(42% 0.16 25deg);
+  --destructive-foreground: oklch(87% 0.15 25deg);
+  --border: oklch(27% 0.035 200deg);
+  --input: oklch(27% 0.035 200deg);
+  --ring: oklch(45% 0.03 200deg);
+  --success: oklch(30% 0.09 155deg);
+  --warning: oklch(37% 0.09 65deg);
+  --error: oklch(41% 0.15 22deg);
+  --purple: oklch(64% 0.2 300deg);
+  --purple-light: oklch(74% 0.15 300deg);
+  --orange: oklch(70% 0.13 200deg);
+  --orange-light: oklch(90% 0.13 200deg);
+}
+
+[data-theme='autumn'] {
+  --background: oklch(96% 0.02 50deg);
+  --foreground: oklch(15% 0.02 50deg);
+  --card: oklch(99% 0.012 50deg);
+  --card-foreground: oklch(15% 0.02 50deg);
+  --popover: oklch(96% 0.02 50deg);
+  --popover-foreground: oklch(15% 0.02 50deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 50deg);
+  --secondary-foreground: oklch(21% 0.02 50deg);
+  --muted: oklch(91% 0.025 50deg);
+  --muted-foreground: oklch(43% 0.02 50deg);
+  --accent: oklch(87% 0.06 50deg);
+  --accent-foreground: oklch(18% 0.02 50deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 50deg);
+  --input: oklch(86% 0.025 50deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(60% 0.16 40deg);
+  --orange-light: oklch(75% 0.16 40deg);
+}
+
+[data-theme='business'] {
+  --background: oklch(15% 0.03 240deg);
+  --foreground: oklch(95% 0.01 240deg);
+  --card: oklch(19% 0.035 240deg);
+  --card-foreground: oklch(95% 0.01 240deg);
+  --popover: oklch(15% 0.03 240deg);
+  --popover-foreground: oklch(95% 0.01 240deg);
+  --primary: oklch(64% 0.2 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(24% 0.03 240deg);
+  --secondary-foreground: oklch(95% 0.01 240deg);
+  --muted: oklch(24% 0.03 240deg);
+  --muted-foreground: oklch(68% 0.02 240deg);
+  --accent: oklch(24% 0.03 240deg);
+  --accent-foreground: oklch(95% 0.01 240deg);
+  --destructive: oklch(42% 0.16 25deg);
+  --destructive-foreground: oklch(87% 0.15 25deg);
+  --border: oklch(27% 0.035 240deg);
+  --input: oklch(27% 0.035 240deg);
+  --ring: oklch(45% 0.03 240deg);
+  --success: oklch(30% 0.09 155deg);
+  --warning: oklch(37% 0.09 65deg);
+  --error: oklch(41% 0.15 22deg);
+  --purple: oklch(64% 0.2 300deg);
+  --purple-light: oklch(74% 0.15 300deg);
+  --orange: oklch(55% 0.06 240deg);
+  --orange-light: oklch(75% 0.06 240deg);
+}
+
+[data-theme='acid'] {
+  --background: oklch(96% 0.02 120deg);
+  --foreground: oklch(15% 0.02 120deg);
+  --card: oklch(99% 0.012 120deg);
+  --card-foreground: oklch(15% 0.02 120deg);
+  --popover: oklch(96% 0.02 120deg);
+  --popover-foreground: oklch(15% 0.02 120deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 120deg);
+  --secondary-foreground: oklch(21% 0.02 120deg);
+  --muted: oklch(91% 0.025 120deg);
+  --muted-foreground: oklch(43% 0.02 120deg);
+  --accent: oklch(87% 0.06 120deg);
+  --accent-foreground: oklch(18% 0.02 120deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 120deg);
+  --input: oklch(86% 0.025 120deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(78% 0.19 125deg);
+  --orange-light: oklch(90% 0.19 125deg);
+}
+
+[data-theme='lemonade'] {
+  --background: oklch(96% 0.02 100deg);
+  --foreground: oklch(15% 0.02 100deg);
+  --card: oklch(99% 0.012 100deg);
+  --card-foreground: oklch(15% 0.02 100deg);
+  --popover: oklch(96% 0.02 100deg);
+  --popover-foreground: oklch(15% 0.02 100deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 100deg);
+  --secondary-foreground: oklch(21% 0.02 100deg);
+  --muted: oklch(91% 0.025 100deg);
+  --muted-foreground: oklch(43% 0.02 100deg);
+  --accent: oklch(87% 0.06 100deg);
+  --accent-foreground: oklch(18% 0.02 100deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 100deg);
+  --input: oklch(86% 0.025 100deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(78% 0.15 110deg);
+  --orange-light: oklch(90% 0.15 110deg);
+}
+
+[data-theme='night'] {
+  --background: oklch(15% 0.03 255deg);
+  --foreground: oklch(95% 0.01 255deg);
+  --card: oklch(19% 0.035 255deg);
+  --card-foreground: oklch(95% 0.01 255deg);
+  --popover: oklch(15% 0.03 255deg);
+  --popover-foreground: oklch(95% 0.01 255deg);
+  --primary: oklch(64% 0.2 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(24% 0.03 255deg);
+  --secondary-foreground: oklch(95% 0.01 255deg);
+  --muted: oklch(24% 0.03 255deg);
+  --muted-foreground: oklch(68% 0.02 255deg);
+  --accent: oklch(24% 0.03 255deg);
+  --accent-foreground: oklch(95% 0.01 255deg);
+  --destructive: oklch(42% 0.16 25deg);
+  --destructive-foreground: oklch(87% 0.15 25deg);
+  --border: oklch(27% 0.035 255deg);
+  --input: oklch(27% 0.035 255deg);
+  --ring: oklch(45% 0.03 255deg);
+  --success: oklch(30% 0.09 155deg);
+  --warning: oklch(37% 0.09 65deg);
+  --error: oklch(41% 0.15 22deg);
+  --purple: oklch(64% 0.2 300deg);
+  --purple-light: oklch(74% 0.15 300deg);
+  --orange: oklch(60% 0.14 260deg);
+  --orange-light: oklch(80% 0.14 260deg);
+}
+
+[data-theme='coffee'] {
+  --background: oklch(15% 0.03 50deg);
+  --foreground: oklch(95% 0.01 50deg);
+  --card: oklch(19% 0.035 50deg);
+  --card-foreground: oklch(95% 0.01 50deg);
+  --popover: oklch(15% 0.03 50deg);
+  --popover-foreground: oklch(95% 0.01 50deg);
+  --primary: oklch(64% 0.2 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(24% 0.03 50deg);
+  --secondary-foreground: oklch(95% 0.01 50deg);
+  --muted: oklch(24% 0.03 50deg);
+  --muted-foreground: oklch(68% 0.02 50deg);
+  --accent: oklch(24% 0.03 50deg);
+  --accent-foreground: oklch(95% 0.01 50deg);
+  --destructive: oklch(42% 0.16 25deg);
+  --destructive-foreground: oklch(87% 0.15 25deg);
+  --border: oklch(27% 0.035 50deg);
+  --input: oklch(27% 0.035 50deg);
+  --ring: oklch(45% 0.03 50deg);
+  --success: oklch(30% 0.09 155deg);
+  --warning: oklch(37% 0.09 65deg);
+  --error: oklch(41% 0.15 22deg);
+  --purple: oklch(64% 0.2 300deg);
+  --purple-light: oklch(74% 0.15 300deg);
+  --orange: oklch(55% 0.1 55deg);
+  --orange-light: oklch(75% 0.1 55deg);
+}
+
+[data-theme='winter'] {
+  --background: oklch(96% 0.02 220deg);
+  --foreground: oklch(15% 0.02 220deg);
+  --card: oklch(99% 0.012 220deg);
+  --card-foreground: oklch(15% 0.02 220deg);
+  --popover: oklch(96% 0.02 220deg);
+  --popover-foreground: oklch(15% 0.02 220deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 220deg);
+  --secondary-foreground: oklch(21% 0.02 220deg);
+  --muted: oklch(91% 0.025 220deg);
+  --muted-foreground: oklch(43% 0.02 220deg);
+  --accent: oklch(87% 0.06 220deg);
+  --accent-foreground: oklch(18% 0.02 220deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 220deg);
+  --input: oklch(86% 0.025 220deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(72% 0.08 220deg);
+  --orange-light: oklch(87% 0.08 220deg);
+}
+
+[data-theme='dim'] {
+  --background: oklch(15% 0.03 260deg);
+  --foreground: oklch(95% 0.01 260deg);
+  --card: oklch(19% 0.035 260deg);
+  --card-foreground: oklch(95% 0.01 260deg);
+  --popover: oklch(15% 0.03 260deg);
+  --popover-foreground: oklch(95% 0.01 260deg);
+  --primary: oklch(64% 0.2 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(24% 0.03 260deg);
+  --secondary-foreground: oklch(95% 0.01 260deg);
+  --muted: oklch(24% 0.03 260deg);
+  --muted-foreground: oklch(68% 0.02 260deg);
+  --accent: oklch(24% 0.03 260deg);
+  --accent-foreground: oklch(95% 0.01 260deg);
+  --destructive: oklch(42% 0.16 25deg);
+  --destructive-foreground: oklch(87% 0.15 25deg);
+  --border: oklch(27% 0.035 260deg);
+  --input: oklch(27% 0.035 260deg);
+  --ring: oklch(45% 0.03 260deg);
+  --success: oklch(30% 0.09 155deg);
+  --warning: oklch(37% 0.09 65deg);
+  --error: oklch(41% 0.15 22deg);
+  --purple: oklch(64% 0.2 300deg);
+  --purple-light: oklch(74% 0.15 300deg);
+  --orange: oklch(55% 0.04 280deg);
+  --orange-light: oklch(75% 0.04 280deg);
+}
+
+[data-theme='nord'] {
+  --background: oklch(96% 0.02 225deg);
+  --foreground: oklch(15% 0.02 225deg);
+  --card: oklch(99% 0.012 225deg);
+  --card-foreground: oklch(15% 0.02 225deg);
+  --popover: oklch(96% 0.02 225deg);
+  --popover-foreground: oklch(15% 0.02 225deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 225deg);
+  --secondary-foreground: oklch(21% 0.02 225deg);
+  --muted: oklch(91% 0.025 225deg);
+  --muted-foreground: oklch(43% 0.02 225deg);
+  --accent: oklch(87% 0.06 225deg);
+  --accent-foreground: oklch(18% 0.02 225deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 225deg);
+  --input: oklch(86% 0.025 225deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(58% 0.08 235deg);
+  --orange-light: oklch(73% 0.08 235deg);
+}
+
+[data-theme='caramellatte'] {
+  --background: oklch(96% 0.02 70deg);
+  --foreground: oklch(15% 0.02 70deg);
+  --card: oklch(99% 0.012 70deg);
+  --card-foreground: oklch(15% 0.02 70deg);
+  --popover: oklch(96% 0.02 70deg);
+  --popover-foreground: oklch(15% 0.02 70deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 70deg);
+  --secondary-foreground: oklch(21% 0.02 70deg);
+  --muted: oklch(91% 0.025 70deg);
+  --muted-foreground: oklch(43% 0.02 70deg);
+  --accent: oklch(87% 0.06 70deg);
+  --accent-foreground: oklch(18% 0.02 70deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 70deg);
+  --input: oklch(86% 0.025 70deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(62% 0.12 60deg);
+  --orange-light: oklch(77% 0.12 60deg);
+}
+
+[data-theme='abyss'] {
+  --background: oklch(15% 0.03 270deg);
+  --foreground: oklch(95% 0.01 270deg);
+  --card: oklch(19% 0.035 270deg);
+  --card-foreground: oklch(95% 0.01 270deg);
+  --popover: oklch(15% 0.03 270deg);
+  --popover-foreground: oklch(95% 0.01 270deg);
+  --primary: oklch(64% 0.2 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(24% 0.03 270deg);
+  --secondary-foreground: oklch(95% 0.01 270deg);
+  --muted: oklch(24% 0.03 270deg);
+  --muted-foreground: oklch(68% 0.02 270deg);
+  --accent: oklch(24% 0.03 270deg);
+  --accent-foreground: oklch(95% 0.01 270deg);
+  --destructive: oklch(42% 0.16 25deg);
+  --destructive-foreground: oklch(87% 0.15 25deg);
+  --border: oklch(27% 0.035 270deg);
+  --input: oklch(27% 0.035 270deg);
+  --ring: oklch(45% 0.03 270deg);
+  --success: oklch(30% 0.09 155deg);
+  --warning: oklch(37% 0.09 65deg);
+  --error: oklch(41% 0.15 22deg);
+  --purple: oklch(64% 0.2 300deg);
+  --purple-light: oklch(74% 0.15 300deg);
+  --orange: oklch(45% 0.15 280deg);
+  --orange-light: oklch(65% 0.15 280deg);
+}
+
+[data-theme='silk'] {
+  --background: oklch(96% 0.02 55deg);
+  --foreground: oklch(15% 0.02 55deg);
+  --card: oklch(99% 0.012 55deg);
+  --card-foreground: oklch(15% 0.02 55deg);
+  --popover: oklch(96% 0.02 55deg);
+  --popover-foreground: oklch(15% 0.02 55deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(91% 0.025 55deg);
+  --secondary-foreground: oklch(21% 0.02 55deg);
+  --muted: oklch(91% 0.025 55deg);
+  --muted-foreground: oklch(43% 0.02 55deg);
+  --accent: oklch(87% 0.06 55deg);
+  --accent-foreground: oklch(18% 0.02 55deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(86% 0.025 55deg);
+  --input: oklch(86% 0.025 55deg);
+  --ring: oklch(55% 0.15 300deg);
+  --success: oklch(74% 0.11 150deg);
+  --warning: oklch(88% 0.1 75deg);
+  --error: oklch(60% 0.2 27deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(75% 0.08 40deg);
+  --orange-light: oklch(90% 0.08 40deg);
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -569,8 +2414,10 @@ html {
   opacity: 0;
 }
 
-html[data-theme='dark'],
-html[data-theme='light'] {
+/* Any theme value InitTheme has applied is fine to reveal — enumerating
+   theme names here caused every non-dark/light theme (midnight, warm,
+   high-contrast, ...) to render as a blank page until this was widened. */
+html[data-theme] {
   opacity: initial;
 }
 
@@ -588,10 +2435,4 @@ textarea,
 
 .skip-link {
   @apply bg-primary text-primary-foreground fixed top-2 left-2 z-[100] -translate-y-16 rounded-lg px-4 py-2 text-sm font-medium transition-transform focus:translate-y-0;
-}
-
-
-.leading-none {
-  line-height: 1;
-  display: none !important;
 }

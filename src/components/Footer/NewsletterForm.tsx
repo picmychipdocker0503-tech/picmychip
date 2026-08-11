@@ -35,7 +35,7 @@ export const NewsletterForm: React.FC = () => {
     <form className="flex w-full max-w-md gap-2" onSubmit={onSubmit}>
       <input
         aria-label="Email address"
-        className="flex-1 rounded-lg border border-neutral-700 bg-neutral-950 px-4 py-3 text-sm text-white placeholder:text-neutral-500 outline-none focus-visible:border-primary"
+        className="border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-primary flex-1 rounded-lg border px-4 py-3 text-sm outline-none"
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Enter your email"
         required

@@ -19,8 +19,8 @@ export const FAQBlock: React.FC<
   return (
     <section className="container my-20">
       <JsonLd data={buildFaqPageJsonLd(items)} />
-      <div className="grid gap-10 lg:grid-cols-12 lg:gap-16">
-        
+      <div className="grid gap-10 lg:grid-cols-12 lg:gap-16 lg:items-start">
+
         {/* Left Column: Heading & Support Desk */}
         <div className="lg:col-span-5">
           <div className="lg:sticky lg:top-24">
@@ -73,13 +73,15 @@ export const FAQBlock: React.FC<
 
         {/* Right Column: Interactive Accordion */}
         <div className="lg:col-span-7">
-          <div className="rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl p-4 sm:p-8 shadow-sm">
+          <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl p-4 sm:p-8 shadow-sm">
+            <div className="pointer-events-none absolute -left-10 -top-10 size-40 rounded-full bg-primary/8 blur-3xl" />
+
             <Accordion className="divide-border divide-y" type="single" collapsible>
               {items.map((item, index) => (
-                <AccordionItem key={index} className="border-none py-2" value={`item-${index}`}>
-                  <AccordionTrigger className="py-4 text-base sm:text-lg font-bold hover:no-underline hover:text-primary transition-colors text-left">
+                <AccordionItem key={index} className="relative border-none py-2" value={`item-${index}`}>
+                  <AccordionTrigger className="group rounded-2xl px-3 -mx-3 py-4 text-base sm:text-lg font-bold hover:no-underline hover:text-primary hover:bg-primary/5 transition-colors text-left">
                     <span className="flex items-center gap-3.5">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-mono font-bold">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-mono font-bold transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                         {String(index + 1).padStart(2, '0')}
                       </span>
                       <span>{item.question}</span>

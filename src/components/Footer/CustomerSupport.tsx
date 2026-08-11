@@ -16,10 +16,10 @@ export const CustomerSupport: React.FC<Props> = ({ supportEmail, supportPhone })
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-start gap-3">
-        <HeadphonesIcon className="text-neutral-500 mt-0.5 size-5 shrink-0" />
+        <HeadphonesIcon className="text-muted-foreground mt-0.5 size-5 shrink-0" />
         <div>
-          <div className="font-semibold text-white">Ask a specialist</div>
-          <div className="text-neutral-400 text-sm">We're here to help</div>
+          <div className="text-foreground font-semibold">Ask a specialist</div>
+          <div className="text-muted-foreground text-sm">We're here to help</div>
           <button className="text-primary text-sm font-semibold hover:underline" onClick={show} type="button">
             Start chat
           </button>
@@ -27,10 +27,10 @@ export const CustomerSupport: React.FC<Props> = ({ supportEmail, supportPhone })
       </div>
 
       <div className="flex items-start gap-3">
-        <MailIcon className="text-neutral-500 mt-0.5 size-5 shrink-0" />
+        <MailIcon className="text-muted-foreground mt-0.5 size-5 shrink-0" />
         <div>
-          <div className="font-semibold text-white">Email us</div>
-          <div className="text-neutral-400 text-sm">We'll get back to you soon</div>
+          <div className="text-foreground font-semibold">Email us</div>
+          <div className="text-muted-foreground text-sm">We'll get back to you soon</div>
           <a className="text-primary text-sm font-semibold hover:underline" href={`mailto:${email}`}>
             {email}
           </a>
@@ -39,10 +39,10 @@ export const CustomerSupport: React.FC<Props> = ({ supportEmail, supportPhone })
 
       {supportPhone && (
         <div className="flex items-start gap-3">
-          <PhoneIcon className="text-neutral-500 mt-0.5 size-5 shrink-0" />
+          <PhoneIcon className="text-muted-foreground mt-0.5 size-5 shrink-0" />
           <div>
-            <div className="font-semibold text-white">Call us</div>
-            <div className="text-neutral-400 text-sm">Speak with our team</div>
+            <div className="text-foreground font-semibold">Call us</div>
+            <div className="text-muted-foreground text-sm">Speak with our team</div>
             <a
               className="text-primary text-sm font-semibold hover:underline"
               href={`tel:${supportPhone.replace(/\s+/g, '')}`}

@@ -4,6 +4,7 @@ import { RenderBlocks } from '@/blocks/RenderBlocks'
 import { FeaturedCategories } from '@/components/FeaturedCategories'
 import { JsonLd } from '@/components/JsonLd'
 import { RecommendedForYou } from '@/components/RecommendedForYou'
+import { ScrollReveal } from '@/components/ScrollReveal'
 import { homeStaticData } from '@/endpoints/seed/home-static'
 import { RenderHero } from '@/heros/RenderHero'
 import { generateMeta } from '@/utilities/generateMeta'
@@ -88,8 +89,12 @@ export default async function Page({ params }: Args) {
       {isHome ? (
         <>
           <RenderBlocks blocks={firstBlock} />
-          <FeaturedCategories />
-          <RecommendedForYou />
+          <ScrollReveal>
+            <FeaturedCategories />
+          </ScrollReveal>
+          <ScrollReveal>
+            <RecommendedForYou />
+          </ScrollReveal>
           <RenderBlocks blocks={remainingBlocks} />
         </>
       ) : (

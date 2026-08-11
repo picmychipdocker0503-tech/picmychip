@@ -3,6 +3,7 @@
 import type { Product } from '@/payload-types'
 
 import { DealProductCard } from '@/components/product/DealProductCard'
+import { ScrollReveal } from '@/components/ScrollReveal'
 import { useAuth } from '@/providers/Auth'
 import { useRecentlyViewed } from '@/providers/RecentlyViewed'
 import { getClientSideURL } from '@/utilities/getURL'
@@ -38,13 +39,14 @@ export const RecommendedForYou: React.FC = () => {
         Recommended for You
       </h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        {products.map((product) => (
-          <DealProductCard
-            averageRating={product.averageRating}
-            key={product.id}
-            product={product}
-            reviewCount={product.reviewCount}
-          />
+        {products.map((product, index) => (
+          <ScrollReveal className="h-full" index={index} key={product.id} staggerMs={50}>
+            <DealProductCard
+              averageRating={product.averageRating}
+              product={product}
+              reviewCount={product.reviewCount}
+            />
+          </ScrollReveal>
         ))}
       </div>
     </div>
