@@ -1,0 +1,131 @@
+import type { SiteSetting } from '@/payload-types'
+
+import { getServerSideURL } from '@/utilities/getURL'
+import { richTextToPlainText } from '@/utilities/richTextToPlainText'
+
+export const buildOrganizationJsonLd = (siteSettings: SiteSetting | null) => {
+  const logo = typeof siteSettings?.logo === 'object' ? siteSettings.logo?.url : undefined
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: siteSettings?.organizationName || undefined,
+    description: siteSettings?.description || undefined,
+    foundingDate: siteSettings?.foundingDate || undefined,
+    logo: logo ? `${getServerSideURL()}${logo}` : undefined,
+    sameAs: siteSettings?.sameAs?.map((item) => item.url).filter(Boolean),
+    url: getServerSideURL(),
+  }
+}
+
+export const buildBreadcrumbListJsonLd = (items: { name: string; url: string }[]) => ({
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: items.map((item, index) => ({
+    '@type': 'ListItem',
+    item: item.url,
+    name: item.name,
+    position: index + 1,
+  })),
+})
+
+export const buildFaqPageJsonLd = (items: { question: string; answer: unknown }[]) => ({
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: items.map((item) => ({
+    '@type': 'Question',
+    acceptedAnswer: {
+      '@type': 'Answer',
+      text: richTextToPlainText(item.answer),
+    },
+    name: item.question,
+  })),
+})
+
+type ArticleJsonLdArgs = {
+  authorName?: string | null
+  dateModified: string
+  datePublished: string
+  description?: string | null
+  imageUrl?: string | null
+  organizationName?: string | null
+  title: string
+  url: string
+}
+
+/**
+ * `Article` for content with no named author (technical guides), `BlogPosting`
+ * for author-bylined posts — both read the same way by search/answer engines,
+ * but the type signals the content genre and `author` is only meaningful
+ * when there's a real byline to attach it to.
+ */
+export const buildArticleJsonLd = ({
+  authorName,
+  dateModified,
+  datePublished,
+  description,
+  imageUrl,
+  organizationName,
+  title,
+  url,
+}: ArticleJsonLdArgs) => ({
+  '@context': 'https://schema.org',
+  '@type': authorName ? 'BlogPosting' : 'Article',
+  author: authorName
+    ? { '@type': 'Person', name: authorName }
+    : organizationName
+      ? { '@type': 'Organization', name: organizationName }
+      : undefined,
+  dateModified,
+  datePublished,
+  description: description || undefined,
+  headline: title,
+  image: imageUrl || undefined,
+  mainEntityOfPage: url,
+  publisher: organizationName ? { '@type': 'Organization', name: organizationName } : undefined,
+  url,
+})
+
+type ProductJsonLdArgs = {
+  description?: string | null
+  hasStock: boolean
+  imageUrl?: string | null
+  price?: number | null
+  title: string
+  url: string
+  averageRating?: number
+  reviewCount?: number
+}
+
+export const buildProductJsonLd = ({
+  description,
+  hasStock,
+  imageUrl,
+  price,
+  title,
+  url,
+  averageRating,
+  reviewCount,
+}: ProductJsonLdArgs) => ({
+  name: title,
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  description,
+  image: imageUrl,
+  offers: {
+    '@type': 'AggregateOffer',
+    availability: hasStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    price,
+    priceCurrency: 'inr',
+  },
+  ...(reviewCount && reviewCount > 0
+    ? {
+        aggregateRating: {
+          '@type': 'AggregateRating',
+          ratingValue: averageRating,
+          reviewCount,
+        },
+      }
+    : {}),
+  url,
+})

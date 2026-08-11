@@ -1,0 +1,597 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@config '../../../tailwind.config.mjs';
+
+@custom-variant dark (&:is([data-theme='dark'] *));
+@custom-variant sm (@media (width >= theme(--breakpoint-sm)));
+@custom-variant md (@media (width >= theme(--breakpoint-md)));
+@custom-variant lg (@media (width >= theme(--breakpoint-lg)));
+@custom-variant xl (@media (width >= theme(--breakpoint-xl)));
+@custom-variant 2xl (@media (width >= theme(--breakpoint-2xl)));
+
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-weight: unset;
+    font-size: unset;
+  }
+}
+
+@plugin "@tailwindcss/typography";
+@plugin "daisyui";
+
+/*
+ * daisyUI themes named "light"/"dark" to match the existing data-theme
+ * toggle in src/providers/Theme — no changes needed there. Values are
+ * var() references into the :root / [data-theme='dark'] blocks below so
+ * the brand palette has one source of truth, not a second copy here.
+ */
+@plugin "daisyui/theme" {
+  name: 'light';
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'dark';
+  default: false;
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'high-contrast';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'midnight';
+  default: false;
+  prefersdark: false;
+  color-scheme: dark;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin "daisyui/theme" {
+  name: 'warm';
+  default: false;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: var(--background);
+  --color-base-200: var(--card);
+  --color-base-300: var(--border);
+  --color-base-content: var(--foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-content: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-content: var(--secondary-foreground);
+  --color-accent: var(--orange);
+  --color-accent-content: var(--foreground);
+  --color-neutral: var(--secondary);
+  --color-neutral-content: var(--secondary-foreground);
+
+  --color-info: var(--muted);
+  --color-info-content: var(--foreground);
+  --color-success: var(--success);
+  --color-success-content: var(--foreground);
+  --color-warning: var(--warning);
+  --color-warning-content: var(--foreground);
+  --color-error: var(--error);
+  --color-error-content: var(--foreground);
+
+  --radius-selector: var(--radius-sm);
+  --radius-field: var(--radius-md);
+  --radius-box: var(--radius-lg);
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@source inline("lg:col-span-4");
+@source inline("lg:col-span-6");
+@source inline("lg:col-span-8");
+@source inline("lg:col-span-12");
+@source inline("border-border");
+@source inline("bg-card");
+@source inline("border-error");
+@source inline("bg-error/30");
+@source inline("border-success");
+@source inline("bg-success/30");
+@source inline("border-warning");
+@source inline("bg-warning/30");
+
+@theme {
+  --breakpoint-sm: 40rem;
+  --breakpoint-md: 48rem;
+  --breakpoint-lg: 64rem;
+  --breakpoint-xl: 80rem;
+  --breakpoint-2xl: 86rem;
+  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-geist-sans);
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 150% 0;
+  }
+  to {
+    background-position: -50% 0;
+  }
+}
+
+@layer utilities {
+  .animate-shimmer {
+    background-image: linear-gradient(
+      110deg,
+      var(--color-muted) 40%,
+      color-mix(in oklch, var(--color-muted), var(--color-background) 40%) 50%,
+      var(--color-muted) 60%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s ease-in-out infinite;
+  }
+
+  .container {
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  .card-hover {
+    transition:
+      transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.25s ease,
+      border-color 0.25s ease;
+  }
+
+  .card-hover:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 20px 32px -16px oklch(0% 0 0 / 0.14);
+    border-color: var(--color-primary);
+  }
+
+  .eyebrow {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+  }
+
+  @variant sm {
+    .container {
+      max-width: var(--breakpoint-sm);
+    }
+  }
+
+  @variant md {
+    .container {
+      max-width: var(--breakpoint-md);
+      padding-inline: 2rem;
+    }
+  }
+
+  @variant lg {
+    .container {
+      max-width: var(--breakpoint-lg);
+    }
+  }
+
+  @variant xl {
+    .container {
+      max-width: var(--breakpoint-xl);
+    }
+  }
+
+  @variant 2xl {
+    .container {
+      max-width: var(--breakpoint-2xl);
+    }
+  }
+}
+
+:root {
+  --background: oklch(100% 0 0deg);
+  --foreground: oklch(14.5% 0 0deg);
+  --card: oklch(100% 0 0deg);
+  --card-foreground: oklch(14.5% 0 0deg);
+  --popover: oklch(100% 0 0deg);
+  --popover-foreground: oklch(14.5% 0 0deg);
+  --primary: oklch(42% 0.27 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(97% 0 0deg);
+  --secondary-foreground: oklch(20.5% 0 0deg);
+  --muted: oklch(97% 0 0deg);
+  --muted-foreground: oklch(50% 0 0deg);
+  --accent: oklch(97% 0 0deg);
+  --accent-foreground: oklch(20.5% 0 0deg);
+  --destructive: oklch(57.7% 0.245 27.325deg);
+  --destructive-foreground: oklch(98.5% 0 0deg);
+  --border: oklch(90% 0 0deg);
+  --input: oklch(90% 0 0deg);
+  --ring: oklch(70.8% 0 0deg);
+  --chart-1: oklch(64.6% 0.222 41.116deg);
+  --chart-2: oklch(60% 0.118 184.704deg);
+  --chart-3: oklch(39.8% 0.07 227.392deg);
+  --chart-4: oklch(82.8% 0.189 84.429deg);
+  --chart-5: oklch(76.9% 0.188 70.08deg);
+  --radius: 0.625rem;
+  --sidebar: oklch(98.5% 0 0deg);
+  --sidebar-foreground: oklch(14.5% 0 0deg);
+  --sidebar-primary: oklch(20.5% 0 0deg);
+  --sidebar-primary-foreground: oklch(98.5% 0 0deg);
+  --sidebar-accent: oklch(97% 0 0deg);
+  --sidebar-accent-foreground: oklch(20.5% 0 0deg);
+  --sidebar-border: oklch(92.2% 0 0deg);
+  --sidebar-ring: oklch(70.8% 0 0deg);
+  --success: oklch(78% 0.08 200deg);
+  --warning: oklch(89% 0.1 75deg);
+  --error: oklch(58% 0.22 25deg);
+  --purple: oklch(42% 0.27 300deg);
+  --purple-light: oklch(85% 0.15 300deg);
+  --orange: oklch(63% 0.2 35deg);
+  --orange-light: oklch(90% 0.1 35deg);
+}
+
+[data-theme='dark'] {
+  --background: oklch(14.5% 0 0deg);
+  --foreground: oklch(98.5% 0 0deg);
+  --card: oklch(17% 0 0deg);
+  --card-foreground: oklch(98.5% 0 0deg);
+  --popover: oklch(14.5% 0 0deg);
+  --popover-foreground: oklch(98.5% 0 0deg);
+  --primary: oklch(65% 0.2 300deg);
+  --primary-foreground: oklch(98.5% 0 0deg);
+  --secondary: oklch(26.9% 0 0deg);
+  --secondary-foreground: oklch(98.5% 0 0deg);
+  --muted: oklch(26.9% 0 0deg);
+  --muted-foreground: oklch(70.8% 0 0deg);
+  --accent: oklch(26.9% 0 0deg);
+  --accent-foreground: oklch(98.5% 0 0deg);
+  --destructive: oklch(39.6% 0.141 25.723deg);
+  --destructive-foreground: oklch(63.7% 0.237 25.331deg);
+  --border: oklch(26.9% 0 0deg);
+  --input: oklch(26.9% 0 0deg);
+  --ring: oklch(43.9% 0 0deg);
+  --chart-1: oklch(48.8% 0.243 264.376deg);
+  --chart-2: oklch(69.6% 0.17 162.48deg);
+  --chart-3: oklch(76.9% 0.188 70.08deg);
+  --chart-4: oklch(62.7% 0.265 303.9deg);
+  --chart-5: oklch(64.5% 0.246 16.439deg);
+  --sidebar: oklch(20.5% 0 0deg);
+  --sidebar-foreground: oklch(98.5% 0 0deg);
+  --sidebar-primary: oklch(48.8% 0.243 264.376deg);
+  --sidebar-primary-foreground: oklch(98.5% 0 0deg);
+  --sidebar-accent: oklch(26.9% 0 0deg);
+  --sidebar-accent-foreground: oklch(98.5% 0 0deg);
+  --sidebar-border: oklch(26.9% 0 0deg);
+  --sidebar-ring: oklch(43.9% 0 0deg);
+  --success: oklch(28% 0.1 200deg);
+  --warning: oklch(35% 0.08 70deg);
+  --error: oklch(45% 0.1 25deg);
+  --purple: oklch(65% 0.2 300deg);
+  --purple-light: oklch(75% 0.15 300deg);
+  --orange: oklch(75% 0.12 35deg);
+  --orange-light: oklch(85% 0.08 35deg);
+}
+
+/* Boosted-contrast light variant: darker/more saturated primary, darker
+   muted text, much more visible borders — aimed at AAA-level contrast. */
+[data-theme='high-contrast'] {
+  --background: oklch(100% 0 0deg);
+  --foreground: oklch(0% 0 0deg);
+  --card: oklch(100% 0 0deg);
+  --card-foreground: oklch(0% 0 0deg);
+  --popover: oklch(100% 0 0deg);
+  --popover-foreground: oklch(0% 0 0deg);
+  --primary: oklch(35% 0.28 300deg);
+  --primary-foreground: oklch(100% 0 0deg);
+  --secondary: oklch(92% 0 0deg);
+  --secondary-foreground: oklch(0% 0 0deg);
+  --muted: oklch(90% 0 0deg);
+  --muted-foreground: oklch(30% 0 0deg);
+  --accent: oklch(90% 0 0deg);
+  --accent-foreground: oklch(0% 0 0deg);
+  --destructive: oklch(45% 0.25 27deg);
+  --destructive-foreground: oklch(100% 0 0deg);
+  --border: oklch(70% 0 0deg);
+  --input: oklch(70% 0 0deg);
+  --ring: oklch(35% 0.28 300deg);
+  --success: oklch(35% 0.12 200deg);
+  --warning: oklch(45% 0.15 75deg);
+  --error: oklch(45% 0.2 25deg);
+  --purple: oklch(35% 0.28 300deg);
+  --purple-light: oklch(75% 0.2 300deg);
+  --orange: oklch(45% 0.18 35deg);
+  --orange-light: oklch(75% 0.15 35deg);
+}
+
+/* Deeper, moodier dark variant: lower background lightness than `dark`,
+   desaturated purple so it reads as "workshop at night" rather than a
+   dimmer copy of `dark`. */
+[data-theme='midnight'] {
+  --background: oklch(6% 0 0deg);
+  --foreground: oklch(92% 0 0deg);
+  --card: oklch(9% 0.005 280deg);
+  --card-foreground: oklch(92% 0 0deg);
+  --popover: oklch(6% 0 0deg);
+  --popover-foreground: oklch(92% 0 0deg);
+  --primary: oklch(55% 0.12 300deg);
+  --primary-foreground: oklch(96% 0 0deg);
+  --secondary: oklch(14% 0 0deg);
+  --secondary-foreground: oklch(92% 0 0deg);
+  --muted: oklch(14% 0 0deg);
+  --muted-foreground: oklch(60% 0 0deg);
+  --accent: oklch(14% 0 0deg);
+  --accent-foreground: oklch(92% 0 0deg);
+  --destructive: oklch(32% 0.12 25deg);
+  --destructive-foreground: oklch(85% 0.15 25deg);
+  --border: oklch(16% 0 0deg);
+  --input: oklch(16% 0 0deg);
+  --ring: oklch(35% 0 0deg);
+  --success: oklch(22% 0.08 200deg);
+  --warning: oklch(28% 0.07 70deg);
+  --error: oklch(35% 0.09 25deg);
+  --purple: oklch(55% 0.12 300deg);
+  --purple-light: oklch(65% 0.1 300deg);
+  --orange: oklch(60% 0.09 35deg);
+  --orange-light: oklch(70% 0.07 35deg);
+}
+
+/* Warm light variant: cream/tan neutrals instead of pure white/grey, a
+   punchier orange token — purple stays primary for cross-theme brand
+   consistency, warmth comes through the surrounding surface colors. */
+[data-theme='warm'] {
+  --background: oklch(97% 0.015 75deg);
+  --foreground: oklch(18% 0.01 50deg);
+  --card: oklch(94% 0.02 70deg);
+  --card-foreground: oklch(18% 0.01 50deg);
+  --popover: oklch(97% 0.015 75deg);
+  --popover-foreground: oklch(18% 0.01 50deg);
+  --primary: oklch(45% 0.22 300deg);
+  --primary-foreground: oklch(98% 0.01 75deg);
+  --secondary: oklch(90% 0.03 60deg);
+  --secondary-foreground: oklch(25% 0.02 50deg);
+  --muted: oklch(90% 0.03 60deg);
+  --muted-foreground: oklch(45% 0.02 50deg);
+  --accent: oklch(85% 0.08 45deg);
+  --accent-foreground: oklch(20% 0.02 45deg);
+  --destructive: oklch(55% 0.22 25deg);
+  --destructive-foreground: oklch(98% 0 0deg);
+  --border: oklch(85% 0.02 60deg);
+  --input: oklch(85% 0.02 60deg);
+  --ring: oklch(60% 0.15 45deg);
+  --success: oklch(75% 0.1 150deg);
+  --warning: oklch(88% 0.12 75deg);
+  --error: oklch(72% 0.18 30deg);
+  --purple: oklch(45% 0.22 300deg);
+  --purple-light: oklch(85% 0.12 300deg);
+  --orange: oklch(65% 0.18 40deg);
+  --orange-light: oklch(88% 0.12 45deg);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-purple: var(--purple);
+  --color-purple-light: var(--purple-light);
+  --color-orange: var(--orange);
+  --color-orange-light: var(--orange-light);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground min-h-[100vh] flex flex-col;
+  }
+}
+
+html {
+  opacity: 0;
+}
+
+html[data-theme='dark'],
+html[data-theme='light'] {
+  opacity: initial;
+}
+
+a,
+input,
+button,
+select,
+textarea,
+[role='button'],
+[tabindex]:not([tabindex='-1']) {
+  /* Theme-aware focus ring (uses each theme's --ring token) so it stays
+     visible in every daisyUI theme, including high-contrast/midnight. */
+  @apply focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
+}
+
+.skip-link {
+  @apply bg-primary text-primary-foreground fixed top-2 left-2 z-[100] -translate-y-16 rounded-lg px-4 py-2 text-sm font-medium transition-transform focus:translate-y-0;
+}
+
+
+.leading-none {
+  line-height: 1;
+  display: none !important;
+}

@@ -1,0 +1,43 @@
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+// Payload has no separate "primary/brand" token — its --color-success-*
+// ramp is what actually drives primary buttons, active nav states, links,
+// and checkboxes throughout the admin UI (confirmed in
+// @payloadcms/ui/dist/scss/colors.scss). Overriding it here (unlayered, so
+// it beats Payload's own `@layer payload-default` regardless of import
+// order) re-brands the whole admin panel's accent color to match the
+// storefront's purple identity, in both light and dark admin themes —
+// dark mode already remaps --theme-success-* to the opposite end of this
+// same ramp, so one override covers both.
+:root {
+  --color-success-0: rgb(255, 255, 255);
+  --color-success-50: rgb(236, 234, 251);
+  --color-success-100: rgb(217, 212, 247);
+  --color-success-150: rgb(198, 191, 242);
+  --color-success-200: rgb(179, 170, 238);
+  --color-success-250: rgb(160, 148, 234);
+  --color-success-300: rgb(142, 127, 230);
+  --color-success-350: rgb(123, 106, 226);
+  --color-success-400: rgb(104, 85, 221);
+  --color-success-450: rgb(85, 63, 217);
+  --color-success-500: rgb(66, 42, 213);
+  --color-success-550: rgb(59, 38, 192);
+  --color-success-600: rgb(53, 34, 170);
+  --color-success-650: rgb(46, 29, 149);
+  --color-success-700: rgb(40, 25, 128);
+  --color-success-750: rgb(33, 21, 106);
+  --color-success-800: rgb(26, 17, 85);
+  --color-success-850: rgb(20, 13, 64);
+  --color-success-900: rgb(13, 8, 43);
+  --color-success-950: rgb(7, 4, 21);
+  --color-success-1000: rgb(0, 0, 0);
+}

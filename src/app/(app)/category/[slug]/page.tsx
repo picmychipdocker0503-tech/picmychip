@@ -1,0 +1,166 @@
+import type { Metadata } from 'next'
+
+import { RenderBlocks } from '@/blocks/RenderBlocks'
+import { Grid } from '@/components/Grid'
+import { JsonLd } from '@/components/JsonLd'
+import { ProductGridItem } from '@/components/ProductGridItem'
+import { ActiveFiltersBar } from '@/components/Search/ActiveFiltersBar'
+import { FacetSidebar } from '@/components/Search/FacetSidebar'
+import { getIllustration } from '@/components/illustrations'
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination'
+import { getFacetsForSchema } from '@/lib/facetConfig'
+import { parseFacetFilters } from '@/lib/facetParams'
+import { searchProducts } from '@/lib/searchProducts'
+import { generateMeta } from '@/utilities/generateMeta'
+import { getCategoryBreadcrumb } from '@/utilities/getCategoryBreadcrumb'
+import { buildBreadcrumbListJsonLd } from '@/utilities/jsonLd'
+import configPromise from '@payload-config'
+import { getPayload } from 'payload'
+import { notFound } from 'next/navigation'
+import React, { Suspense } from 'react'
+
+const PRODUCTS_PER_PAGE = 12
+
+type SearchParams = { [key: string]: string | string[] | undefined }
+
+type Args = {
+  params: Promise<{
+    slug: string
+  }>
+  searchParams: Promise<SearchParams>
+}
+
+export async function generateStaticParams() {
+  const payload = await getPayload({ config: configPromise })
+  const categories = await payload.find({
+    collection: 'categories',
+    limit: 1000,
+    overrideAccess: false,
+    pagination: false,
+    select: {
+      slug: true,
+    },
+  })
+
+  return categories.docs.map(({ slug }) => ({ slug }))
+}
+
+export async function generateMetadata({ params, searchParams }: Args): Promise<Metadata> {
+  const { slug } = await params
+  const { page } = await searchParams
+  const category = await queryCategoryBySlug({ slug })
+
+  if (!category) return notFound()
+
+  const pageNum = Number(page) || 1
+
+  return generateMeta({
+    doc: category,
+    path: `/category/${slug}${pageNum > 1 ? `?page=${pageNum}` : ''}`,
+  })
+}
+
+export default async function CategoryPage({ params, searchParams }: Args) {
+  const { slug } = await params
+  const query = await searchParams
+  const category = await queryCategoryBySlug({ slug })
+
+  if (!category) return notFound()
+
+  const pageNum = Number(query.page) || 1
+  const payload = await getPayload({ config: configPromise })
+
+  const facets = getFacetsForSchema(category.specSchemaType)
+
+  const products = await searchProducts({
+    categoryId: String(category.id),
+    facetFilters: parseFacetFilters(query, facets),
+    facetAttributes: facets.map((facet) => facet.attribute),
+    page: pageNum,
+    limit: PRODUCTS_PER_PAGE,
+  })
+
+  const Illustration = getIllustration(category.specSchemaType)
+
+  const breadcrumb = await getCategoryBreadcrumb(payload, category)
+
+  return (
+    <div className="pt-16 pb-24">
+      <JsonLd data={buildBreadcrumbListJsonLd(breadcrumb)} />
+      <div className="container mb-14 flex flex-col items-center gap-3 text-center">
+        <div className="bg-muted text-muted-foreground flex size-20 items-center justify-center rounded-full">
+          <Illustration className="size-10" />
+        </div>
+        <span className="eyebrow">Category</span>
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{category.title}</h1>
+      </div>
+
+      {category.layout?.length ? <RenderBlocks blocks={category.layout} /> : null}
+
+      <div className="container flex flex-col gap-8 md:flex-row md:items-start">
+        <Suspense fallback={null}>
+          <FacetSidebar facetDistribution={products.facetDistribution} facets={facets} />
+        </Suspense>
+
+        <div className="min-h-screen w-full">
+          {facets.length > 0 && (
+            <Suspense fallback={null}>
+              <ActiveFiltersBar facets={facets} />
+            </Suspense>
+          )}
+
+          {products.docs.length > 0 ? (
+            <Grid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in-0 duration-500">
+              {products.docs.map((product) => (
+                <ProductGridItem key={product.id} product={product} />
+              ))}
+            </Grid>
+          ) : (
+            <p className="text-muted-foreground">No products in this category yet.</p>
+          )}
+
+          {products.totalPages > 1 && (
+            <Pagination className="mt-12">
+              <PaginationContent>
+                {products.hasPrevPage && (
+                  <PaginationItem>
+                    <PaginationPrevious href={`/category/${slug}?page=${pageNum - 1}`} />
+                  </PaginationItem>
+                )}
+                {products.hasNextPage && (
+                  <PaginationItem>
+                    <PaginationNext href={`/category/${slug}?page=${pageNum + 1}`} />
+                  </PaginationItem>
+                )}
+              </PaginationContent>
+            </Pagination>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+const queryCategoryBySlug = async ({ slug }: { slug: string }) => {
+  const payload = await getPayload({ config: configPromise })
+
+  const result = await payload.find({
+    collection: 'categories',
+    limit: 1,
+    overrideAccess: false,
+    pagination: false,
+    where: {
+      slug: {
+        equals: slug,
+      },
+    },
+  })
+
+  return result.docs?.[0] || null
+}

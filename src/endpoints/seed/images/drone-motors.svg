@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <rect width="400" height="400" fill="#f3f4f6" />
+  <g transform="translate(80,60) scale(2)" fill="none" stroke="#334155" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="46" y="50" width="28" height="20" rx="4" />
+    <path d="M46 54 22 30M74 54l24-24M46 66 22 90M74 66l24 24" />
+    <circle cx="18" cy="26" r="14" />
+    <circle cx="102" cy="26" r="14" />
+    <circle cx="18" cy="94" r="14" />
+    <circle cx="102" cy="94" r="14" />
+    <path d="M60 50v-8M56 42h8" />
+  </g>
+  <text x="200" y="360" text-anchor="middle" font-family="sans-serif" font-size="22" fill="#64748b">Drone Motors</text>
+</svg>

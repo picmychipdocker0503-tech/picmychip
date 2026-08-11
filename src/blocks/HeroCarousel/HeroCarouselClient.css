@@ -1,0 +1,609 @@
+/* ==========================================================================
+   HERO CAROUSEL & SERVICES BENTO SECTION
+   ========================================================================== */
+
+.pmc-home-section {
+  display: grid;
+  grid-template-columns: minmax(260px, 300px) minmax(0, 1fr);
+  align-items: stretch;
+  gap: 20px;
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 16px 1rem 32px;
+}
+
+@media (max-width: 1024px) {
+  .pmc-home-section {
+    grid-template-columns: 1fr;
+    gap: 24px;
+    padding: 12px 1rem 24px;
+  }
+}
+
+/* ==========================================================================
+   SERVICES SIDEBAR HUB
+   ========================================================================== */
+
+.pmc-services-container {
+  width: 100%;
+  height: 100%;
+}
+
+.pmc-services-hub {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 20px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.pmc-services-hub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pmc-services-hub-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, transparent);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pmc-services-hub-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+.pmc-service-links-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+@media (max-width: 1024px) {
+  .pmc-service-links-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .pmc-service-links-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pmc-service-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  text-decoration: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  flex: 1;
+}
+
+.pmc-service-card:hover {
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+  background: color-mix(in srgb, var(--primary) 4%, var(--card));
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+.pmc-service-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.pmc-service-card:hover .pmc-service-icon-box {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+
+.pmc-service-card:hover .pmc-service-icon-box svg {
+  color: var(--primary-foreground);
+}
+
+.pmc-service-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.pmc-service-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pmc-service-subtitle {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  line-height: 1.25;
+  margin-top: 2px;
+}
+
+.pmc-service-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.pmc-service-card:hover .pmc-service-arrow {
+  opacity: 1;
+}
+
+/* ==========================================================================
+   MAIN HERO CAROUSEL CONTAINER
+   ========================================================================== */
+
+.pmc-hero-container {
+  width: 100%;
+  min-width: 0;
+}
+
+.pmc-carousel-wrapper {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* ==========================================================================
+   SPLIT HERO CARD
+   ========================================================================== */
+
+.pmc-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  align-items: center;
+  min-height: 480px;
+  border-radius: 24px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.05);
+}
+
+@media (max-width: 900px) {
+  .pmc-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+}
+
+.pmc-hero-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 85% 30%, color-mix(in srgb, var(--primary) 14%, transparent), transparent 45%),
+    radial-gradient(circle at 15% 85%, color-mix(in srgb, #f97316 10%, transparent), transparent 40%),
+    linear-gradient(145deg, var(--card) 0%, color-mix(in srgb, var(--card) 85%, var(--background)) 100%);
+  pointer-events: none;
+}
+
+.pmc-hero-left {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  padding: 44px 28px 44px 40px;
+  width: 100%;
+  pointer-events: auto;
+}
+
+@media (max-width: 640px) {
+  .pmc-hero-left {
+    padding: 28px 20px;
+  }
+}
+
+.pmc-hero-content {
+  max-width: 520px;
+  width: 100%;
+}
+
+.pmc-hero-right {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  min-height: 380px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: 20px 28px 20px 0;
+}
+
+@media (max-width: 900px) {
+  .pmc-hero-right {
+    padding: 10px 20px 28px;
+    min-height: 300px;
+  }
+}
+
+/* ==========================================================================
+   HERO BADGE
+   ========================================================================== */
+
+.pmc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  margin-bottom: 18px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+  color: var(--primary);
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pmc-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 25%, transparent);
+}
+
+/* ==========================================================================
+   HERO HEADINGS & ACTIONS
+   ========================================================================== */
+
+.pmc-heading {
+  margin: 0;
+  color: var(--foreground);
+  font-size: clamp(24px, 3vw, 40px);
+  font-weight: 900;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+}
+
+.pmc-description {
+  margin: 14px 0 0;
+  color: var(--muted-foreground);
+  font-size: 14.5px;
+  line-height: 1.6;
+  max-width: 460px;
+}
+
+.pmc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.pmc-shop-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 22px;
+  border-radius: 12px;
+  background: var(--primary);
+  color: var(--primary-foreground) !important;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 6px 18px -2px color-mix(in srgb, var(--primary) 40%, transparent);
+  transition: all 0.2s ease;
+}
+
+.pmc-shop-button:hover {
+  background: color-mix(in srgb, var(--primary) 88%, #000);
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px -2px color-mix(in srgb, var(--primary) 50%, transparent);
+}
+
+.pmc-explore-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.pmc-explore-button:hover {
+  background: color-mix(in srgb, var(--primary) 6%, var(--card));
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+  color: var(--primary);
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   HERO TRUST ROW
+   ========================================================================== */
+
+.pmc-trust-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  margin-top: 24px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.pmc-trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted-foreground);
+}
+
+/* ==========================================================================
+   PRODUCT VISUAL
+   ========================================================================== */
+
+.pmc-product-visual {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  max-width: 480px;
+  min-height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pmc-ambient-glow {
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--primary) 25%, transparent) 0%, transparent 70%);
+  filter: blur(36px);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.pmc-product-media-wrapper {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 300px;
+  max-height: 340px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pmc-media-inner {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.pmc-product-image {
+  position: relative !important;
+  object-fit: contain !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: auto !important;
+  height: auto !important;
+  filter: drop-shadow(0 16px 32px rgba(0, 0, 0, 0.18));
+  transition: transform 0.4s ease;
+}
+
+.pmc-hero:hover .pmc-product-image {
+  transform: scale(1.03);
+}
+
+.pmc-product-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+/* Floating Spec Badges */
+.pmc-floating-badge {
+  position: absolute;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+.pmc-floating-badge.badge-top {
+  top: 10px;
+  right: 10px;
+}
+
+.pmc-floating-badge.badge-bottom {
+  bottom: 10px;
+  left: 10px;
+}
+
+@media (max-width: 640px) {
+  .pmc-floating-badge {
+    display: none;
+  }
+}
+
+.pmc-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+}
+
+.pmc-floating-badge strong {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.2;
+}
+
+.pmc-floating-badge small {
+  display: block;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  line-height: 1.2;
+  margin-top: 1px;
+}
+
+/* ==========================================================================
+   CAROUSEL DOTS
+   ========================================================================== */
+
+.pmc-carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+/* ==========================================================================
+   BENEFITS VALUE STRIP
+   ========================================================================== */
+
+.pmc-benefits-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+  .pmc-benefits-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .pmc-benefits-strip {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pmc-benefit-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.pmc-benefit-card:hover {
+  border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -4px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.pmc-benefit-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--primary) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.pmc-benefit-card:hover .pmc-benefit-icon-wrap {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+
+.pmc-benefit-card:hover .pmc-benefit-icon-wrap svg {
+  color: var(--primary-foreground);
+}
+
+.pmc-benefit-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.pmc-benefit-text strong {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.25;
+}
+
+.pmc-benefit-text small {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+  line-height: 1.25;
+  margin-top: 2px;
+}

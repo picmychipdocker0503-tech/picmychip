@@ -1,0 +1,77 @@
+[
+  {
+    "event_name": "product_viewed",
+    "event_description": "Fired when a user views a product detail page — the top of the purchase conversion funnel.",
+    "file": "src/components/product/TrackProductView.tsx"
+  },
+  {
+    "event_name": "product_added_to_cart",
+    "event_description": "Fired when a user clicks the Add to Cart button on the product detail page.",
+    "file": "src/components/Cart/AddToCart.tsx"
+  },
+  {
+    "event_name": "buy_now_clicked",
+    "event_description": "Fired when a user clicks Buy Now, immediately adding the product to cart and navigating to checkout.",
+    "file": "src/components/Cart/AddToCart.tsx"
+  },
+  {
+    "event_name": "product_wishlisted",
+    "event_description": "Fired when a user adds a product to their wishlist from the product detail page.",
+    "file": "src/components/product/ProductDescription.tsx"
+  },
+  {
+    "event_name": "coupon_applied",
+    "event_description": "Fired when a coupon code is successfully applied to the cart.",
+    "file": "src/app/(app)/cart/page.tsx"
+  },
+  {
+    "event_name": "gift_card_applied",
+    "event_description": "Fired when a gift card code is successfully applied to the cart.",
+    "file": "src/app/(app)/cart/page.tsx"
+  },
+  {
+    "event_name": "checkout_started",
+    "event_description": "Fired when the user initiates payment (clicks Place Order for COD or Go to Payment for card) on the checkout page.",
+    "file": "src/components/checkout/CheckoutPage.tsx"
+  },
+  {
+    "event_name": "payment_submitted",
+    "event_description": "Fired when the user submits the Stripe payment form to complete a card/UPI payment.",
+    "file": "src/components/forms/CheckoutForm/index.tsx"
+  },
+  {
+    "event_name": "order_placed_card",
+    "event_description": "Fired on the client when a Stripe payment is confirmed and the order is created successfully.",
+    "file": "src/components/forms/CheckoutForm/index.tsx"
+  },
+  {
+    "event_name": "order_placed",
+    "event_description": "Fired server-side when a COD or gift-card-covered order is successfully created in the database.",
+    "file": "src/app/(app)/checkout/place-order/route.ts"
+  },
+  {
+    "event_name": "wishlist_item_added_to_cart",
+    "event_description": "Fired when a user moves an item from their wishlist directly into the cart.",
+    "file": "src/app/(app)/wishlist/page.tsx"
+  },
+  {
+    "event_name": "return_request_submitted",
+    "event_description": "Fired server-side when a customer successfully submits a return request for an order.",
+    "file": "src/app/(app)/returns/submitReturnRequest.ts"
+  },
+  {
+    "event_name": "user_signed_up",
+    "event_description": "Fired when a new user completes account registration, also triggers PostHog identify.",
+    "file": "src/components/forms/CreateAccountForm/index.tsx"
+  },
+  {
+    "event_name": "user_logged_in",
+    "event_description": "Fired when an existing user successfully logs in, also triggers PostHog identify.",
+    "file": "src/components/forms/LoginForm/index.tsx"
+  },
+  {
+    "event_name": "user_logged_out",
+    "event_description": "Fired when a user logs out, also triggers posthog.reset() to clear the identified session.",
+    "file": "src/app/(app)/logout/LogoutPage/index.tsx"
+  }
+]

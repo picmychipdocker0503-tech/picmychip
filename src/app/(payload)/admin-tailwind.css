@@ -1,0 +1,108 @@
+/*
+ * A separate, minimal Tailwind + daisyUI entry for the Payload admin panel.
+ * The admin bundle has its own CSS system (@payloadcms/next/css, themed via
+ * --theme-* variables — see custom.scss for that side of the branding) and
+ * does NOT import the storefront's globals.css. This file exists so custom
+ * admin components (BeforeDashboard, BeforeLogin, etc.) can use daisyUI
+ * classes too. Imports only Tailwind's theme + utilities layers — NOT
+ * `tailwindcss/preflight.css` (Tailwind's global CSS reset, applied via bare
+ * selectors like `*`/`button`/`table`), which was clobbering Payload's own
+ * native sidebar-nav and dashboard group-card styling.
+ */
+@import 'tailwindcss/theme.css';
+@import 'tailwindcss/utilities.css';
+
+/*
+ * Prefixed: Payload's own DOM uses plain, unnamespaced class names for field
+ * types — e.g. a sidebar checkbox field literally renders
+ * `<div class="field-type checkbox">` and a select field
+ * `<div class="field-type select">`. daisyUI's `.checkbox`/`.select`/`.link`/
+ * etc. component classes are ALSO unnamespaced, so without a prefix they
+ * silently collide: daisyUI's `.checkbox { display: inline-block; width: ... }`
+ * was overriding Payload's own sidebar field wrapper, causing fields to render
+ * inline instead of stacked and overlap each other. Every daisyUI class we use
+ * in our own custom admin components must be written with the `pmc-` prefix
+ * (e.g. `pmc-btn`, `pmc-input`, `pmc-badge`) to get daisyUI's styling while
+ * never touching Payload's own class names.
+ */
+@plugin 'daisyui' {
+  prefix: 'pmc-';
+}
+
+@plugin 'daisyui/theme' {
+  name: 'light';
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+
+  --color-base-100: oklch(100% 0 0deg);
+  --color-base-200: oklch(96.5% 0.005 265deg);
+  --color-base-300: oklch(92.2% 0 0deg);
+  --color-base-content: oklch(14.5% 0 0deg);
+
+  --color-primary: oklch(45% 0.25 300deg);
+  --color-primary-content: oklch(98.5% 0 0deg);
+  --color-secondary: oklch(97% 0 0deg);
+  --color-secondary-content: oklch(20.5% 0 0deg);
+  --color-accent: oklch(70% 0.15 35deg);
+  --color-accent-content: oklch(14.5% 0 0deg);
+  --color-neutral: oklch(20.5% 0 0deg);
+  --color-neutral-content: oklch(98.5% 0 0deg);
+
+  --color-info: oklch(97% 0 0deg);
+  --color-info-content: oklch(14.5% 0 0deg);
+  --color-success: oklch(78% 0.08 200deg);
+  --color-success-content: oklch(14.5% 0 0deg);
+  --color-warning: oklch(89% 0.1 75deg);
+  --color-warning-content: oklch(14.5% 0 0deg);
+  --color-error: oklch(75% 0.15 25deg);
+  --color-error-content: oklch(14.5% 0 0deg);
+
+  --radius-selector: 0.375rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.625rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+@plugin 'daisyui/theme' {
+  name: 'dark';
+  default: false;
+  prefersdark: true;
+  color-scheme: dark;
+
+  --color-base-100: oklch(14.5% 0 0deg);
+  --color-base-200: oklch(17% 0 0deg);
+  --color-base-300: oklch(26.9% 0 0deg);
+  --color-base-content: oklch(98.5% 0 0deg);
+
+  --color-primary: oklch(65% 0.2 300deg);
+  --color-primary-content: oklch(98.5% 0 0deg);
+  --color-secondary: oklch(26.9% 0 0deg);
+  --color-secondary-content: oklch(98.5% 0 0deg);
+  --color-accent: oklch(75% 0.12 35deg);
+  --color-accent-content: oklch(14.5% 0 0deg);
+  --color-neutral: oklch(26.9% 0 0deg);
+  --color-neutral-content: oklch(98.5% 0 0deg);
+
+  --color-info: oklch(26.9% 0 0deg);
+  --color-info-content: oklch(98.5% 0 0deg);
+  --color-success: oklch(28% 0.1 200deg);
+  --color-success-content: oklch(98.5% 0 0deg);
+  --color-warning: oklch(35% 0.08 70deg);
+  --color-warning-content: oklch(98.5% 0 0deg);
+  --color-error: oklch(45% 0.1 25deg);
+  --color-error-content: oklch(98.5% 0 0deg);
+
+  --radius-selector: 0.375rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.625rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
