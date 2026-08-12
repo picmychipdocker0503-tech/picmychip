@@ -57,7 +57,7 @@ export const Gallery: React.FC<Props> = ({ gallery, categorySlug }) => {
     <div>
       <button
         aria-label="Zoom image"
-        className="border-border bg-muted/20 group relative mb-5 block aspect-square w-full cursor-zoom-in overflow-hidden rounded-2xl border"
+        className="border-border bg-transparent group relative mb-5 block aspect-square w-full cursor-zoom-in overflow-hidden rounded-2xl border"
         onClick={() => setLightboxOpen(true)}
         type="button"
       >

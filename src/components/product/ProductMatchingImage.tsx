@@ -218,7 +218,7 @@ export const ProductMatchingImage: React.FC<Props> = ({
           </div>
 
           {/* Matching Component Tag */}
-          <span className="relative z-10 mt-2.5 inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-0.5 text-[10px] font-mono font-bold text-muted-foreground border border-border/60">
+          <span className="relative z-10 mt-2.5 inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-0.5 text-[10px] font-bold text-muted-foreground border border-border/60">
             {label}
           </span>
         </div>

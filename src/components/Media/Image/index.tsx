@@ -88,7 +88,6 @@ export const Image: React.FC<MediaProps> = (props) => {
       quality={90}
       sizes={sizes}
       src={hasError || !src ? PRODUCT_IMAGE_PLACEHOLDER : src}
-      unoptimized={true}
       width={!fill ? width || widthFromProps : undefined}
     />
   )

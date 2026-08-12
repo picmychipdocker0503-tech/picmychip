@@ -26,6 +26,7 @@ export interface Data {
 export type FormBlockType = {
   blockName?: string
   blockType?: 'formBlock'
+  className?: string
   enableIntro: boolean
   form: FormType
   introContent?: SerializedEditorState
@@ -37,6 +38,7 @@ export const FormBlock: React.FC<
   }
 > = (props) => {
   const {
+    className,
     enableIntro,
     form: formFromProps,
     form: { id: formID, confirmationMessage, confirmationType, redirect, submitButtonLabel } = {},
@@ -64,10 +66,19 @@ export const FormBlock: React.FC<
       const submitForm = async () => {
         setError(undefined)
 
-        const dataToSend = Object.entries(data).map(([name, value]) => ({
-          field: name,
-          value,
-        }))
+        // File inputs come back from react-hook-form as a FileList. Those must travel as
+        // multipart file parts (matching the form-builder plugin's `handleUploads` hook, which
+        // reads them off `req.files[fieldName]`) — everything else stays in the JSON payload.
+        const fileEntries = Object.entries(data).filter(
+          ([, value]) => typeof FileList !== 'undefined' && value instanceof FileList && value.length > 0,
+        ) as unknown as [string, FileList][]
+
+        const dataToSend = Object.entries(data)
+          .filter(([name]) => !fileEntries.some(([fileName]) => fileName === name))
+          .map(([name, value]) => ({
+            field: name,
+            value,
+          }))
 
         // delay loading indicator by 1s
         loadingTimerID = setTimeout(() => {
@@ -75,16 +86,39 @@ export const FormBlock: React.FC<
         }, 1000)
 
         try {
-          const req = await fetch(`${getClientSideURL()}/api/form-submissions`, {
-            body: JSON.stringify({
-              form: formID,
-              submissionData: dataToSend,
-            }),
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            method: 'POST',
-          })
+          let req: Response
+
+          if (fileEntries.length > 0) {
+            const formData = new FormData()
+            formData.append(
+              '_payload',
+              JSON.stringify({
+                form: formID,
+                submissionData: dataToSend,
+              }),
+            )
+            for (const [name, fileList] of fileEntries) {
+              for (const file of Array.from(fileList)) {
+                formData.append(name, file)
+              }
+            }
+
+            req = await fetch(`${getClientSideURL()}/api/form-submissions`, {
+              body: formData,
+              method: 'POST',
+            })
+          } else {
+            req = await fetch(`${getClientSideURL()}/api/form-submissions`, {
+              body: JSON.stringify({
+                form: formID,
+                submissionData: dataToSend,
+              }),
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              method: 'POST',
+            })
+          }
 
           const res = await req.json()
 
@@ -126,17 +160,23 @@ export const FormBlock: React.FC<
   )
 
   return (
-    <div className="container lg:max-w-3xl">
+    <div className={className ?? 'container lg:max-w-3xl'}>
       {enableIntro && introContent && !hasSubmitted && (
-        <RichText className="mb-8 lg:mb-12" data={introContent} enableGutter={false} />
+        <RichText className="mb-6" data={introContent} enableGutter={false} />
       )}
-      <div className="p-4 lg:p-6 border border-border rounded-[0.8rem]">
+      <div className="border-border bg-card rounded-2xl border p-6 lg:p-8">
         <FormProvider {...formMethods}>
           {!isLoading && hasSubmitted && confirmationType === 'message' && (
             <RichText data={confirmationMessage} />
           )}
-          {isLoading && !hasSubmitted && <p>Loading, please wait...</p>}
-          {error && <div>{`${error.status || '500'}: ${error.message || ''}`}</div>}
+          {isLoading && !hasSubmitted && (
+            <p className="text-muted-foreground text-sm">Loading, please wait...</p>
+          )}
+          {error && (
+            <div className="border-error/20 bg-error/10 text-error mb-6 rounded-lg border px-4 py-3 text-sm">
+              {`${error.status || '500'}: ${error.message || ''}`}
+            </div>
+          )}
           {!hasSubmitted && (
             <form id={formID} onSubmit={handleSubmit(onSubmit)}>
               <div className="mb-4 last:mb-0">
@@ -164,7 +204,7 @@ export const FormBlock: React.FC<
                   })}
               </div>
 
-              <Button form={formID} type="submit" variant="default">
+              <Button className="w-full sm:w-auto" form={formID} size="lg" type="submit" variant="default">
                 {submitButtonLabel}
               </Button>
             </form>

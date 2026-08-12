@@ -2,14 +2,18 @@
 
 import type { Header } from '@/payload-types'
 
+import type { CategoryMenuGroup } from '@/utilities/categoryMenuGroups'
+
 import { NavDropdown } from './NavDropdown'
+import { ShopMegaMenu } from './ShopMegaMenu'
 import { usePathname } from 'next/navigation'
 
 type Props = {
   menu: NonNullable<Header['navItems']>
+  shopCategoryGroups: CategoryMenuGroup[]
 }
 
-export function MainNavigationBar({ menu }: Props) {
+export function MainNavigationBar({ menu, shopCategoryGroups }: Props) {
   const pathname = usePathname()
 
   if (!menu.length) return null
@@ -21,9 +25,19 @@ export function MainNavigationBar({ menu }: Props) {
 
   return (
     <nav className="hidden items-center gap-1 md:flex">
-      {menu.map((item) => (
-        <NavDropdown active={isItemActive(item)} item={item} key={item.id} />
-      ))}
+      {menu.map((item) =>
+        item.link.label === 'All Categories' && shopCategoryGroups.length ? (
+          <ShopMegaMenu
+            active={isItemActive(item)}
+            groups={shopCategoryGroups}
+            key={item.id}
+            label={item.link.label}
+            url={item.link.url || '/shop'}
+          />
+        ) : (
+          <NavDropdown active={isItemActive(item)} item={item} key={item.id} />
+        ),
+      )}
     </nav>
   )
 }

@@ -47,11 +47,17 @@ export default function CartPage() {
     if (args.giftCardCode || args.remove === 'gift-card') setGiftCardError(null)
 
     try {
+      // Guest carts (no logged-in user) are owned by whoever holds this
+      // secret — the same one the ecommerce plugin's own cart requests use
+      // under the hood. Logged-in users are authorized via their session
+      // cookie server-side instead, so this is simply absent/unused there.
+      const secret = window.localStorage.getItem('cart_secret') ?? undefined
+
       const res = await fetch(`${getClientSideURL()}/api/cart/discount`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({ cartId: cart.id, ...args }),
+        body: JSON.stringify({ cartId: cart.id, secret, ...args }),
       })
       const data = await res.json()
 

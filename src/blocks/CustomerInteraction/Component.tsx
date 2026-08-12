@@ -183,7 +183,7 @@ export const CustomerInteractionBlock: React.FC<
                   <div className="flex flex-col items-center">
                     <span
                       className={cn(
-                        'flex size-7 items-center justify-center rounded-full text-xs font-bold font-mono transition-colors',
+                        'flex size-7 items-center justify-center rounded-full text-xs font-bold transition-colors',
                         index === 0
                           ? 'bg-primary text-primary-foreground shadow-sm shadow-primary/30'
                           : 'border border-border bg-muted text-muted-foreground',

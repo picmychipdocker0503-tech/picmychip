@@ -36,7 +36,10 @@ export const buildFaqPageJsonLd = (items: { question: string; answer: unknown }[
     '@type': 'Question',
     acceptedAnswer: {
       '@type': 'Answer',
-      text: richTextToPlainText(item.answer),
+      // Answers come from two sources: CMS richText (Lexical JSON) or plain
+      // strings (e.g. auto-generated per-product FAQs) — only run the
+      // Lexical flattener on the former, or it silently returns ''.
+      text: typeof item.answer === 'string' ? item.answer : richTextToPlainText(item.answer),
     },
     name: item.question,
   })),

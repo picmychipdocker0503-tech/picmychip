@@ -27,7 +27,12 @@ export const Datasheets: CollectionConfig = {
     },
   ],
   upload: {
-    mimeTypes: ['application/pdf'],
+    mimeTypes: [
+      'application/pdf',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.ms-excel',
+      'text/csv',
+    ],
     staticDir: path.resolve(dirname, '../../public/datasheets'),
   },
 }

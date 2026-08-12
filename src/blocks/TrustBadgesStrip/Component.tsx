@@ -84,7 +84,7 @@ export const TrustBadgesStripBlock: React.FC<
                 key={index}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-mono font-bold text-muted-foreground group-hover:text-primary transition-colors">
+                  <span className="text-[11px] font-bold text-muted-foreground group-hover:text-primary transition-colors">
                     {String(index + 1).padStart(2, '0')}
                   </span>
                   <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-200">

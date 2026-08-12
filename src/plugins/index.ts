@@ -56,7 +56,9 @@ export const plugins: Plugin[] = [
   formBuilderPlugin({
     fields: {
       payment: false,
+      upload: true,
     },
+    uploadCollections: ['media', 'datasheets'],
     formSubmissionOverrides: {
       access: {
         delete: isAdmin,
@@ -70,7 +72,11 @@ export const plugins: Plugin[] = [
     formOverrides: {
       access: {
         delete: isAdmin,
-        read: isAdmin,
+        // Public read is required so pages can render a form's fields for
+        // anonymous visitors (RSC page queries run with overrideAccess: false).
+        // The `emails` field below is locked back down to admins so the
+        // internal notification address/templates aren't exposed to the API.
+        read: () => true,
         update: isAdmin,
         create: isAdmin,
       },
@@ -92,6 +98,12 @@ export const plugins: Plugin[] = [
                 },
               }),
             }
+          }
+          if ('name' in field && field.name === 'emails') {
+            return {
+              ...field,
+              access: { read: adminOnlyFieldAccess },
+            } as typeof field
           }
           return field
         })

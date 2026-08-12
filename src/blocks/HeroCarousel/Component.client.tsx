@@ -1,19 +1,17 @@
 'use client'
 
-import type { HeroCarouselBlock } from '@/payload-types'
+import type { HeroCarouselBlock, SiteSetting } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
 import { Media } from '@/components/Media'
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel'
 import { CarouselDots } from '@/components/ui/carousel-dots'
+import { getSocialIcon } from '@/utilities/getSocialIcon'
 import Autoplay from 'embla-carousel-autoplay'
 import {
   ArrowRight,
-  BadgePercent,
-  Boxes,
   CheckCircle2,
   Lock,
-  PackageCheck,
   ShieldCheck,
   Sparkles,
   Truck,
@@ -25,12 +23,13 @@ import React, { useRef, useState } from 'react'
 import './HeroCarouselClient.css'
 
 type Slide = NonNullable<HeroCarouselBlock['slides']>[number]
+type SocialLink = NonNullable<SiteSetting['sameAs']>[number]
 
 /* -------------------------------------------------------------------------- */
 /* Hero content                                                                */
 /* -------------------------------------------------------------------------- */
 
-const HeroContent = ({ slide }: { slide: Slide }) => {
+const HeroContent = ({ slide, socialLinks }: { slide: Slide; socialLinks: SocialLink[] }) => {
   return (
     <div className="pmc-hero-content">
       {slide.badge && (
@@ -76,6 +75,30 @@ const HeroContent = ({ slide }: { slide: Slide }) => {
           <span>Secure Checkout</span>
         </div>
       </div>
+
+      {socialLinks.length > 0 && (
+        <div className="pmc-social-row">
+          <span>Follow us on:</span>
+          <div className="pmc-social-icons">
+            {socialLinks.map((social, index) => {
+              const Icon = getSocialIcon(social.url)
+              if (!Icon) return null
+              return (
+                <a
+                  aria-label="Social link"
+                  className="pmc-social-icon"
+                  href={social.url}
+                  key={social.id ?? index}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  <Icon className="size-3.5" />
+                </a>
+              )
+            })}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -134,13 +157,21 @@ const ProductVisual = ({ slide, priority }: { slide: Slide; priority?: boolean }
 /* Split slide                                                                 */
 /* -------------------------------------------------------------------------- */
 
-const SplitSlide = ({ slide, priority }: { slide: Slide; priority?: boolean }) => {
+const SplitSlide = ({
+  slide,
+  priority,
+  socialLinks,
+}: {
+  slide: Slide
+  priority?: boolean
+  socialLinks: SocialLink[]
+}) => {
   return (
     <div className="pmc-hero">
       <div className="pmc-hero-bg" />
 
       <div className="pmc-hero-left">
-        <HeroContent slide={slide} />
+        <HeroContent slide={slide} socialLinks={socialLinks} />
       </div>
 
       <div className="pmc-hero-right">
@@ -154,7 +185,15 @@ const SplitSlide = ({ slide, priority }: { slide: Slide; priority?: boolean }) =
 /* Full image slide                                                            */
 /* -------------------------------------------------------------------------- */
 
-const FullBleedSlide = ({ slide, priority }: { slide: Slide; priority?: boolean }) => {
+const FullBleedSlide = ({
+  slide,
+  priority,
+  socialLinks,
+}: {
+  slide: Slide
+  priority?: boolean
+  socialLinks: SocialLink[]
+}) => {
   return (
     <div className="pmc-full-slide">
       <Media
@@ -168,57 +207,7 @@ const FullBleedSlide = ({ slide, priority }: { slide: Slide; priority?: boolean 
       <div className="pmc-full-overlay" />
 
       <div className="pmc-full-content">
-        <HeroContent slide={slide} />
-      </div>
-    </div>
-  )
-}
-
-/* -------------------------------------------------------------------------- */
-/* Benefits                                                                    */
-/* -------------------------------------------------------------------------- */
-
-const Benefits = () => {
-  return (
-    <div className="pmc-benefits-strip">
-      <div className="pmc-benefit-card">
-        <div className="pmc-benefit-icon-wrap">
-          <ShieldCheck className="size-5 text-primary" />
-        </div>
-        <div className="pmc-benefit-text">
-          <strong>Genuine Products</strong>
-          <small>100% Spec-verified silicon</small>
-        </div>
-      </div>
-
-      <div className="pmc-benefit-card">
-        <div className="pmc-benefit-icon-wrap">
-          <Truck className="size-5 text-primary" />
-        </div>
-        <div className="pmc-benefit-text">
-          <strong>Same-Day Dispatch</strong>
-          <small>Fast express shipping</small>
-        </div>
-      </div>
-
-      <div className="pmc-benefit-card">
-        <div className="pmc-benefit-icon-wrap">
-          <BadgePercent className="size-5 text-primary" />
-        </div>
-        <div className="pmc-benefit-text">
-          <strong>Tiered Pricing</strong>
-          <small>Transparent volume discounts</small>
-        </div>
-      </div>
-
-      <div className="pmc-benefit-card">
-        <div className="pmc-benefit-icon-wrap">
-          <Boxes className="size-5 text-primary" />
-        </div>
-        <div className="pmc-benefit-text">
-          <strong>Factory Packaging</strong>
-          <small>Anti-static reels & tubes</small>
-        </div>
+        <HeroContent slide={slide} socialLinks={socialLinks} />
       </div>
     </div>
   )
@@ -230,7 +219,8 @@ const Benefits = () => {
 
 export const HeroCarouselClient: React.FC<{
   slides: Slide[]
-}> = ({ slides }) => {
+  socialLinks?: SocialLink[]
+}> = ({ slides, socialLinks = [] }) => {
   const [api, setApi] = useState<CarouselApi>()
 
   const autoplay = useRef(
@@ -257,9 +247,9 @@ export const HeroCarouselClient: React.FC<{
           {slides.map((slide, index) => (
             <CarouselItem key={slide.id ?? index}>
               {slide.layout === 'split' ? (
-                <SplitSlide slide={slide} priority={index === 0} />
+                <SplitSlide slide={slide} priority={index === 0} socialLinks={socialLinks} />
               ) : (
-                <FullBleedSlide slide={slide} priority={index === 0} />
+                <FullBleedSlide slide={slide} priority={index === 0} socialLinks={socialLinks} />
               )}
             </CarouselItem>
           ))}
@@ -267,8 +257,6 @@ export const HeroCarouselClient: React.FC<{
       </Carousel>
 
       {slides.length > 1 && <CarouselDots api={api} className="pmc-carousel-dots" />}
-
-      <Benefits />
     </div>
   )
 }

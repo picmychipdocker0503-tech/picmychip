@@ -56,6 +56,14 @@ export const Providers: React.FC<{
                     couponDiscountAmount: true,
                     appliedGiftCardCode: true,
                     giftCardAmountApplied: true,
+                    // Without this, the create-cart response never carries
+                    // `secret` back to the client, so the ecommerce
+                    // provider never persists it to localStorage — guest
+                    // carts silently lose their only proof of ownership,
+                    // and every subsequent guest cart request (including
+                    // this app's own /api/cart/discount) has nothing to
+                    // authenticate against.
+                    secret: true,
                   },
                 },
               }}

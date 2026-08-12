@@ -36,11 +36,16 @@ export const DeliveryEstimate: React.FC<Props> = ({ cartId, pincode }) => {
     let cancelled = false
     setState({ status: 'loading', options: [] })
 
+    // Guest carts prove ownership via this secret (see /api/cart/discount
+    // for the same pattern) — logged-in users are authorized via their
+    // session cookie server-side instead.
+    const secret = window.localStorage.getItem('cart_secret') ?? undefined
+
     fetch(`${getClientSideURL()}/api/shipping/serviceability`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ cartId, pincode }),
+      body: JSON.stringify({ cartId, pincode, secret }),
     })
       .then((res) => res.json())
       .then((data) => {

@@ -1,3 +1,4 @@
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import { searchProducts } from '@/lib/searchProducts'
 import { NextRequest, NextResponse } from 'next/server'
 
@@ -6,6 +7,14 @@ export async function GET(request: NextRequest) {
 
   if (query.length < 2) {
     return NextResponse.json({ suggestions: [] })
+  }
+
+  // The UI already debounces at 200ms, so a real typing user stays well
+  // under this — it's aimed at scripted scraping of the search index.
+  const ip = getClientIp(request.headers)
+  const { allowed } = checkRateLimit(`search-suggestions:${ip}`, 60, 60_000)
+  if (!allowed) {
+    return NextResponse.json({ suggestions: [], error: 'Too many requests.' }, { status: 429 })
   }
 
   const result = await searchProducts({ query, limit: 6 })

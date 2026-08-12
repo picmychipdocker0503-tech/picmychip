@@ -1,22 +1,19 @@
+import { AmexIcon, MastercardIcon, RuPayIcon, UpiIcon, VisaIcon } from '@/components/icons/payments'
+
 const badges = [
-  { label: 'Visa', text: 'VISA' },
-  { label: 'Mastercard', text: 'MC' },
-  { label: 'RuPay', text: 'RuPay' },
-  { label: 'UPI', text: 'UPI' },
-  { label: 'American Express', text: 'AMEX' },
+  { label: 'Visa', Icon: VisaIcon },
+  { label: 'Mastercard', Icon: MastercardIcon },
+  { label: 'RuPay', Icon: RuPayIcon },
+  { label: 'UPI', Icon: UpiIcon },
+  { label: 'American Express', Icon: AmexIcon },
 ]
 
 export function PaymentBadges() {
   return (
     <div className="flex items-center gap-1.5" role="list" aria-label="Accepted payment methods">
-      {badges.map((badge) => (
-        <span
-          key={badge.label}
-          role="listitem"
-          aria-label={badge.label}
-          className="border-border text-muted-foreground flex h-6 min-w-10 items-center justify-center rounded-sm border px-1.5 text-[10px] font-semibold tracking-tight"
-        >
-          {badge.text}
+      {badges.map(({ label, Icon }) => (
+        <span key={label} role="listitem" aria-label={label} className="block h-6 w-10">
+          <Icon className="h-full w-full" />
         </span>
       ))}
     </div>

@@ -2,8 +2,11 @@
 
 import type { Header } from '@/payload-types'
 
+import type { CategoryMenuGroup } from '@/utilities/categoryMenuGroups'
+
 import { CMSLink } from '@/components/Link'
 import { Button } from '@/components/ui/button'
+import { cn } from '@/utilities/cn'
 import {
   Sheet,
   SheetContent,
@@ -20,9 +23,10 @@ import React, { useEffect, useState } from 'react'
 
 interface Props {
   menu: Header['navItems']
+  shopCategoryGroups: CategoryMenuGroup[]
 }
 
-export function MobileMenu({ menu }: Props) {
+export function MobileMenu({ menu, shopCategoryGroups }: Props) {
   const { user } = useAuth()
 
   const pathname = usePathname()
@@ -62,7 +66,55 @@ export function MobileMenu({ menu }: Props) {
           {menu?.length ? (
             <ul className="flex w-full flex-col">
               {menu.map((item) =>
-                item.children?.length ? (
+                item.link.label === 'All Categories' && shopCategoryGroups.length ? (
+                  <li className="collapse-arrow collapse" key={item.id}>
+                    <input aria-label={item.link.label} type="checkbox" />
+                    <div className="collapse-title min-h-0 px-0 py-2 text-base font-medium">
+                      {item.link.label}
+                    </div>
+                    <div className="collapse-content px-0">
+                      {shopCategoryGroups.map((group, index) => (
+                        <div
+                          className={cn(
+                            'mb-3 last:mb-0',
+                            index > 0 && 'border-border mt-1 border-t pt-3',
+                          )}
+                          key={group.heading}
+                        >
+                          <div className="text-muted-foreground/75 pl-4 text-[11px] font-semibold tracking-wider uppercase">
+                            {group.heading}
+                          </div>
+                          <ul className="flex flex-col gap-1 pl-4">
+                            {group.categories.map((category) => (
+                              <li className="py-1" key={category.id}>
+                                <Link
+                                  className="block py-1 text-sm font-medium"
+                                  href={`/category/${category.slug}`}
+                                >
+                                  {category.title}
+                                </Link>
+                                {category.children.length > 0 && (
+                                  <ul className="flex flex-col gap-1 pl-3">
+                                    {category.children.map((child) => (
+                                      <li key={child.id}>
+                                        <Link
+                                          className="text-muted-foreground block py-1 text-sm"
+                                          href={`/category/${child.slug}`}
+                                        >
+                                          {child.title}
+                                        </Link>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                )}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </li>
+                ) : item.children?.length ? (
                   <li className="collapse-arrow collapse" key={item.id}>
                     <input aria-label={item.link.label} type="checkbox" />
                     <div className="collapse-title min-h-0 px-0 py-2 text-base font-medium">

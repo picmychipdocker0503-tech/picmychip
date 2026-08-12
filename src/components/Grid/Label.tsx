@@ -17,7 +17,7 @@ export const Label: React.FC<Props> = ({ amount, position = 'bottom', title }) =
       })}
     >
       <div className="flex items-end justify-between text-sm grow font-semibold ">
-        <h3 className="border-border bg-card/80 text-foreground mr-4 line-clamp-2 rounded-full border p-2 px-3 font-mono leading-none tracking-tight backdrop-blur-md">
+        <h3 className="border-border bg-card/80 text-foreground mr-4 line-clamp-2 rounded-full border p-2 px-3 leading-none tracking-tight backdrop-blur-md">
           {title}
         </h3>
 

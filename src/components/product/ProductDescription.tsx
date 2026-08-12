@@ -97,7 +97,7 @@ export function ProductDescription({
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <h1 className="text-foreground text-2xl font-bold tracking-tight sm:text-3xl">{product.title}</h1>
-        <div className="text-primary shrink-0 font-mono text-2xl font-semibold tracking-tight">
+        <div className="text-primary shrink-0 text-2xl font-bold tracking-tight">
           {hasVariants ? (
             <Price highestAmount={highestAmount} lowestAmount={lowestAmount} />
           ) : (

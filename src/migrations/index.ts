@@ -1,31 +1,35 @@
-import * as migration_20260717_084221_initial_schema from './20260717_084221_initial_schema'
-import * as migration_20260720_061657_add_media_prefix from './20260720_061657_add_media_prefix'
-import * as migration_20260721_092721_add_brands_reviews_product_fields from './20260721_092721_add_brands_reviews_product_fields'
-import * as migration_20260721_100952_add_homepage_foundations from './20260721_100952_add_homepage_foundations'
-import * as migration_20260721_102154_add_homepage_priority_blocks from './20260721_102154_add_homepage_priority_blocks'
-import * as migration_20260721_103947_add_homepage_merchandising_blocks from './20260721_103947_add_homepage_merchandising_blocks'
-import * as migration_20260721_113103_add_testimonials_trustbadges_blocks from './20260721_113103_add_testimonials_trustbadges_blocks'
-import * as migration_20260721_121331_add_robu_redesign_content from './20260721_121331_add_robu_redesign_content'
-import * as migration_20260724_045337_add_header_nav_dropdown from './20260724_045337_add_header_nav_dropdown'
-import * as migration_20260724_072729_add_guide_author_byline from './20260724_072729_add_guide_author_byline'
-import * as migration_20260724_085446_add_user_avatar from './20260724_085446_add_user_avatar'
-import * as migration_20260724_101857_add_product_highlights_support_email from './20260724_101857_add_product_highlights_support_email'
-import * as migration_20260724_103402_add_product_compare_at_price from './20260724_103402_add_product_compare_at_price'
-import * as migration_20260724_111250_add_inr_currency_support from './20260724_111250_add_inr_currency_support'
-import * as migration_20260724_111400_add_inr_currency_defaults from './20260724_111400_add_inr_currency_defaults'
-import * as migration_20260724_111612_add_compare_at_price_per_currency from './20260724_111612_add_compare_at_price_per_currency'
-import * as migration_20260724_112042_remove_legacy_compare_at_price from './20260724_112042_remove_legacy_compare_at_price'
-import * as migration_20260724_134511_add_ecommerce_feature_batch from './20260724_134511_add_ecommerce_feature_batch'
-import * as migration_20260724_144339_add_order_fraud_flag from './20260724_144339_add_order_fraud_flag'
-import * as migration_20260804_103157_add_trust_badge_description from './20260804_103157_add_trust_badge_description'
-import * as migration_20260804_132937_add_shipping_tax_reports from './20260804_132937_add_shipping_tax_reports'
-import * as migration_20260804_142125_add_refunds_abandoned_cart from './20260804_142125_add_refunds_abandoned_cart'
-import * as migration_20260805_105728_add_faq_design_fields from './20260805_105728_add_faq_design_fields'
-import * as migration_20260810_120000_replace_stripe_with_razorpay from './20260810_120000_replace_stripe_with_razorpay'
-import * as migration_20260810_130000_fix_razorpay_shipping_column from './20260810_130000_fix_razorpay_shipping_column'
-import * as migration_20260810_140000_remove_usd_pricing from './20260810_140000_remove_usd_pricing'
-import * as migration_20260810_150000_replace_razorpay_with_payu from './20260810_150000_replace_razorpay_with_payu'
-import * as migration_20260810_163500_add_customer_interaction_block from './20260810_163500_add_customer_interaction_block'
+import * as migration_20260717_084221_initial_schema from './20260717_084221_initial_schema';
+import * as migration_20260720_061657_add_media_prefix from './20260720_061657_add_media_prefix';
+import * as migration_20260721_092721_add_brands_reviews_product_fields from './20260721_092721_add_brands_reviews_product_fields';
+import * as migration_20260721_100952_add_homepage_foundations from './20260721_100952_add_homepage_foundations';
+import * as migration_20260721_102154_add_homepage_priority_blocks from './20260721_102154_add_homepage_priority_blocks';
+import * as migration_20260721_103947_add_homepage_merchandising_blocks from './20260721_103947_add_homepage_merchandising_blocks';
+import * as migration_20260721_113103_add_testimonials_trustbadges_blocks from './20260721_113103_add_testimonials_trustbadges_blocks';
+import * as migration_20260721_121331_add_robu_redesign_content from './20260721_121331_add_robu_redesign_content';
+import * as migration_20260724_045337_add_header_nav_dropdown from './20260724_045337_add_header_nav_dropdown';
+import * as migration_20260724_072729_add_guide_author_byline from './20260724_072729_add_guide_author_byline';
+import * as migration_20260724_085446_add_user_avatar from './20260724_085446_add_user_avatar';
+import * as migration_20260724_101857_add_product_highlights_support_email from './20260724_101857_add_product_highlights_support_email';
+import * as migration_20260724_103402_add_product_compare_at_price from './20260724_103402_add_product_compare_at_price';
+import * as migration_20260724_111250_add_inr_currency_support from './20260724_111250_add_inr_currency_support';
+import * as migration_20260724_111400_add_inr_currency_defaults from './20260724_111400_add_inr_currency_defaults';
+import * as migration_20260724_111612_add_compare_at_price_per_currency from './20260724_111612_add_compare_at_price_per_currency';
+import * as migration_20260724_112042_remove_legacy_compare_at_price from './20260724_112042_remove_legacy_compare_at_price';
+import * as migration_20260724_134511_add_ecommerce_feature_batch from './20260724_134511_add_ecommerce_feature_batch';
+import * as migration_20260724_144339_add_order_fraud_flag from './20260724_144339_add_order_fraud_flag';
+import * as migration_20260804_103157_add_trust_badge_description from './20260804_103157_add_trust_badge_description';
+import * as migration_20260804_132937_add_shipping_tax_reports from './20260804_132937_add_shipping_tax_reports';
+import * as migration_20260804_142125_add_refunds_abandoned_cart from './20260804_142125_add_refunds_abandoned_cart';
+import * as migration_20260805_105728_add_faq_design_fields from './20260805_105728_add_faq_design_fields';
+import * as migration_20260810_120000_replace_stripe_with_razorpay from './20260810_120000_replace_stripe_with_razorpay';
+import * as migration_20260810_130000_fix_razorpay_shipping_column from './20260810_130000_fix_razorpay_shipping_column';
+import * as migration_20260810_140000_remove_usd_pricing from './20260810_140000_remove_usd_pricing';
+import * as migration_20260810_150000_replace_razorpay_with_payu from './20260810_150000_replace_razorpay_with_payu';
+import * as migration_20260810_163500_add_customer_interaction_block from './20260810_163500_add_customer_interaction_block';
+import * as migration_20260811_123811_add_forms_upload_field from './20260811_123811_add_forms_upload_field';
+import * as migration_20260811_130249_add_datasheets_upload_collection from './20260811_130249_add_datasheets_upload_collection';
+import * as migration_20260811_180000_add_users_verify from './20260811_180000_add_users_verify';
+import * as migration_20260811_190000_add_jobs_collection from './20260811_190000_add_jobs_collection';
 
 export const migrations = [
   {
@@ -168,4 +172,24 @@ export const migrations = [
     down: migration_20260810_163500_add_customer_interaction_block.down,
     name: '20260810_163500_add_customer_interaction_block',
   },
-]
+  {
+    up: migration_20260811_123811_add_forms_upload_field.up,
+    down: migration_20260811_123811_add_forms_upload_field.down,
+    name: '20260811_123811_add_forms_upload_field',
+  },
+  {
+    up: migration_20260811_130249_add_datasheets_upload_collection.up,
+    down: migration_20260811_130249_add_datasheets_upload_collection.down,
+    name: '20260811_130249_add_datasheets_upload_collection',
+  },
+  {
+    up: migration_20260811_180000_add_users_verify.up,
+    down: migration_20260811_180000_add_users_verify.down,
+    name: '20260811_180000_add_users_verify',
+  },
+  {
+    up: migration_20260811_190000_add_jobs_collection.up,
+    down: migration_20260811_190000_add_jobs_collection.down,
+    name: '20260811_190000_add_jobs_collection',
+  },
+];

@@ -2,9 +2,10 @@
 
 import type { Product } from '@/payload-types'
 
-import { ProductGridItem } from '@/components/ProductGridItem'
+import { DealProductCard } from '@/components/product/DealProductCard'
 import { useRecentlyViewed } from '@/providers/RecentlyViewed'
 import { getClientSideURL } from '@/utilities/getURL'
+import { HistoryIcon } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 
 type Props = {
@@ -44,12 +45,18 @@ export const RecentlyViewedProducts: React.FC<Props> = ({ excludeProductId }) =>
   if (products.length === 0) return null
 
   return (
-    <div className="container my-16">
-      <h2 className="mb-6 text-2xl font-bold text-foreground">Recently Viewed</h2>
+    <div className="container my-20">
+      <span className="eyebrow inline-flex items-center gap-1.5">
+        <HistoryIcon className="size-3.5" />
+        Pick Up Where You Left Off
+      </span>
+      <h2 className="mt-2 mb-8 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+        Recently Viewed
+      </h2>
       <div className="flex gap-4 overflow-x-auto pb-2">
         {products.map((product) => (
-          <div className="w-48 shrink-0" key={product.id}>
-            <ProductGridItem product={product} />
+          <div className="w-56 shrink-0" key={product.id}>
+            <DealProductCard product={product} />
           </div>
         ))}
       </div>

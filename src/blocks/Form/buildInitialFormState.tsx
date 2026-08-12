@@ -38,6 +38,18 @@ export const buildInitialFormState = (fields: FormFieldBlock[]) => {
         [field.name]: '',
       }
     }
+    if (field.blockType === 'textarea') {
+      return {
+        ...initialSchema,
+        [field.name]: '',
+      }
+    }
+    if (field.blockType === 'upload') {
+      return {
+        ...initialSchema,
+        [field.name]: undefined,
+      }
+    }
 
     return {}
   }, {})

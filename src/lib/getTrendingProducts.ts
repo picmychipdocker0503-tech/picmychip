@@ -58,7 +58,19 @@ export const getTrendingProducts = async ({ payload, limit, pinnedProducts }: Op
             depth: 1,
             limit: bestSellingIds.length,
             overrideAccess: true,
-            where: { id: { in: bestSellingIds } },
+            // A completed order can reference a product that's since been
+            // unpublished (or was left as an incomplete draft during
+            // testing) — best-sellers should never surface those. Gift
+            // cards are a checkout instrument, not a component someone
+            // browses for — every caller of this utility excludes them, so
+            // it's excluded here rather than left to each call site.
+            where: {
+              and: [
+                { id: { in: bestSellingIds } },
+                { _status: { equals: 'published' } },
+                { isGiftCard: { not_equals: true } },
+              ],
+            },
           })
         ).docs.sort((a, b) => bestSellingIds.indexOf(a.id) - bestSellingIds.indexOf(b.id))
       : []
@@ -74,7 +86,14 @@ export const getTrendingProducts = async ({ payload, limit, pinnedProducts }: Op
       depth: 1,
       limit: stillNeeded,
       overrideAccess: true,
-      where: { and: [{ featured: { equals: true } }, { id: { not_in: excludeAll } }] },
+      where: {
+        and: [
+          { featured: { equals: true } },
+          { id: { not_in: excludeAll } },
+          { _status: { equals: 'published' } },
+          { isGiftCard: { not_equals: true } },
+        ],
+      },
     })
     fallback.push(...featured)
 
@@ -86,7 +105,13 @@ export const getTrendingProducts = async ({ payload, limit, pinnedProducts }: Op
         limit: stillNeededAfterFeatured,
         overrideAccess: true,
         sort: '-createdAt',
-        where: { id: { not_in: [...excludeAll, ...featured.map((product) => product.id)] } },
+        where: {
+          and: [
+            { id: { not_in: [...excludeAll, ...featured.map((product) => product.id)] } },
+            { _status: { equals: 'published' } },
+            { isGiftCard: { not_equals: true } },
+          ],
+        },
       })
       fallback.push(...recent)
     }

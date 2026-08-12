@@ -4,6 +4,7 @@ import { adminOnly } from '@/access/adminOnly'
 import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { checkRole } from '@/access/utilities'
 import { deriveVerifiedPurchase } from '@/hooks/deriveVerifiedPurchase'
+import { rateLimitCreate } from '@/hooks/rateLimitCreate'
 
 const isAuthenticated: Access = ({ req: { user } }) => Boolean(user)
 
@@ -46,6 +47,7 @@ export const Reviews: CollectionConfig = {
     useAsTitle: 'id',
   },
   hooks: {
+    beforeOperation: [rateLimitCreate('review-create', 5, 60_000)],
     beforeChange: [forceOwnCustomerOnCreate, deriveVerifiedPurchase],
   },
   fields: [

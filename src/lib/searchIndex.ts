@@ -21,6 +21,7 @@ export type ProductSearchDocument = {
   imageUrl: string | null
   imageAlt: string | null
   inventory: number | null
+  isGiftCard: boolean
 }
 
 export const toSearchDocument = (product: Product): ProductSearchDocument => {
@@ -51,6 +52,7 @@ export const toSearchDocument = (product: Product): ProductSearchDocument => {
     imageUrl: firstImage?.url ?? null,
     imageAlt: firstImage?.alt ?? null,
     inventory: product.inventory ?? null,
+    isGiftCard: Boolean(product.isGiftCard),
   }
 }
 
@@ -72,6 +74,7 @@ export const configureProductsIndex = async (): Promise<void> => {
     'stockStatus',
     'priceInINR',
     'brandName',
+    'isGiftCard',
     ...ALL_FACET_ATTRIBUTES,
   ])
   await index.updateSortableAttributes(['priceInINR', ...RANGE_ATTRIBUTES])

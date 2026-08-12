@@ -6,10 +6,9 @@ import { Message } from '@/components/Message'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { useAuth } from '@/providers/Auth'
 import { getClientSideURL } from '@/utilities/getURL'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import posthog from 'posthog-js'
 import React, { useCallback, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -23,10 +22,9 @@ type FormData = {
 export const CreateAccountForm: React.FC = () => {
   const searchParams = useSearchParams()
   const allParams = searchParams.toString() ? `?${searchParams.toString()}` : ''
-  const { login } = useAuth()
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<null | string>(null)
+  const [created, setCreated] = useState(false)
 
   const {
     formState: { errors },
@@ -38,8 +36,11 @@ export const CreateAccountForm: React.FC = () => {
   const password = useRef({})
   password.current = watch('password', '')
 
-  const onSubmit = useCallback(
-    async (data: FormData) => {
+  const onSubmit = useCallback(async (data: FormData) => {
+    setLoading(true)
+    setError(null)
+
+    try {
       const response = await fetch(`${getClientSideURL()}/api/users`, {
         body: JSON.stringify(data),
         headers: {
@@ -54,26 +55,24 @@ export const CreateAccountForm: React.FC = () => {
         return
       }
 
-      const redirect = searchParams.get('redirect')
+      posthog.capture('user_signed_up')
+      setCreated(true)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
-      const timer = setTimeout(() => {
-        setLoading(true)
-      }, 1000)
-
-      try {
-        const user = await login(data)
-        clearTimeout(timer)
-        posthog.identify(String(user.id), { email: user.email })
-        posthog.capture('user_signed_up')
-        if (redirect) router.push(redirect)
-        else router.push(`/account?success=${encodeURIComponent('Account created successfully')}`)
-      } catch (_) {
-        clearTimeout(timer)
-        setError('There was an error with the credentials provided. Please try again.')
-      }
-    },
-    [login, router, searchParams],
-  )
+  if (created) {
+    return (
+      <div className="prose dark:prose-invert max-w-lg py-4">
+        <h1 className="text-xl mb-4">Check your email</h1>
+        <p>
+          We&apos;ve sent an activation link to your email address. Click it to verify your account, then{' '}
+          <Link href={`/login${allParams}`}>log in</Link>.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <form className="max-w-lg py-4" onSubmit={handleSubmit(onSubmit)}>

@@ -68,31 +68,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const login = useCallback<Login>(async (args) => {
-    try {
-      const res = await fetch(`${getClientSideURL()}/api/users/login`, {
-        body: JSON.stringify({
-          email: args.email,
-          password: args.password,
-        }),
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      })
+    const res = await fetch(`${getClientSideURL()}/api/users/login`, {
+      body: JSON.stringify({
+        email: args.email,
+        password: args.password,
+      }),
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    })
 
-      if (res.ok) {
-        const { errors, user } = await res.json()
-        if (errors) throw new Error(errors[0].message)
-        setUser(user)
-        setStatus('loggedIn')
-        return user
-      }
+    // Read the body regardless of status — Payload returns a non-2xx status
+    // with a specific `errors[0].message` (e.g. "verify your account before
+    // logging in"), not just on success.
+    const { errors, user } = await res.json().catch(() => ({ errors: undefined, user: undefined }))
 
-      throw new Error('Invalid login')
-    } catch (e) {
-      throw new Error('An error occurred while attempting to login.')
+    if (!res.ok || errors || !user) {
+      throw new Error(errors?.[0]?.message || 'Invalid login')
     }
+
+    setUser(user)
+    setStatus('loggedIn')
+    return user
   }, [])
 
   const logout = useCallback<Logout>(async () => {

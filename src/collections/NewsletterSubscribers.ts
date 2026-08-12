@@ -2,6 +2,8 @@ import type { CollectionConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { publicAccess } from '@/access/publicAccess'
+import { rateLimitCreate } from '@/hooks/rateLimitCreate'
+import { sendNewsletterWelcome } from '@/hooks/sendNewsletterWelcome'
 
 export const NewsletterSubscribers: CollectionConfig = {
   slug: 'newsletter-subscribers',
@@ -10,6 +12,10 @@ export const NewsletterSubscribers: CollectionConfig = {
     delete: adminOnly,
     read: adminOnly,
     update: adminOnly,
+  },
+  hooks: {
+    beforeOperation: [rateLimitCreate('newsletter-signup', 5, 60_000)],
+    afterChange: [sendNewsletterWelcome],
   },
   admin: {
     group: 'Content',

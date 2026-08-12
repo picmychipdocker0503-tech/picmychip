@@ -3,7 +3,7 @@ import type { Metadata } from 'next'
 import { RenderBlocks } from '@/blocks/RenderBlocks'
 import { Grid } from '@/components/Grid'
 import { JsonLd } from '@/components/JsonLd'
-import { ProductGridItem } from '@/components/ProductGridItem'
+import { DealProductCard } from '@/components/product/DealProductCard'
 import { ActiveFiltersBar } from '@/components/Search/ActiveFiltersBar'
 import { FacetSidebar } from '@/components/Search/FacetSidebar'
 import { getIllustration } from '@/components/illustrations'
@@ -116,9 +116,9 @@ export default async function CategoryPage({ params, searchParams }: Args) {
           )}
 
           {products.docs.length > 0 ? (
-            <Grid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in-0 duration-500">
+            <Grid className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-in fade-in-0 duration-500">
               {products.docs.map((product) => (
-                <ProductGridItem key={product.id} product={product} />
+                <DealProductCard key={product.id} product={product} />
               ))}
             </Grid>
           ) : (

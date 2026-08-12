@@ -36,6 +36,10 @@ export const NewsletterForm: React.FC = () => {
       <input
         aria-label="Email address"
         className="border-border bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-primary flex-1 rounded-lg border px-4 py-3 text-sm outline-none"
+        data-1p-ignore=""
+        data-bwignore="true"
+        data-form-type="other"
+        data-lpignore="true"
         onChange={(e) => setEmail(e.target.value)}
         placeholder="Enter your email"
         required

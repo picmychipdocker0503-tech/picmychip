@@ -22,6 +22,7 @@ import { Coupons } from '@/collections/Coupons'
 import { Datasheets } from '@/collections/Datasheets'
 import { GiftCards } from '@/collections/GiftCards'
 import { Guides } from '@/collections/Guides'
+import { Jobs } from '@/collections/Jobs'
 import { Media } from '@/collections/Media'
 import { NewsletterSubscribers } from '@/collections/NewsletterSubscribers'
 import { Pages } from '@/collections/Pages'
@@ -75,6 +76,7 @@ export default buildConfig({
     Media,
     Datasheets,
     Guides,
+    Jobs,
     Brands,
     Reviews,
     Services,

@@ -23,9 +23,9 @@ const buttonVariants = cva(
         outline: 'btn btn-outline',
         secondary: 'btn btn-secondary border-0',
         ghost:
-          'text-primary/50 hover:text-primary [&.active]:text-primary py-2 px-4 uppercase font-mono tracking-widest text-xs',
+          'text-muted-foreground hover:text-primary [&.active]:text-primary py-2 px-4 uppercase font-semibold tracking-wide text-xs',
         link: 'btn btn-link no-underline hover:underline',
-        nav: 'text-primary/50 hover:text-primary [&.active]:text-primary p-0 pt-2 pb-6 uppercase font-mono tracking-widest text-xs',
+        nav: 'text-muted-foreground hover:text-primary [&.active]:text-primary p-0 pt-2 pb-6 uppercase font-semibold tracking-wide text-xs',
       },
       size: {
         clear: '',

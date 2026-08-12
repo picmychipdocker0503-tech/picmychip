@@ -40,6 +40,7 @@ yarn-error.log*
 next-env.d.ts
 
 public/media
+scripts/output
 
 # scraped product data/images for one-off import scripts
 scripts/data/

@@ -31,7 +31,7 @@ export const PriceTiers: React.FC<Props> = ({ product }) => {
           {tiers.map((tier) => (
             <TableRow key={tier.id ?? tier.minQuantity}>
               <TableCell className="font-medium">{tier.minQuantity}+</TableCell>
-              <TableCell className="text-primary font-mono font-semibold">
+              <TableCell className="text-primary font-semibold">
                 ₹{tier.priceInINR?.toFixed(2)}
               </TableCell>
             </TableRow>

@@ -10,6 +10,7 @@ import { deriveStockStatus } from '@/hooks/deriveStockStatus'
 import { notifyBackInStock } from '@/hooks/notifyBackInStock'
 import { removeProductFromSearchIndex } from '@/hooks/removeProductFromSearchIndex'
 import { syncProductToSearchIndex } from '@/hooks/syncProductToSearchIndex'
+import { revalidateProduct, revalidateProductDelete } from './hooks/revalidateProduct'
 import {
   MetaDescriptionField,
   MetaImageField,
@@ -35,8 +36,13 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       ...(defaultCollection?.hooks?.afterChange ?? []),
       syncProductToSearchIndex,
       notifyBackInStock,
+      revalidateProduct,
     ],
-    afterDelete: [...(defaultCollection?.hooks?.afterDelete ?? []), removeProductFromSearchIndex],
+    afterDelete: [
+      ...(defaultCollection?.hooks?.afterDelete ?? []),
+      removeProductFromSearchIndex,
+      revalidateProductDelete,
+    ],
   },
   admin: {
     ...defaultCollection?.admin,

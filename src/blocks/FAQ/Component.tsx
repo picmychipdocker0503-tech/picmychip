@@ -81,7 +81,7 @@ export const FAQBlock: React.FC<
                 <AccordionItem key={index} className="relative border-none py-2" value={`item-${index}`}>
                   <AccordionTrigger className="group rounded-2xl px-3 -mx-3 py-4 text-base sm:text-lg font-bold hover:no-underline hover:text-primary hover:bg-primary/5 transition-colors text-left">
                     <span className="flex items-center gap-3.5">
-                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-mono font-bold transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                      <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
                         {String(index + 1).padStart(2, '0')}
                       </span>
                       <span>{item.question}</span>

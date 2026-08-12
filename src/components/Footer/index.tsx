@@ -6,7 +6,7 @@ import { FooterMenu } from '@/components/Footer/menu'
 import { NewsletterForm } from '@/components/Footer/NewsletterForm'
 import { PaymentBadges } from '@/components/Footer/PaymentBadges'
 import { ShipToPills } from '@/components/Footer/ShipToPills'
-import { LogoIcon } from '@/components/icons/logo'
+import { Wordmark } from '@/components/icons/Wordmark'
 import { ThemeSelector } from '@/providers/Theme/ThemeSelector'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { getSocialIcon } from '@/utilities/getSocialIcon'
@@ -45,14 +45,20 @@ export async function Footer() {
       {/* Brand */}
       <div className="container pt-16">
         <div className="flex flex-col items-start justify-between gap-8 lg:flex-row lg:items-end">
-          <div className="flex flex-col gap-4">
-            <Link className="flex items-center gap-3" href="/">
-              <LogoIcon className="text-primary w-9" />
-              <span className="text-foreground text-2xl font-semibold tracking-tight sm:text-3xl">
-                {SITE_NAME || 'Picmychip'}
-              </span>
-            </Link>
-            <p className="text-primary text-base font-medium sm:text-lg">Everything for your next build.</p>
+          <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-1.5">
+              <Link className="flex items-center" href="/">
+                <Wordmark
+                  className="text-foreground text-2xl font-semibold tracking-tight sm:text-3xl"
+                  iconClassName="text-primary"
+                  iconSize={34}
+                  name={SITE_NAME || 'Picmychip'}
+                />
+              </Link>
+              <p className="text-primary text-sm font-medium sm:text-base">
+                Everything for your next build.
+              </p>
+            </div>
             {siteSettings?.description && (
               <p className="text-muted-foreground max-w-sm">{siteSettings.description}</p>
             )}

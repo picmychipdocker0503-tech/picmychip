@@ -60,6 +60,10 @@ export const ReturnRequestForm: React.FC<{ defaultOrderId?: string }> = ({ defau
           </label>
           <input
             className="border-border bg-background rounded-lg border px-3 py-2 text-sm outline-none"
+            data-1p-ignore=""
+            data-bwignore="true"
+            data-form-type="other"
+            data-lpignore="true"
             id="orderId"
             onChange={(e) => setOrderId(e.target.value)}
             required
@@ -72,6 +76,10 @@ export const ReturnRequestForm: React.FC<{ defaultOrderId?: string }> = ({ defau
           </label>
           <input
             className="border-border bg-background rounded-lg border px-3 py-2 text-sm outline-none"
+            data-1p-ignore=""
+            data-bwignore="true"
+            data-form-type="other"
+            data-lpignore="true"
             id="email"
             onChange={(e) => setEmail(e.target.value)}
             required

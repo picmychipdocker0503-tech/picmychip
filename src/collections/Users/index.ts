@@ -5,6 +5,8 @@ import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { publicAccess } from '@/access/publicAccess'
 import { adminOrSelf } from '@/access/adminOrSelf'
 import { checkRole } from '@/access/utilities'
+import { accountActivationEmailHtml } from '@/lib/email'
+import { getServerSideURL } from '@/utilities/getURL'
 
 import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
 
@@ -25,6 +27,17 @@ export const Users: CollectionConfig = {
   },
   auth: {
     tokenExpiration: 1209600,
+    // Default verify email links to the admin UI, which storefront customers
+    // should never see — point it at the frontend instead. Until SMTP env
+    // vars are set this is logged, not sent, same as the other adapter emails.
+    verify: {
+      generateEmailHTML: ({ token, user }) =>
+        accountActivationEmailHtml({
+          verificationUrl: `${getServerSideURL()}/verify-email?token=${token}`,
+          name: user?.name,
+        }),
+      generateEmailSubject: () => 'Verify your Picmychip account',
+    },
   },
   fields: [
     {

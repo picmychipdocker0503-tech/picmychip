@@ -80,3 +80,26 @@ export function giftCardIssuedEmailHtml(giftCard: {
      <p><strong>Balance:</strong> ${giftCard.currency || ''} ${giftCard.balance ?? ''}</p>`,
   )
 }
+
+export function accountActivationEmailHtml(args: { verificationUrl: string; name?: string | null }): string {
+  const greeting = args.name ? `Hi ${args.name},` : 'Hi,'
+  return wrapper(
+    'Verify your email to activate your account',
+    `<p>${greeting}</p>
+     <p>Thanks for creating a Picmychip account. Confirm your email address to activate it and start ordering.</p>
+     <p>
+       <a href="${args.verificationUrl}" style="display: inline-block; background: #111; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none;">
+         Verify email
+       </a>
+     </p>
+     <p style="font-size: 12px; color: #888;">Or paste this link into your browser: ${args.verificationUrl}</p>`,
+  )
+}
+
+export function newsletterWelcomeEmailHtml(): string {
+  return wrapper(
+    "You're subscribed",
+    `<p>Thanks for signing up to the Picmychip newsletter — you'll hear from us about new components, restocks, and the occasional deal.</p>
+     <p>Didn't sign up for this? You can ignore this email; you won't hear from us again unless you subscribe.</p>`,
+  )
+}

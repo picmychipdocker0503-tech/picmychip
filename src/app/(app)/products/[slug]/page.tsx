@@ -10,6 +10,7 @@ import { FrequentlyBoughtTogether } from '@/components/product/FrequentlyBoughtT
 import { Gallery } from '@/components/product/Gallery'
 import { PriceTiers } from '@/components/product/PriceTiers'
 import { ProductDescription } from '@/components/product/ProductDescription'
+import { ProductFaqs } from '@/components/product/ProductFaqs'
 import { ProductReviews } from '@/components/product/ProductReviews'
 import { RecentlyViewedProducts } from '@/components/product/RecentlyViewedProducts'
 import { SpecTable } from '@/components/product/SpecTable'
@@ -34,6 +35,28 @@ type Args = {
   params: Promise<{
     slug: string
   }>
+}
+
+/**
+ * Without this, every product page rendered dynamically on every request —
+ * a full set of DB queries (product, reviews, related products, category
+ * breadcrumb, "also bought") re-run per visit instead of once at build time.
+ * Freshness after publish is handled by revalidateProduct (afterChange hook
+ * on the Products collection), the same pattern Pages already uses.
+ */
+export async function generateStaticParams() {
+  const payload = await getPayload({ config: configPromise })
+  const products = await payload.find({
+    collection: 'products',
+    draft: false,
+    limit: 1000,
+    overrideAccess: false,
+    pagination: false,
+    select: { slug: true },
+    where: { _status: { equals: 'published' } },
+  })
+
+  return products.docs?.filter((doc) => doc.slug).map(({ slug }) => ({ slug })) ?? []
 }
 
 export async function generateMetadata({ params }: Args): Promise<Metadata> {
@@ -220,6 +243,7 @@ export default async function ProductPage({ params }: Args) {
           <SpecTable product={product} />
           <PriceTiers product={product} />
           <Datasheets product={product} />
+          <ProductFaqs product={product} />
           {companions.length > 0 && <FrequentlyBoughtTogether companions={companions} mainProduct={product} />}
           <div id="reviews">
             <ProductReviews productId={product.id} />

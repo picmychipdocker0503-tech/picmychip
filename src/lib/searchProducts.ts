@@ -37,16 +37,25 @@ const toMeiliSort = (sort?: string | null): string[] | undefined => {
   return [`${sort}:asc`]
 }
 
+// categoryId and facet values both come straight from URL query params —
+// interpolating them unescaped into a Meilisearch filter expression lets a
+// crafted `"` break out of the string literal and inject arbitrary filter
+// clauses. Escape backslash and double-quote the same way Meilisearch's own
+// filter grammar requires inside a quoted string.
+const escapeFilterValue = (value: string): string => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
+
 const buildFilter = (
   categoryId?: string,
   facetFilters?: Record<string, FacetFilterValue>,
   priceMin?: number,
   priceMax?: number,
 ): string[] => {
-  const clauses: string[] = []
+  // Gift cards are a checkout instrument, not a component someone browses
+  // for — keep them out of the shop/category listing and search suggestions.
+  const clauses: string[] = ['isGiftCard = false']
 
   if (categoryId) {
-    clauses.push(`categoryIds = "${categoryId}"`)
+    clauses.push(`categoryIds = "${escapeFilterValue(categoryId)}"`)
   }
 
   if (typeof priceMin === 'number') clauses.push(`priceInINR >= ${priceMin}`)
@@ -57,7 +66,7 @@ const buildFilter = (
       if (typeof value.min === 'number') clauses.push(`${attribute} >= ${value.min}`)
       if (typeof value.max === 'number') clauses.push(`${attribute} <= ${value.max}`)
     } else if (value.type === 'select' && value.values.length > 0) {
-      const quoted = value.values.map((v) => `"${v}"`).join(', ')
+      const quoted = value.values.map((v) => `"${escapeFilterValue(v)}"`).join(', ')
       clauses.push(`${attribute} IN [${quoted}]`)
     }
   }
@@ -129,6 +138,7 @@ const searchViaMongo = async (args: SearchProductsArgs): Promise<SearchProductsR
     where: {
       and: [
         { _status: { equals: 'published' } },
+        { isGiftCard: { not_equals: true } },
         // `description` is richText (jsonb) — Postgres can't `ilike` it directly
         // without a cast, so the DB fallback only matches on `title`/`tags`.
         // Matched word-by-word (every word must appear somewhere, in any
