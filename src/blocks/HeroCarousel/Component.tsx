@@ -2,7 +2,7 @@ import type { Media as MediaType } from '@/payload-types'
 import type { HeroCarouselBlock as HeroCarouselBlockProps } from '@/payload-types'
 
 import { Media } from '@/components/Media'
-import { ServiceQuickLinks } from '@/components/services/ServiceQuickLinks'
+import { BestSellersQuickLinks } from '@/components/services/BestSellersQuickLinks'
 import { getCategoryIcon } from '@/components/illustrations/categoryIcons'
 import { getTrendingProducts } from '@/lib/getTrendingProducts'
 import { getCategoryTreeSafe } from '@/utilities/getCategoryTree'
@@ -59,7 +59,7 @@ export const HeroCarouselBlock: React.FC<
 
       <div className="pmc-services-container">
         <Suspense fallback={null}>
-          <ServiceQuickLinks className="pmc-service-links" />
+          <BestSellersQuickLinks className="pmc-service-links" />
         </Suspense>
       </div>
 

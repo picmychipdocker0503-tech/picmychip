@@ -24,11 +24,11 @@ export const FeaturedCollectionBlock: React.FC<
               <Media
                 className="absolute inset-0"
                 fill
-                imgClassName="object-cover transition-transform duration-300 group-hover:scale-105"
+                imgClassName="object-contain p-10 pb-20 transition-transform duration-300 group-hover:scale-105 sm:p-12 sm:pb-24"
                 resource={panel.image}
               />
             )}
-            <div className="from-background/95 via-background/50 absolute inset-0 bg-gradient-to-t to-transparent" />
+            <div className="from-background/95 via-background/40 absolute inset-0 bg-gradient-to-t to-transparent" />
 
             {panel.link?.label && (
               <div className="border-border bg-card/90 text-foreground absolute top-4 right-4 flex size-9 items-center justify-center rounded-full border backdrop-blur-sm transition-transform group-hover:scale-105">

@@ -106,5 +106,14 @@ export const Users: CollectionConfig = {
         defaultColumns: ['id'],
       },
     },
+    {
+      name: 'zohoCustomerId',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'Zoho Books contact id — checked first when matching this customer on future orders.',
+      },
+    },
   ],
 }

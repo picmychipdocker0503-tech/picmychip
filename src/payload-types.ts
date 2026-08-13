@@ -233,6 +233,10 @@ export interface User {
     hasNextPage?: boolean;
     totalDocs?: number;
   };
+  /**
+   * Zoho Books contact id — checked first when matching this customer on future orders.
+   */
+  zohoCustomerId?: string | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -367,6 +371,54 @@ export interface Order {
     igstAmount?: number | null;
     totalTax?: number | null;
   };
+  /**
+   * Captured at checkout — falls back to the shipping address when not separately provided.
+   */
+  billingAddress?: {
+    title?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    company?: string | null;
+    addressLine1?: string | null;
+    addressLine2?: string | null;
+    city?: string | null;
+    state?: string | null;
+    postalCode?: string | null;
+    country?: string | null;
+    phone?: string | null;
+  };
+  /**
+   * Optional GST/company details provided at checkout, used for the Zoho tax invoice.
+   */
+  businessDetails?: {
+    companyName?: string | null;
+    gstin?: string | null;
+    panNumber?: string | null;
+  };
+  zohoCustomerId?: string | null;
+  zohoInvoiceId?: string | null;
+  zohoInvoiceNumber?: string | null;
+  /**
+   * Zoho’s own invoice status (draft/sent/paid/etc.), as last synced.
+   */
+  zohoInvoiceStatus?: string | null;
+  zohoInvoiceUrl?: string | null;
+  zohoInvoiceCreatedAt?: string | null;
+  shiprocketTrackingUrl?: string | null;
+  shiprocketPickupStatus?: string | null;
+  shiprocketDeliveryStatus?: string | null;
+  shiprocketEstimatedDeliveryDate?: string | null;
+  shiprocketCreatedAt?: string | null;
+  invoiceSyncStatus?: ('pending' | 'processing' | 'completed' | 'failed') | null;
+  shipmentSyncStatus?: ('pending' | 'processing' | 'completed' | 'failed') | null;
+  /**
+   * Last error message from each integration, if any — cleared on the next successful sync.
+   */
+  integrationError?: {
+    invoice?: string | null;
+    shipment?: string | null;
+  };
+  lastSyncAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -601,6 +653,18 @@ export interface Product {
    * Per-unit shipping weight in grams. Used for Shiprocket rate checks and shipment creation — defaults to 50g, a reasonable estimate for small electronic components.
    */
   weightInGrams?: number | null;
+  /**
+   * Stock-keeping unit sent to Shiprocket and Zoho Books. Falls back to the product slug when left blank.
+   */
+  sku?: string | null;
+  /**
+   * HSN/SAC code for GST invoicing. Left blank, the Zoho invoice line item omits it.
+   */
+  hsnCode?: string | null;
+  /**
+   * GST rate applied to this product on Zoho invoices and the internal tax breakdown. Falls back to Site Settings → Tax Invoicing → GST rate when left blank.
+   */
+  gstPercent?: number | null;
   /**
    * Optional "was" price (₹) shown struck through next to the current price when higher than it.
    */
@@ -1667,6 +1731,14 @@ export interface Transaction {
   cart?: (number | null) | Cart;
   amount?: number | null;
   currency?: 'INR' | null;
+  /**
+   * Optional GST/company details provided at checkout, used for the Zoho tax invoice.
+   */
+  businessDetails?: {
+    companyName?: string | null;
+    gstin?: string | null;
+    panNumber?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -2273,6 +2345,7 @@ export interface UsersSelect<T extends boolean = true> {
   orders?: T;
   cart?: T;
   addresses?: T;
+  zohoCustomerId?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -3413,6 +3486,9 @@ export interface ProductsSelect<T extends boolean = true> {
   stockStatus?: T;
   lowStockThreshold?: T;
   weightInGrams?: T;
+  sku?: T;
+  hsnCode?: T;
+  gstPercent?: T;
   compareAtPriceInINR?: T;
   isGiftCard?: T;
   leadTimeDays?: T;
@@ -3517,6 +3593,48 @@ export interface OrdersSelect<T extends boolean = true> {
         igstAmount?: T;
         totalTax?: T;
       };
+  billingAddress?:
+    | T
+    | {
+        title?: T;
+        firstName?: T;
+        lastName?: T;
+        company?: T;
+        addressLine1?: T;
+        addressLine2?: T;
+        city?: T;
+        state?: T;
+        postalCode?: T;
+        country?: T;
+        phone?: T;
+      };
+  businessDetails?:
+    | T
+    | {
+        companyName?: T;
+        gstin?: T;
+        panNumber?: T;
+      };
+  zohoCustomerId?: T;
+  zohoInvoiceId?: T;
+  zohoInvoiceNumber?: T;
+  zohoInvoiceStatus?: T;
+  zohoInvoiceUrl?: T;
+  zohoInvoiceCreatedAt?: T;
+  shiprocketTrackingUrl?: T;
+  shiprocketPickupStatus?: T;
+  shiprocketDeliveryStatus?: T;
+  shiprocketEstimatedDeliveryDate?: T;
+  shiprocketCreatedAt?: T;
+  invoiceSyncStatus?: T;
+  shipmentSyncStatus?: T;
+  integrationError?:
+    | T
+    | {
+        invoice?: T;
+        shipment?: T;
+      };
+  lastSyncAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3564,6 +3682,13 @@ export interface TransactionsSelect<T extends boolean = true> {
   cart?: T;
   amount?: T;
   currency?: T;
+  businessDetails?:
+    | T
+    | {
+        companyName?: T;
+        gstin?: T;
+        panNumber?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3756,11 +3881,54 @@ export interface SiteSetting {
     businessName?: string | null;
     businessAddress?: string | null;
     /**
-     * Used to label the tax split as CGST+SGST (intra-state) vs IGST (inter-state).
+     * Used to determine CGST+SGST (intra-state) vs IGST (inter-state) against the customer’s state, and as the seller state on Zoho invoices.
      */
-    businessState?: string | null;
+    businessState?:
+      | (
+          | 'Andaman and Nicobar Islands'
+          | 'Andhra Pradesh'
+          | 'Arunachal Pradesh'
+          | 'Assam'
+          | 'Bihar'
+          | 'Chandigarh'
+          | 'Chhattisgarh'
+          | 'Dadra and Nagar Haveli and Daman and Diu'
+          | 'Delhi'
+          | 'Goa'
+          | 'Gujarat'
+          | 'Haryana'
+          | 'Himachal Pradesh'
+          | 'Jammu and Kashmir'
+          | 'Jharkhand'
+          | 'Karnataka'
+          | 'Kerala'
+          | 'Ladakh'
+          | 'Lakshadweep'
+          | 'Madhya Pradesh'
+          | 'Maharashtra'
+          | 'Manipur'
+          | 'Meghalaya'
+          | 'Mizoram'
+          | 'Nagaland'
+          | 'Odisha'
+          | 'Puducherry'
+          | 'Punjab'
+          | 'Rajasthan'
+          | 'Sikkim'
+          | 'Tamil Nadu'
+          | 'Telangana'
+          | 'Tripura'
+          | 'Uttar Pradesh'
+          | 'Uttarakhand'
+          | 'West Bengal'
+        )
+      | null;
     /**
-     * Applied rate, assumed inclusive in listed prices.
+     * Company PAN, sent to Zoho Books as part of the organization profile.
+     */
+    businessPan?: string | null;
+    /**
+     * Default rate, assumed inclusive in listed prices. Individual products can override this via their own GST % field.
      */
     gstRatePercent?: number | null;
   };
@@ -3910,6 +4078,7 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         businessName?: T;
         businessAddress?: T;
         businessState?: T;
+        businessPan?: T;
         gstRatePercent?: T;
       };
   sameAs?:

@@ -21,10 +21,12 @@ import { isDocumentOwner } from '@/access/isDocumentOwner'
 import { applyCartDiscounts } from '@/hooks/applyCartDiscounts'
 import { applyOrderDiscountSideEffects } from '@/hooks/applyOrderDiscountSideEffects'
 import { computeGstTaxBreakdown } from '@/hooks/computeGstTaxBreakdown'
+import { createZohoInvoice } from '@/hooks/createZohoInvoice'
 import { createShiprocketShipment } from '@/hooks/createShiprocketShipment'
 import { flagPotentialFraud } from '@/hooks/flagPotentialFraud'
 import { issueGiftCardsForOrder } from '@/hooks/issueGiftCardsForOrder'
 import { sendOrderLifecycleEmails } from '@/hooks/sendOrderLifecycleEmails'
+import { billingDetailsAddressFields, businessDetailsGroup } from '@/fields/businessDetails'
 
 const generateTitle: GenerateTitle<Product | Page | Category | Guide> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Payload Ecommerce Template` : 'Payload Ecommerce Template'
@@ -125,6 +127,17 @@ export const plugins: Plugin[] = [
     orders: {
       ordersCollectionOverride: ({ defaultCollection }) => ({
         ...defaultCollection,
+        admin: {
+          ...defaultCollection.admin,
+          components: {
+            ...defaultCollection.admin?.components,
+            edit: {
+              ...defaultCollection.admin?.components?.edit,
+              // Invoice/shipment sync status + retry actions, shown above the save controls.
+              beforeDocumentControls: ['@/components/admin/OrderIntegrationPanel#OrderIntegrationPanel'],
+            },
+          },
+        },
         hooks: {
           ...defaultCollection.hooks,
           afterChange: [
@@ -132,6 +145,7 @@ export const plugins: Plugin[] = [
             applyOrderDiscountSideEffects,
             issueGiftCardsForOrder,
             computeGstTaxBreakdown,
+            createZohoInvoice,
             createShiprocketShipment,
             sendOrderLifecycleEmails,
             flagPotentialFraud,
@@ -293,6 +307,119 @@ export const plugins: Plugin[] = [
               { name: 'totalTax', type: 'number', admin: { readOnly: true } },
             ],
           },
+          {
+            name: 'billingAddress',
+            type: 'group',
+            admin: {
+              description: 'Captured at checkout — falls back to the shipping address when not separately provided.',
+            },
+            fields: billingDetailsAddressFields(),
+          },
+          businessDetailsGroup(),
+          // Zoho Books (invoicing)
+          {
+            name: 'zohoCustomerId',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoInvoiceId',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoInvoiceNumber',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoInvoiceStatus',
+            type: 'text',
+            admin: {
+              position: 'sidebar',
+              readOnly: true,
+              description: 'Zoho’s own invoice status (draft/sent/paid/etc.), as last synced.',
+            },
+          },
+          {
+            name: 'zohoInvoiceUrl',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoInvoiceCreatedAt',
+            type: 'date',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          // Shiprocket (shiprocketOrderId, shiprocketShipmentId, trackingNumber,
+          // courierName, shipmentStatus already exist above)
+          {
+            name: 'shiprocketTrackingUrl',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'shiprocketPickupStatus',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'shiprocketDeliveryStatus',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'shiprocketEstimatedDeliveryDate',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'shiprocketCreatedAt',
+            type: 'date',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          // Integration sync bookkeeping
+          {
+            name: 'invoiceSyncStatus',
+            type: 'select',
+            defaultValue: 'pending',
+            options: [
+              { label: 'Pending', value: 'pending' },
+              { label: 'Processing', value: 'processing' },
+              { label: 'Completed', value: 'completed' },
+              { label: 'Failed', value: 'failed' },
+            ],
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'shipmentSyncStatus',
+            type: 'select',
+            defaultValue: 'pending',
+            options: [
+              { label: 'Pending', value: 'pending' },
+              { label: 'Processing', value: 'processing' },
+              { label: 'Completed', value: 'completed' },
+              { label: 'Failed', value: 'failed' },
+            ],
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'integrationError',
+            type: 'group',
+            admin: {
+              position: 'sidebar',
+              description: 'Last error message from each integration, if any — cleared on the next successful sync.',
+            },
+            fields: [
+              { name: 'invoice', type: 'text', admin: { readOnly: true } },
+              { name: 'shipment', type: 'text', admin: { readOnly: true } },
+            ],
+          },
+          {
+            name: 'lastSyncAt',
+            type: 'date',
+            admin: { position: 'sidebar', readOnly: true },
+          },
         ],
       }),
     },
@@ -346,6 +473,12 @@ export const plugins: Plugin[] = [
             },
           },
         ],
+      }),
+    },
+    transactions: {
+      transactionsCollectionOverride: ({ defaultCollection }) => ({
+        ...defaultCollection,
+        fields: [...defaultCollection.fields, businessDetailsGroup()],
       }),
     },
     payments: {

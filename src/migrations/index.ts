@@ -30,6 +30,9 @@ import * as migration_20260811_123811_add_forms_upload_field from './20260811_12
 import * as migration_20260811_130249_add_datasheets_upload_collection from './20260811_130249_add_datasheets_upload_collection';
 import * as migration_20260811_180000_add_users_verify from './20260811_180000_add_users_verify';
 import * as migration_20260811_190000_add_jobs_collection from './20260811_190000_add_jobs_collection';
+import * as migration_20260813_043522_fix_users_verify_column from './20260813_043522_fix_users_verify_column';
+import * as migration_20260813_062510_add_zoho_shiprocket_integration from './20260813_062510_add_zoho_shiprocket_integration';
+import * as migration_20260813_101501_revert_verification_token_rename from './20260813_101501_revert_verification_token_rename';
 
 export const migrations = [
   {
@@ -191,5 +194,20 @@ export const migrations = [
     up: migration_20260811_190000_add_jobs_collection.up,
     down: migration_20260811_190000_add_jobs_collection.down,
     name: '20260811_190000_add_jobs_collection',
+  },
+  {
+    up: migration_20260813_043522_fix_users_verify_column.up,
+    down: migration_20260813_043522_fix_users_verify_column.down,
+    name: '20260813_043522_fix_users_verify_column',
+  },
+  {
+    up: migration_20260813_062510_add_zoho_shiprocket_integration.up,
+    down: migration_20260813_062510_add_zoho_shiprocket_integration.down,
+    name: '20260813_062510_add_zoho_shiprocket_integration',
+  },
+  {
+    up: migration_20260813_101501_revert_verification_token_rename.up,
+    down: migration_20260813_101501_revert_verification_token_rename.down,
+    name: '20260813_101501_revert_verification_token_rename'
   },
 ];

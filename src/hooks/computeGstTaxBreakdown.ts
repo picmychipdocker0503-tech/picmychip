@@ -1,14 +1,18 @@
 import type { CollectionAfterChangeHook } from 'payload'
 
+import { computeOrderTaxBreakdown, type TaxLineItem } from '@/lib/taxCalculation'
+
 /**
  * Snapshots the GST split (CGST+SGST for intra-state vs IGST for inter-state)
  * onto the order at creation time, comparing the customer's shipping state
  * against SiteSettings.taxSettings.businessState. Storing a snapshot — rather
  * than recomputing from the live SiteSettings global on every render, as the
  * invoice page previously did — keeps historical invoices stable if the
- * admin changes the GST rate or business state later. Prices are assumed
- * GST-inclusive (see the taxSettings field description), so this decomposes
- * `amount` rather than adding to it — the order total is unaffected.
+ * admin changes the GST rate or business state later.
+ *
+ * Computed per line item (each product can carry its own gstPercent, falling
+ * back to the site default) via computeOrderTaxBreakdown, matching what the
+ * Zoho invoice charges per item.
  */
 export const computeGstTaxBreakdown: CollectionAfterChangeHook = async ({ doc, operation, req }) => {
   if (operation !== 'create') return doc
@@ -16,30 +20,48 @@ export const computeGstTaxBreakdown: CollectionAfterChangeHook = async ({ doc, o
   try {
     const siteSettings = await req.payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
     const tax = siteSettings?.taxSettings
+    const defaultGstPercent = tax?.gstRatePercent ?? 18
 
-    const gstRatePercent = tax?.gstRatePercent ?? 18
-    const amount = doc.amount ?? 0
-    const taxableValue = amount / (1 + gstRatePercent / 100)
-    const totalTax = amount - taxableValue
+    const itemsWithNominal = await Promise.all(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      (doc.items || []).map(async (item: any): Promise<TaxLineItem | null> => {
+        const productId = typeof item.product === 'object' ? item.product?.id : item.product
+        const quantity = item.quantity ?? 1
+        if (!productId) return null
 
-    const businessState = (tax?.businessState || '').trim().toLowerCase()
-    const customerState = (doc.shippingAddress?.state || '').trim().toLowerCase()
-    const isIntraState = Boolean(businessState) && Boolean(customerState) && businessState === customerState
+        const product =
+          typeof item.product === 'object' && item.product
+            ? item.product
+            : await req.payload.findByID({ collection: 'products', id: productId, depth: 0, overrideAccess: true })
+
+        const variant =
+          item.variant && typeof item.variant === 'object'
+            ? item.variant
+            : item.variant
+              ? await req.payload.findByID({ collection: 'variants', id: item.variant, depth: 0, overrideAccess: true })
+              : undefined
+
+        const unitPrice = (variant?.priceInINR ?? product?.priceInINR ?? 0) as number
+        const gstPercent = (product?.gstPercent ?? defaultGstPercent) as number
+
+        return { gstPercent, nominal: unitPrice * quantity }
+      }),
+    )
+
+    const validItems = itemsWithNominal.filter((item): item is TaxLineItem => Boolean(item))
+
+    const taxBreakdown = computeOrderTaxBreakdown({
+      items: validItems,
+      amount: doc.amount ?? 0,
+      defaultGstPercent,
+      businessState: tax?.businessState,
+      customerState: doc.shippingAddress?.state,
+    })
 
     await req.payload.update({
       collection: 'orders',
       id: doc.id,
-      data: {
-        taxBreakdown: {
-          taxType: isIntraState ? 'intra-state' : 'inter-state',
-          gstRatePercent,
-          taxableValue,
-          cgstAmount: isIntraState ? totalTax / 2 : 0,
-          sgstAmount: isIntraState ? totalTax / 2 : 0,
-          igstAmount: isIntraState ? 0 : totalTax,
-          totalTax,
-        },
-      },
+      data: { taxBreakdown },
       overrideAccess: true,
     })
   } catch (err) {

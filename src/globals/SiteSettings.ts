@@ -2,6 +2,7 @@ import type { GlobalConfig } from 'payload'
 
 import { adminOnly } from '@/access/adminOnly'
 import { link } from '@/fields/link'
+import { INDIAN_STATES } from '@/lib/indianStates'
 import { revalidateGlobal } from './hooks/revalidateGlobal'
 
 export const SiteSettings: GlobalConfig = {
@@ -108,9 +109,19 @@ export const SiteSettings: GlobalConfig = {
         },
         {
           name: 'businessState',
-          type: 'text',
+          type: 'select',
+          options: INDIAN_STATES.map((state) => ({ label: state.name, value: state.name })),
           admin: {
-            description: 'Used to label the tax split as CGST+SGST (intra-state) vs IGST (inter-state).',
+            description:
+              'Used to determine CGST+SGST (intra-state) vs IGST (inter-state) against the customer’s state, and as the seller state on Zoho invoices.',
+          },
+        },
+        {
+          name: 'businessPan',
+          type: 'text',
+          label: 'PAN',
+          admin: {
+            description: 'Company PAN, sent to Zoho Books as part of the organization profile.',
           },
         },
         {
@@ -118,7 +129,8 @@ export const SiteSettings: GlobalConfig = {
           type: 'number',
           defaultValue: 18,
           admin: {
-            description: 'Applied rate, assumed inclusive in listed prices.',
+            description:
+              'Default rate, assumed inclusive in listed prices. Individual products can override this via their own GST % field.',
           },
         },
       ],

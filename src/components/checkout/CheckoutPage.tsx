@@ -51,6 +51,7 @@ export const CheckoutPage: React.FC = () => {
   const [isProcessingPayment, setProcessingPayment] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>('card')
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
+  const [businessDetails, setBusinessDetails] = useState({ companyName: '', gstin: '', panNumber: '' })
   const [couponInput, setCouponInput] = useState('')
   const [giftCardInput, setGiftCardInput] = useState('')
   const [couponError, setCouponError] = useState<string | null>(null)
@@ -114,6 +115,8 @@ export const CheckoutPage: React.FC = () => {
           cartId: cart.id,
           email: email || user?.email,
           shippingAddress: billingAddressSameAsShipping ? billingAddress : shippingAddress,
+          billingAddress,
+          businessDetails: businessDetails.gstin || businessDetails.companyName ? businessDetails : undefined,
         }),
       })
       const data = await res.json()
@@ -132,7 +135,17 @@ export const CheckoutPage: React.FC = () => {
       setIsPlacingOrder(false)
       setProcessingPayment(false)
     }
-  }, [cart?.id, email, user?.email, billingAddress, billingAddressSameAsShipping, shippingAddress, clearCart, router])
+  }, [
+    cart?.id,
+    email,
+    user?.email,
+    billingAddress,
+    billingAddressSameAsShipping,
+    shippingAddress,
+    businessDetails,
+    clearCart,
+    router,
+  ])
 
   const canGoToPayment = Boolean(
     (email || user) && billingAddress && (billingAddressSameAsShipping || shippingAddress),
@@ -180,6 +193,7 @@ export const CheckoutPage: React.FC = () => {
           ...(email ? { customerEmail: email } : {}),
           billingAddress,
           shippingAddress: billingAddressSameAsShipping ? billingAddress : shippingAddress,
+          ...(businessDetails.gstin || businessDetails.companyName ? { businessDetails } : {}),
         },
       })) as unknown as PayuRedirectFields
 
@@ -200,7 +214,7 @@ export const CheckoutPage: React.FC = () => {
       toast.error(errorMessage)
       setIsInitiatingPayment(false)
     }
-  }, [billingAddress, billingAddressSameAsShipping, email, initiatePayment, shippingAddress])
+  }, [billingAddress, billingAddressSameAsShipping, businessDetails, email, initiatePayment, shippingAddress])
 
   if (cartIsEmpty && isProcessingPayment) {
     return (
@@ -363,6 +377,45 @@ export const CheckoutPage: React.FC = () => {
             )}
           </>
         )}
+
+        <div className="flex flex-col gap-4">
+          <div>
+            <h2 className="font-medium text-3xl">Business / GST details</h2>
+            <p className="text-muted-foreground text-sm">
+              Optional — add your company name and GSTIN to receive a GST tax invoice.
+            </p>
+          </div>
+          <div className="flex flex-col gap-4 md:flex-row">
+            <FormItem>
+              <Label htmlFor="companyName">Company name</Label>
+              <Input
+                id="companyName"
+                value={businessDetails.companyName}
+                onChange={(e) => setBusinessDetails((prev) => ({ ...prev, companyName: e.target.value }))}
+              />
+            </FormItem>
+            <FormItem>
+              <Label htmlFor="gstin">GSTIN</Label>
+              <Input
+                id="gstin"
+                value={businessDetails.gstin}
+                onChange={(e) =>
+                  setBusinessDetails((prev) => ({ ...prev, gstin: e.target.value.toUpperCase() }))
+                }
+              />
+            </FormItem>
+            <FormItem>
+              <Label htmlFor="panNumber">PAN</Label>
+              <Input
+                id="panNumber"
+                value={businessDetails.panNumber}
+                onChange={(e) =>
+                  setBusinessDetails((prev) => ({ ...prev, panNumber: e.target.value.toUpperCase() }))
+                }
+              />
+            </FormItem>
+          </div>
+        </div>
 
         <DeliveryEstimate
           cartId={cart?.id}

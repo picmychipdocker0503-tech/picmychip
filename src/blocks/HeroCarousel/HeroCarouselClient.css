@@ -135,6 +135,24 @@
   color: var(--primary-foreground);
 }
 
+/* Product photos, not flat icons — a solid color-fill on hover would hide the
+   image, so this swaps that behavior for a border/scale tweak instead. */
+.pmc-product-icon-box {
+  position: relative;
+  background: var(--background);
+  overflow: hidden;
+}
+
+.pmc-service-card:hover .pmc-product-icon-box {
+  background: var(--background);
+  color: inherit;
+  border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+}
+
+.pmc-service-card:hover .pmc-product-icon-box img {
+  transform: scale(1.08);
+}
+
 .pmc-service-info {
   display: flex;
   flex-direction: column;

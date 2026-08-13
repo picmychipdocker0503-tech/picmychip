@@ -14,6 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+import { INDIAN_STATES } from '@/lib/indianStates'
 import { titles } from './constants'
 import { Button } from '@/components/ui/button'
 import { deepMergeSimple } from 'payload/shared'
@@ -169,7 +170,24 @@ export const AddressForm: React.FC<Props> = ({
 
         <FormItem>
           <Label htmlFor="state">State</Label>
-          <Input id="state" autoComplete="address-level1" {...register('state')} />
+          <Select
+            {...register('state')}
+            onValueChange={(value) => {
+              setValue('state', value, { shouldValidate: true })
+            }}
+            defaultValue={initialData?.state || ''}
+          >
+            <SelectTrigger id="state" className="w-full">
+              <SelectValue placeholder="State" />
+            </SelectTrigger>
+            <SelectContent>
+              {INDIAN_STATES.map((state) => (
+                <SelectItem key={state.name} value={state.name}>
+                  {state.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           {errors.state && <FormError message={errors.state.message} />}
         </FormItem>
 

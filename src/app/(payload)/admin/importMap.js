@@ -24,6 +24,7 @@ import { VariantOptionsSelector as VariantOptionsSelector_b91672ccd6e8b071c11142
 import { PriceCell as PriceCell_e27bf7b8cc50640dcdd584767b8eac3c } from '@payloadcms/plugin-ecommerce/client'
 import { PriceInput as PriceInput_b91672ccd6e8b071c11142ab941fedfb } from '@payloadcms/plugin-ecommerce/rsc'
 import { HorizontalRuleFeatureClient as HorizontalRuleFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { OrderIntegrationPanel as OrderIntegrationPanel_300ab51a4697d020513537b41697b27a } from '@/components/admin/OrderIntegrationPanel'
 import { AdminIcon as AdminIcon_b29a940bedbba3640ea4cdbe2b7935c8 } from '@/components/icons/AdminLogo'
 import { AdminLogo as AdminLogo_b29a940bedbba3640ea4cdbe2b7935c8 } from '@/components/icons/AdminLogo'
 import { EnvironmentBadge as EnvironmentBadge_35243b88fbc88089b03f124de046576f } from '@/components/admin/EnvironmentBadge'
@@ -62,6 +63,7 @@ export const importMap = {
   "@payloadcms/plugin-ecommerce/client#PriceCell": PriceCell_e27bf7b8cc50640dcdd584767b8eac3c,
   "@payloadcms/plugin-ecommerce/rsc#PriceInput": PriceInput_b91672ccd6e8b071c11142ab941fedfb,
   "@payloadcms/richtext-lexical/client#HorizontalRuleFeatureClient": HorizontalRuleFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "@/components/admin/OrderIntegrationPanel#OrderIntegrationPanel": OrderIntegrationPanel_300ab51a4697d020513537b41697b27a,
   "@/components/icons/AdminLogo#AdminIcon": AdminIcon_b29a940bedbba3640ea4cdbe2b7935c8,
   "@/components/icons/AdminLogo#AdminLogo": AdminLogo_b29a940bedbba3640ea4cdbe2b7935c8,
   "@/components/admin/EnvironmentBadge#EnvironmentBadge": EnvironmentBadge_35243b88fbc88089b03f124de046576f,

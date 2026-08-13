@@ -27,6 +27,11 @@ export const initiatePayment =
     const payload = req.payload
     const { merchantKey, merchantSalt, mode } = props
     const { billingAddress, cart, currency, customerEmail, shippingAddress } = data
+    // businessDetails (GSTIN/company/PAN) isn't part of the plugin's typed additionalData
+    // shape — the checkout page still sends it through as an extra key.
+    const businessDetails = (data as Record<string, unknown>).businessDetails as
+      | { companyName?: string; gstin?: string; panNumber?: string }
+      | undefined
     const amountInPaise = cart?.subtotal
 
     if (currency !== 'INR') {
@@ -100,6 +105,7 @@ export const initiatePayment =
           ...(req.user ? { customer: req.user.id } : { customerEmail }),
           amount: amountInPaise,
           billingAddress,
+          ...(businessDetails ? { businessDetails } : {}),
           cart: cart.id,
           currency,
           items: flattenedCart,

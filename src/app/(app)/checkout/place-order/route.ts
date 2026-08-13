@@ -11,6 +11,8 @@ type Body = {
   cartId: number | string
   email: string
   shippingAddress?: Partial<Address>
+  billingAddress?: Partial<Address>
+  businessDetails?: { companyName?: string; gstin?: string; panNumber?: string }
 }
 
 /**
@@ -24,7 +26,7 @@ type Body = {
  */
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as Body
-  const { cartId, email, shippingAddress } = body
+  const { cartId, email, shippingAddress, billingAddress, businessDetails } = body
 
   if (!cartId || !email) {
     return NextResponse.json({ error: 'Missing cart or email.' }, { status: 400 })
@@ -60,6 +62,8 @@ export async function POST(request: NextRequest) {
       data: {
         items,
         shippingAddress: shippingAddress as Address,
+        billingAddress: (billingAddress ?? shippingAddress) as Address,
+        ...(businessDetails ? { businessDetails } : {}),
         customer: user?.id,
         customerEmail: email,
         status: 'processing',

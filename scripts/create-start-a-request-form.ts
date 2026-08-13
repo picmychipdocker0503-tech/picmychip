@@ -140,13 +140,13 @@ const run = async () => {
     ? await payload.update({
         collection: 'pages',
         id: existingPage.id,
-        data: pageData,
+        data: pageData as any,
         overrideAccess: true,
         context: { disableRevalidate: true },
       })
     : await payload.create({
         collection: 'pages',
-        data: pageData,
+        data: pageData as any,
         overrideAccess: true,
         context: { disableRevalidate: true },
       })
@@ -166,7 +166,7 @@ const run = async () => {
   await payload.update({
     collection: 'pages',
     id: 3,
-    data: { layout: newBlocks },
+    data: { layout: newBlocks } as any,
     overrideAccess: true,
     context: { disableRevalidate: true },
   })

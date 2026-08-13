@@ -222,3 +222,73 @@ export async function trackShipmentByAwb(awbCode: string): Promise<ShipmentTrack
     trackingUrl: data.tracking_data?.track_url,
   }
 }
+
+export type AssignAwbResult = {
+  awbCode: string
+  courierName: string
+}
+
+/**
+ * Explicitly assigns a courier + generates the AWB for a shipment. Usually
+ * unnecessary — `createShiprocketOrder`'s adhoc create often auto-assigns one
+ * synchronously — but this covers the case where it didn't (or a retry needs
+ * to (re)request it).
+ */
+export async function assignAwb(shipmentId: number | string): Promise<AssignAwbResult | null> {
+  const data = await shiprocketFetch<{
+    response?: { data?: { awb_code?: string; courier_name?: string } }
+  }>('/courier/assign/awb', {
+    method: 'POST',
+    body: JSON.stringify({ shipment_id: shipmentId }),
+  })
+
+  const result = data.response?.data
+  if (!result?.awb_code) return null
+
+  return { awbCode: result.awb_code, courierName: result.courier_name || 'Courier' }
+}
+
+/**
+ * Cancels the order in Shiprocket — only succeeds if it hasn't been picked up
+ * yet. Used by the admin "Cancel shipment" action.
+ */
+export async function cancelShiprocketOrder(orderId: number | string): Promise<void> {
+  await shiprocketFetch('/orders/cancel', {
+    method: 'POST',
+    body: JSON.stringify({ ids: [Number(orderId)] }),
+  })
+}
+
+export type ShiprocketShipmentStatus = {
+  currentStatus: string
+  deliveryStatus?: string
+  estimatedDeliveryDate?: string
+  pickupStatus?: string
+}
+
+/**
+ * Refreshes pickup/delivery status for a shipment by its Shiprocket shipment id
+ * (not the AWB) — used by the "Retry shipment" admin action to pull the latest
+ * status without needing an AWB to already be assigned.
+ */
+export async function getShiprocketShipmentStatus(
+  shipmentId: number | string,
+): Promise<ShiprocketShipmentStatus | null> {
+  const data = await shiprocketFetch<{
+    tracking_data?: {
+      shipment_status?: string
+      shipment_track?: { current_status?: string; delivered_date?: string; pickup_date?: string }[]
+      etd?: string
+    }
+  }>(`/courier/track/shipment/${shipmentId}`)
+
+  const track = data.tracking_data?.shipment_track?.[0]
+  if (!track && !data.tracking_data?.shipment_status) return null
+
+  return {
+    currentStatus: track?.current_status || data.tracking_data?.shipment_status || 'Unknown',
+    pickupStatus: track?.pickup_date ? 'Picked up' : undefined,
+    deliveryStatus: track?.delivered_date ? 'Delivered' : undefined,
+    estimatedDeliveryDate: data.tracking_data?.etd,
+  }
+}

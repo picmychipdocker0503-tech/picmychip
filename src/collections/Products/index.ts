@@ -354,6 +354,33 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       },
     },
     {
+      name: 'sku',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        description:
+          'Stock-keeping unit sent to Shiprocket and Zoho Books. Falls back to the product slug when left blank.',
+      },
+    },
+    {
+      name: 'hsnCode',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        description: 'HSN/SAC code for GST invoicing. Left blank, the Zoho invoice line item omits it.',
+      },
+    },
+    {
+      name: 'gstPercent',
+      type: 'number',
+      defaultValue: 18,
+      admin: {
+        position: 'sidebar',
+        description:
+          'GST rate applied to this product on Zoho invoices and the internal tax breakdown. Falls back to Site Settings → Tax Invoicing → GST rate when left blank.',
+      },
+    },
+    {
       name: 'compareAtPriceInINR',
       type: 'number',
       admin: {

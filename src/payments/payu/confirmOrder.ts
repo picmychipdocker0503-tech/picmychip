@@ -142,6 +142,8 @@ export const confirmOrder =
         ...(customer ? { customer } : { customerEmail: transaction.customerEmail }),
         items: transaction.items,
         shippingAddress: (transaction.payu?.shippingAddressSnapshot ?? undefined) as Address | undefined,
+        billingAddress: transaction.billingAddress,
+        ...(transaction.businessDetails ? { businessDetails: transaction.businessDetails } : {}),
         status: 'processing',
         transactions: [transaction.id],
       },
