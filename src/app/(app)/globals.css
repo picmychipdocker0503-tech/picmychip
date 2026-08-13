@@ -1500,8 +1500,8 @@
 }
 
 /* Deeper, moodier dark variant: lower background lightness than `dark`,
-   desaturated purple so it reads as "workshop at night" rather than a
-   dimmer copy of `dark`. */
+   with a desaturated indigo primary so it reads as "workshop at night"
+   rather than a dimmer copy of `dark`. */
 [data-theme='midnight'] {
   --background: oklch(6% 0 0deg);
   --foreground: oklch(92% 0 0deg);
@@ -1509,8 +1509,8 @@
   --card-foreground: oklch(92% 0 0deg);
   --popover: oklch(6% 0 0deg);
   --popover-foreground: oklch(92% 0 0deg);
-  --primary: oklch(55% 0.12 300deg);
-  --primary-foreground: oklch(96% 0 0deg);
+  --primary: oklch(58% 0.16 265deg);
+  --primary-foreground: oklch(97% 0 0deg);
   --secondary: oklch(14% 0 0deg);
   --secondary-foreground: oklch(92% 0 0deg);
   --muted: oklch(14% 0 0deg);
@@ -1521,7 +1521,7 @@
   --destructive-foreground: oklch(85% 0.15 25deg);
   --border: oklch(16% 0 0deg);
   --input: oklch(16% 0 0deg);
-  --ring: oklch(35% 0 0deg);
+  --ring: oklch(58% 0.16 265deg);
   --success: oklch(22% 0.08 200deg);
   --warning: oklch(28% 0.07 70deg);
   --error: oklch(35% 0.09 25deg);
@@ -1531,9 +1531,9 @@
   --orange-light: oklch(70% 0.07 35deg);
 }
 
-/* Warm light variant: cream/tan neutrals instead of pure white/grey, a
-   punchier orange token — purple stays primary for cross-theme brand
-   consistency, warmth comes through the surrounding surface colors. */
+/* Warm light variant: cream/tan neutrals instead of pure white/grey, with
+   a burnt-orange primary carrying the warmth through buttons and links
+   too, not just the surrounding surface colors. */
 [data-theme='warm'] {
   --background: oklch(97% 0.015 75deg);
   --foreground: oklch(18% 0.01 50deg);
@@ -1541,7 +1541,7 @@
   --card-foreground: oklch(18% 0.01 50deg);
   --popover: oklch(97% 0.015 75deg);
   --popover-foreground: oklch(18% 0.01 50deg);
-  --primary: oklch(45% 0.22 300deg);
+  --primary: oklch(52% 0.18 40deg);
   --primary-foreground: oklch(98% 0.01 75deg);
   --secondary: oklch(90% 0.03 60deg);
   --secondary-foreground: oklch(25% 0.02 50deg);
@@ -1553,7 +1553,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(85% 0.02 60deg);
   --input: oklch(85% 0.02 60deg);
-  --ring: oklch(60% 0.15 45deg);
+  --ring: oklch(52% 0.18 40deg);
   --success: oklch(75% 0.1 150deg);
   --warning: oklch(88% 0.12 75deg);
   --error: oklch(72% 0.18 30deg);
@@ -1565,7 +1565,7 @@
 
 /* Ocean dark variant: deep navy-black background with a cool blue
    undertone (hue 245) instead of dark's neutral gray or midnight's
-   desaturated purple — purple stays primary for cross-theme consistency. */
+   desaturated indigo, and a matching blue primary. */
 [data-theme='ocean'] {
   --background: oklch(16% 0.03 250deg);
   --foreground: oklch(95% 0.01 240deg);
@@ -1573,7 +1573,7 @@
   --card-foreground: oklch(95% 0.01 240deg);
   --popover: oklch(16% 0.03 250deg);
   --popover-foreground: oklch(95% 0.01 240deg);
-  --primary: oklch(62% 0.19 300deg);
+  --primary: oklch(60% 0.16 235deg);
   --primary-foreground: oklch(98% 0 0deg);
   --secondary: oklch(24% 0.025 245deg);
   --secondary-foreground: oklch(95% 0.01 240deg);
@@ -1585,7 +1585,7 @@
   --destructive-foreground: oklch(90% 0.15 25deg);
   --border: oklch(27% 0.03 245deg);
   --input: oklch(27% 0.03 245deg);
-  --ring: oklch(45% 0.03 245deg);
+  --ring: oklch(60% 0.16 235deg);
   --success: oklch(30% 0.09 190deg);
   --warning: oklch(35% 0.08 70deg);
   --error: oklch(40% 0.15 25deg);
@@ -1597,7 +1597,7 @@
 
 /* Circuit light variant: pale PCB-green background instead of pure
    white — the accent token shifts toward copper/gold to read as solder
-   traces. Purple stays primary for cross-theme consistency. */
+   traces, and the primary is a matching trace-green. */
 [data-theme='circuit'] {
   --background: oklch(97% 0.015 150deg);
   --foreground: oklch(15% 0.02 150deg);
@@ -1605,7 +1605,7 @@
   --card-foreground: oklch(15% 0.02 150deg);
   --popover: oklch(97% 0.015 150deg);
   --popover-foreground: oklch(15% 0.02 150deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(50% 0.15 155deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(92% 0.025 150deg);
   --secondary-foreground: oklch(22% 0.02 150deg);
@@ -1617,7 +1617,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(85% 0.025 150deg);
   --input: oklch(85% 0.025 150deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(50% 0.15 155deg);
   --success: oklch(72% 0.12 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(58% 0.22 25deg);
@@ -1628,8 +1628,8 @@
 }
 
 /* Sunset dark variant: near-black background with a warm coral
-   undertone (hue 20) — distinct from midnight's cool purple-black and
-   ocean's blue-black. Purple stays primary for cross-theme consistency. */
+   undertone (hue 20) — distinct from midnight's cool indigo-black and
+   ocean's blue-black — and a matching coral primary. */
 [data-theme='sunset'] {
   --background: oklch(15% 0.03 20deg);
   --foreground: oklch(95% 0.01 30deg);
@@ -1637,7 +1637,7 @@
   --card-foreground: oklch(95% 0.01 30deg);
   --popover: oklch(15% 0.03 20deg);
   --popover-foreground: oklch(95% 0.01 30deg);
-  --primary: oklch(65% 0.2 300deg);
+  --primary: oklch(62% 0.2 25deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(24% 0.03 20deg);
   --secondary-foreground: oklch(95% 0.01 30deg);
@@ -1649,7 +1649,7 @@
   --destructive-foreground: oklch(85% 0.15 25deg);
   --border: oklch(27% 0.035 20deg);
   --input: oklch(27% 0.035 20deg);
-  --ring: oklch(45% 0.03 20deg);
+  --ring: oklch(62% 0.2 25deg);
   --success: oklch(30% 0.09 150deg);
   --warning: oklch(38% 0.1 60deg);
   --error: oklch(42% 0.15 20deg);
@@ -1666,8 +1666,8 @@
   --card-foreground: oklch(15% 0.02 350deg);
   --popover: oklch(96% 0.02 350deg);
   --popover-foreground: oklch(15% 0.02 350deg);
-  --primary: oklch(42% 0.27 300deg);
-  --primary-foreground: oklch(98.5% 0 0deg);
+  --primary: oklch(68% 0.11 195deg);
+  --primary-foreground: oklch(18% 0.02 195deg);
   --secondary: oklch(91% 0.025 350deg);
   --secondary-foreground: oklch(21% 0.02 350deg);
   --muted: oklch(91% 0.025 350deg);
@@ -1678,7 +1678,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 350deg);
   --input: oklch(86% 0.025 350deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(68% 0.11 195deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -1695,7 +1695,7 @@
   --card-foreground: oklch(15% 0.02 90deg);
   --popover: oklch(96% 0.02 90deg);
   --popover-foreground: oklch(15% 0.02 90deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(58% 0.17 80deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(91% 0.025 90deg);
   --secondary-foreground: oklch(21% 0.02 90deg);
@@ -1707,7 +1707,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 90deg);
   --input: oklch(86% 0.025 90deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(58% 0.17 80deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -1724,7 +1724,7 @@
   --card-foreground: oklch(15% 0.02 160deg);
   --popover: oklch(96% 0.02 160deg);
   --popover-foreground: oklch(15% 0.02 160deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(52% 0.15 165deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(91% 0.025 160deg);
   --secondary-foreground: oklch(21% 0.02 160deg);
@@ -1736,7 +1736,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 160deg);
   --input: oklch(86% 0.025 160deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(52% 0.15 165deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -1753,7 +1753,7 @@
   --card-foreground: oklch(15% 0.02 240deg);
   --popover: oklch(96% 0.02 240deg);
   --popover-foreground: oklch(15% 0.02 240deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(48% 0.16 245deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(91% 0.025 240deg);
   --secondary-foreground: oklch(21% 0.02 240deg);
@@ -1765,7 +1765,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 240deg);
   --input: oklch(86% 0.025 240deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(48% 0.16 245deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -1782,7 +1782,7 @@
   --card-foreground: oklch(95% 0.01 320deg);
   --popover: oklch(15% 0.03 320deg);
   --popover-foreground: oklch(95% 0.01 320deg);
-  --primary: oklch(64% 0.2 300deg);
+  --primary: oklch(65% 0.25 330deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(24% 0.03 320deg);
   --secondary-foreground: oklch(95% 0.01 320deg);
@@ -1794,7 +1794,7 @@
   --destructive-foreground: oklch(87% 0.15 25deg);
   --border: oklch(27% 0.035 320deg);
   --input: oklch(27% 0.035 320deg);
-  --ring: oklch(45% 0.03 320deg);
+  --ring: oklch(65% 0.25 330deg);
   --success: oklch(30% 0.09 155deg);
   --warning: oklch(37% 0.09 65deg);
   --error: oklch(41% 0.15 22deg);
@@ -1811,7 +1811,7 @@
   --card-foreground: oklch(15% 0.02 80deg);
   --popover: oklch(96% 0.02 80deg);
   --popover-foreground: oklch(15% 0.02 80deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(55% 0.15 45deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(91% 0.025 80deg);
   --secondary-foreground: oklch(21% 0.02 80deg);
@@ -1823,7 +1823,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 80deg);
   --input: oklch(86% 0.025 80deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(55% 0.15 45deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -1840,8 +1840,8 @@
   --card-foreground: oklch(15% 0.02 95deg);
   --popover: oklch(96% 0.02 95deg);
   --popover-foreground: oklch(15% 0.02 95deg);
-  --primary: oklch(42% 0.27 300deg);
-  --primary-foreground: oklch(98.5% 0 0deg);
+  --primary: oklch(65% 0.24 340deg);
+  --primary-foreground: oklch(18% 0.02 340deg);
   --secondary: oklch(91% 0.025 95deg);
   --secondary-foreground: oklch(21% 0.02 95deg);
   --muted: oklch(91% 0.025 95deg);
@@ -1852,7 +1852,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 95deg);
   --input: oklch(86% 0.025 95deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(65% 0.24 340deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -1869,7 +1869,7 @@
   --card-foreground: oklch(15% 0.02 10deg);
   --popover: oklch(96% 0.02 10deg);
   --popover-foreground: oklch(15% 0.02 10deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(60% 0.2 350deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(91% 0.025 10deg);
   --secondary-foreground: oklch(21% 0.02 10deg);
@@ -1881,7 +1881,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 10deg);
   --input: oklch(86% 0.025 10deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(60% 0.2 350deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -1898,8 +1898,8 @@
   --card-foreground: oklch(95% 0.01 45deg);
   --popover: oklch(15% 0.03 45deg);
   --popover-foreground: oklch(95% 0.01 45deg);
-  --primary: oklch(64% 0.2 300deg);
-  --primary-foreground: oklch(98.5% 0 0deg);
+  --primary: oklch(65% 0.22 50deg);
+  --primary-foreground: oklch(15% 0.02 50deg);
   --secondary: oklch(24% 0.03 45deg);
   --secondary-foreground: oklch(95% 0.01 45deg);
   --muted: oklch(24% 0.03 45deg);
@@ -1910,7 +1910,7 @@
   --destructive-foreground: oklch(87% 0.15 25deg);
   --border: oklch(27% 0.035 45deg);
   --input: oklch(27% 0.035 45deg);
-  --ring: oklch(45% 0.03 45deg);
+  --ring: oklch(65% 0.22 50deg);
   --success: oklch(30% 0.09 155deg);
   --warning: oklch(37% 0.09 65deg);
   --error: oklch(41% 0.15 22deg);
@@ -1927,7 +1927,7 @@
   --card-foreground: oklch(15% 0.02 140deg);
   --popover: oklch(96% 0.02 140deg);
   --popover-foreground: oklch(15% 0.02 140deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(50% 0.15 140deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(91% 0.025 140deg);
   --secondary-foreground: oklch(21% 0.02 140deg);
@@ -1939,7 +1939,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 140deg);
   --input: oklch(86% 0.025 140deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(50% 0.15 140deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -1956,8 +1956,8 @@
   --card-foreground: oklch(95% 0.01 150deg);
   --popover: oklch(15% 0.03 150deg);
   --popover-foreground: oklch(95% 0.01 150deg);
-  --primary: oklch(64% 0.2 300deg);
-  --primary-foreground: oklch(98.5% 0 0deg);
+  --primary: oklch(58% 0.16 150deg);
+  --primary-foreground: oklch(15% 0.02 150deg);
   --secondary: oklch(24% 0.03 150deg);
   --secondary-foreground: oklch(95% 0.01 150deg);
   --muted: oklch(24% 0.03 150deg);
@@ -1968,7 +1968,7 @@
   --destructive-foreground: oklch(87% 0.15 25deg);
   --border: oklch(27% 0.035 150deg);
   --input: oklch(27% 0.035 150deg);
-  --ring: oklch(45% 0.03 150deg);
+  --ring: oklch(58% 0.16 150deg);
   --success: oklch(30% 0.09 155deg);
   --warning: oklch(37% 0.09 65deg);
   --error: oklch(41% 0.15 22deg);
@@ -1985,8 +1985,8 @@
   --card-foreground: oklch(95% 0.01 200deg);
   --popover: oklch(15% 0.03 200deg);
   --popover-foreground: oklch(95% 0.01 200deg);
-  --primary: oklch(64% 0.2 300deg);
-  --primary-foreground: oklch(98.5% 0 0deg);
+  --primary: oklch(68% 0.14 195deg);
+  --primary-foreground: oklch(15% 0.02 195deg);
   --secondary: oklch(24% 0.03 200deg);
   --secondary-foreground: oklch(95% 0.01 200deg);
   --muted: oklch(24% 0.03 200deg);
@@ -1997,7 +1997,7 @@
   --destructive-foreground: oklch(87% 0.15 25deg);
   --border: oklch(27% 0.035 200deg);
   --input: oklch(27% 0.035 200deg);
-  --ring: oklch(45% 0.03 200deg);
+  --ring: oklch(68% 0.14 195deg);
   --success: oklch(30% 0.09 155deg);
   --warning: oklch(37% 0.09 65deg);
   --error: oklch(41% 0.15 22deg);
@@ -2014,7 +2014,7 @@
   --card-foreground: oklch(15% 0.02 50deg);
   --popover: oklch(96% 0.02 50deg);
   --popover-foreground: oklch(15% 0.02 50deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(48% 0.18 35deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(91% 0.025 50deg);
   --secondary-foreground: oklch(21% 0.02 50deg);
@@ -2026,7 +2026,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 50deg);
   --input: oklch(86% 0.025 50deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(48% 0.18 35deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -2043,7 +2043,7 @@
   --card-foreground: oklch(95% 0.01 240deg);
   --popover: oklch(15% 0.03 240deg);
   --popover-foreground: oklch(95% 0.01 240deg);
-  --primary: oklch(64% 0.2 300deg);
+  --primary: oklch(58% 0.11 230deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(24% 0.03 240deg);
   --secondary-foreground: oklch(95% 0.01 240deg);
@@ -2055,7 +2055,7 @@
   --destructive-foreground: oklch(87% 0.15 25deg);
   --border: oklch(27% 0.035 240deg);
   --input: oklch(27% 0.035 240deg);
-  --ring: oklch(45% 0.03 240deg);
+  --ring: oklch(58% 0.11 230deg);
   --success: oklch(30% 0.09 155deg);
   --warning: oklch(37% 0.09 65deg);
   --error: oklch(41% 0.15 22deg);
@@ -2072,8 +2072,8 @@
   --card-foreground: oklch(15% 0.02 120deg);
   --popover: oklch(96% 0.02 120deg);
   --popover-foreground: oklch(15% 0.02 120deg);
-  --primary: oklch(42% 0.27 300deg);
-  --primary-foreground: oklch(98.5% 0 0deg);
+  --primary: oklch(72% 0.24 115deg);
+  --primary-foreground: oklch(15% 0.02 115deg);
   --secondary: oklch(91% 0.025 120deg);
   --secondary-foreground: oklch(21% 0.02 120deg);
   --muted: oklch(91% 0.025 120deg);
@@ -2084,7 +2084,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 120deg);
   --input: oklch(86% 0.025 120deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(72% 0.24 115deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -2101,7 +2101,7 @@
   --card-foreground: oklch(15% 0.02 100deg);
   --popover: oklch(96% 0.02 100deg);
   --popover-foreground: oklch(15% 0.02 100deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(52% 0.15 95deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(91% 0.025 100deg);
   --secondary-foreground: oklch(21% 0.02 100deg);
@@ -2113,7 +2113,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 100deg);
   --input: oklch(86% 0.025 100deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(52% 0.15 95deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -2130,7 +2130,7 @@
   --card-foreground: oklch(95% 0.01 255deg);
   --popover: oklch(15% 0.03 255deg);
   --popover-foreground: oklch(95% 0.01 255deg);
-  --primary: oklch(64% 0.2 300deg);
+  --primary: oklch(62% 0.2 255deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(24% 0.03 255deg);
   --secondary-foreground: oklch(95% 0.01 255deg);
@@ -2142,7 +2142,7 @@
   --destructive-foreground: oklch(87% 0.15 25deg);
   --border: oklch(27% 0.035 255deg);
   --input: oklch(27% 0.035 255deg);
-  --ring: oklch(45% 0.03 255deg);
+  --ring: oklch(62% 0.2 255deg);
   --success: oklch(30% 0.09 155deg);
   --warning: oklch(37% 0.09 65deg);
   --error: oklch(41% 0.15 22deg);
@@ -2159,7 +2159,7 @@
   --card-foreground: oklch(95% 0.01 50deg);
   --popover: oklch(15% 0.03 50deg);
   --popover-foreground: oklch(95% 0.01 50deg);
-  --primary: oklch(64% 0.2 300deg);
+  --primary: oklch(55% 0.12 55deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(24% 0.03 50deg);
   --secondary-foreground: oklch(95% 0.01 50deg);
@@ -2171,7 +2171,7 @@
   --destructive-foreground: oklch(87% 0.15 25deg);
   --border: oklch(27% 0.035 50deg);
   --input: oklch(27% 0.035 50deg);
-  --ring: oklch(45% 0.03 50deg);
+  --ring: oklch(55% 0.12 55deg);
   --success: oklch(30% 0.09 155deg);
   --warning: oklch(37% 0.09 65deg);
   --error: oklch(41% 0.15 22deg);
@@ -2188,7 +2188,7 @@
   --card-foreground: oklch(15% 0.02 220deg);
   --popover: oklch(96% 0.02 220deg);
   --popover-foreground: oklch(15% 0.02 220deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(50% 0.16 215deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(91% 0.025 220deg);
   --secondary-foreground: oklch(21% 0.02 220deg);
@@ -2200,7 +2200,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 220deg);
   --input: oklch(86% 0.025 220deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(50% 0.16 215deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -2217,7 +2217,7 @@
   --card-foreground: oklch(95% 0.01 260deg);
   --popover: oklch(15% 0.03 260deg);
   --popover-foreground: oklch(95% 0.01 260deg);
-  --primary: oklch(64% 0.2 300deg);
+  --primary: oklch(62% 0.16 260deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(24% 0.03 260deg);
   --secondary-foreground: oklch(95% 0.01 260deg);
@@ -2229,7 +2229,7 @@
   --destructive-foreground: oklch(87% 0.15 25deg);
   --border: oklch(27% 0.035 260deg);
   --input: oklch(27% 0.035 260deg);
-  --ring: oklch(45% 0.03 260deg);
+  --ring: oklch(62% 0.16 260deg);
   --success: oklch(30% 0.09 155deg);
   --warning: oklch(37% 0.09 65deg);
   --error: oklch(41% 0.15 22deg);
@@ -2246,7 +2246,7 @@
   --card-foreground: oklch(15% 0.02 225deg);
   --popover: oklch(96% 0.02 225deg);
   --popover-foreground: oklch(15% 0.02 225deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(50% 0.1 225deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(91% 0.025 225deg);
   --secondary-foreground: oklch(21% 0.02 225deg);
@@ -2258,7 +2258,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 225deg);
   --input: oklch(86% 0.025 225deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(50% 0.1 225deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -2275,7 +2275,7 @@
   --card-foreground: oklch(15% 0.02 70deg);
   --popover: oklch(96% 0.02 70deg);
   --popover-foreground: oklch(15% 0.02 70deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(48% 0.13 60deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(91% 0.025 70deg);
   --secondary-foreground: oklch(21% 0.02 70deg);
@@ -2287,7 +2287,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 70deg);
   --input: oklch(86% 0.025 70deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(48% 0.13 60deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);
@@ -2304,7 +2304,7 @@
   --card-foreground: oklch(95% 0.01 270deg);
   --popover: oklch(15% 0.03 270deg);
   --popover-foreground: oklch(95% 0.01 270deg);
-  --primary: oklch(64% 0.2 300deg);
+  --primary: oklch(58% 0.18 250deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(24% 0.03 270deg);
   --secondary-foreground: oklch(95% 0.01 270deg);
@@ -2316,7 +2316,7 @@
   --destructive-foreground: oklch(87% 0.15 25deg);
   --border: oklch(27% 0.035 270deg);
   --input: oklch(27% 0.035 270deg);
-  --ring: oklch(45% 0.03 270deg);
+  --ring: oklch(58% 0.18 250deg);
   --success: oklch(30% 0.09 155deg);
   --warning: oklch(37% 0.09 65deg);
   --error: oklch(41% 0.15 22deg);
@@ -2333,7 +2333,7 @@
   --card-foreground: oklch(15% 0.02 55deg);
   --popover: oklch(96% 0.02 55deg);
   --popover-foreground: oklch(15% 0.02 55deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(58% 0.13 50deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(91% 0.025 55deg);
   --secondary-foreground: oklch(21% 0.02 55deg);
@@ -2345,7 +2345,7 @@
   --destructive-foreground: oklch(98% 0 0deg);
   --border: oklch(86% 0.025 55deg);
   --input: oklch(86% 0.025 55deg);
-  --ring: oklch(55% 0.15 300deg);
+  --ring: oklch(58% 0.13 50deg);
   --success: oklch(74% 0.11 150deg);
   --warning: oklch(88% 0.1 75deg);
   --error: oklch(60% 0.2 27deg);

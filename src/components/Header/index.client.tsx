@@ -19,6 +19,7 @@ export function HeaderClient({ header, shopCategoryGroups, siteSettings }: Props
       <TopUtilityBar
         announcementBar={siteSettings?.announcementBar}
         socialLinks={siteSettings?.sameAs ?? []}
+        supportEmail={siteSettings?.supportEmail}
         supportPhone={siteSettings?.supportPhone}
       />
       <MainHeader header={header} shopCategoryGroups={shopCategoryGroups} />

@@ -10,6 +10,7 @@ import { Wordmark } from '@/components/icons/Wordmark'
 import { ThemeSelector } from '@/providers/Theme/ThemeSelector'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { getSocialIcon } from '@/utilities/getSocialIcon'
+import { Headset } from 'lucide-react'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
@@ -109,7 +110,8 @@ export async function Footer() {
           )}
 
           <div className="border-border shrink-0 lg:w-72 lg:border-l lg:pl-16">
-            <h3 className="text-muted-foreground mb-5 text-xs font-semibold tracking-wider uppercase">
+            <h3 className="text-muted-foreground mb-5 flex items-center gap-2 text-xs font-semibold tracking-wider uppercase">
+              <Headset className="size-3.5" />
               Customer Support
             </h3>
             <CustomerSupport supportEmail={siteSettings?.supportEmail} supportPhone={siteSettings?.supportPhone} />

@@ -3,8 +3,9 @@ import type { Payload } from 'payload'
 import { zohoIsConfigured } from '@/lib/zoho/auth'
 import { findOrCreateZohoCustomer } from '@/lib/zoho/customers'
 import { resolveTaxId } from '@/lib/zoho/taxes'
-import { createZohoInvoice, findExistingInvoiceByOrderId, getInvoicePdfUrl } from '@/lib/zoho/invoices'
-import type { ZohoAddress, ZohoLineItem } from '@/lib/zoho/types'
+import { createZohoInvoice, findExistingInvoiceByOrderId, getInvoicePdfUrl, getZohoInvoice } from '@/lib/zoho/invoices'
+import { recordCustomerPayment } from '@/lib/zoho/payments'
+import type { ZohoAddress, ZohoInvoice, ZohoLineItem } from '@/lib/zoho/types'
 import { IndianState, resolveIndianState } from '@/lib/indianStates'
 
 type AddressLike = {
@@ -32,6 +33,139 @@ const toZohoAddress = (address: AddressLike, state?: IndianState): ZohoAddress |
     country: address.country || 'India',
     phone: address.phone || undefined,
   }
+}
+
+/**
+ * PayU's own transaction id (mihpayid — assigned once PayU confirms the
+ * payment; txnid is our merchant-generated id, sent before confirmation) is
+ * the reference a bookkeeper actually wants on a payment record, not our
+ * internal order id — it's what shows up in PayU's own settlement reports,
+ * so it's what reconciliation is actually done against.
+ */
+function getPayuReference(order: { transactions?: unknown }): string | undefined {
+  const transaction = Array.isArray(order.transactions) ? order.transactions[0] : undefined
+  const payu = transaction && typeof transaction === 'object' ? (transaction as { payu?: { mihpayid?: string; txnid?: string } }).payu : undefined
+  return payu?.mihpayid || payu?.txnid
+}
+
+/**
+ * This app collects 100% of the order total upfront (via PayU, or on
+ * delivery for COD) before an invoice is ever created — so by the time
+ * createZohoInvoice runs, the money has already been received. Without
+ * explicitly recording that in Zoho, the invoice sits with the full amount
+ * showing as "Balance Due" even though nothing is actually owed. Best-effort
+ * and non-fatal: a failure here doesn't undo the (already successful)
+ * invoice creation, just leaves the balance showing until retried.
+ */
+async function recordPaymentIfNeeded(args: {
+  payload: import('payload').Payload
+  order: { id: number | string; createdAt?: string; paymentMethod?: string | null; transactions?: unknown }
+  customerId?: string
+  invoice: ZohoInvoice
+}): Promise<boolean> {
+  const { payload, order, customerId, invoice } = args
+  const balance = invoice.balance ?? invoice.total
+  if (!customerId || !balance || balance <= 0) return false
+
+  const isPayu = order.paymentMethod !== 'cod'
+  const payuReference = isPayu ? getPayuReference(order) : undefined
+
+  try {
+    await recordCustomerPayment({
+      customerId,
+      invoiceId: invoice.invoice_id,
+      amount: balance,
+      date: new Date(order.createdAt || Date.now()).toISOString().slice(0, 10),
+      referenceNumber: payuReference || String(order.id),
+      // Must exactly match an existing mode name in Zoho's Settings > Payment
+      // Modes — Zoho matches by exact string (case-sensitive) and silently
+      // creates a new custom mode instead of erroring on a near-miss, so a
+      // wrong-case guess here doesn't fail loudly, it clutters the settings
+      // screen with a duplicate. Configurable rather than hard-coded so a
+      // typo/rename doesn't require a code change to fix.
+      paymentMode: isPayu ? process.env.ZOHO_PAYU_PAYMENT_MODE || 'PAYU' : 'cash',
+      accountId: process.env.ZOHO_PAYMENT_DEPOSIT_ACCOUNT_ID || undefined,
+      accountName: process.env.ZOHO_PAYMENT_DEPOSIT_ACCOUNT_NAME || 'SBI-BKC',
+    })
+    return true
+  } catch (err) {
+    payload.logger.warn({ msg: 'Failed to record Zoho payment for invoice', err, orderId: order.id })
+    return false
+  }
+}
+
+/**
+ * Builds Zoho line items for an order's items. Exported (not just inlined in
+ * syncZohoInvoiceForOrder) so a one-off correction script can rebuild
+ * line items with the current — correct — logic for an invoice that was
+ * created before a pricing/tax fix landed, without duplicating this logic.
+ */
+export async function buildZohoLineItems(
+  payload: Payload,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  order: any,
+  taxType: 'intra-state' | 'inter-state',
+  defaultGstPercent: number,
+): Promise<ZohoLineItem[]> {
+  const lineItems: ZohoLineItem[] = []
+
+  for (const item of order.items || []) {
+    const productId = typeof item.product === 'object' ? item.product?.id : item.product
+    if (!productId) continue
+
+    const product =
+      typeof item.product === 'object' && item.product
+        ? item.product
+        : await payload.findByID({ collection: 'products', id: productId, depth: 0, overrideAccess: true })
+
+    const variant =
+      item.variant && typeof item.variant === 'object'
+        ? item.variant
+        : item.variant
+          ? await payload.findByID({ collection: 'variants', id: item.variant, depth: 0, overrideAccess: true })
+          : undefined
+
+    const gstPercent = product?.gstPercent ?? defaultGstPercent
+    const taxId = await resolveTaxId(gstPercent, taxType)
+
+    // priceInINR is GST-inclusive (same assumption as taxCalculation.ts) but
+    // Zoho's line-item `rate` is the pre-tax base — it adds tax_id's rate on
+    // top when computing the invoice total. Sending the inclusive price
+    // straight through double-counted GST (e.g. a ₹5.00 inclusive price
+    // became a ₹5.00 rate + ₹0.90 IGST = ₹5.90 total, instead of the ₹5.00
+    // actually charged) and left every invoice showing a "balance due" for
+    // the extra tax amount that was never actually owed.
+    const taxInclusiveRate = ((variant?.priceInINR ?? product?.priceInINR ?? 0) as number) / 100
+    const rate = gstPercent > 0 ? taxInclusiveRate / (1 + gstPercent / 100) : taxInclusiveRate
+
+    lineItems.push({
+      name: product?.title || 'Product',
+      hsn_or_sac: product?.hsnCode || undefined,
+      rate,
+      quantity: item.quantity ?? 1,
+      tax_id: taxId,
+    })
+  }
+
+  return lineItems
+}
+
+/**
+ * Same intra/inter-state comparison as computeGstTaxBreakdown — needed
+ * because Zoho has separate tax_ids per type (e.g. "GST18" vs "IGST18") and
+ * will reject an invoice whose line items carry the wrong one for the
+ * transaction ("IGST has to be applied as this is an interstate
+ * transaction").
+ */
+export function resolveOrderTaxType(
+  sellerStateName: string | null | undefined,
+  customerStateName: string | null | undefined,
+): 'intra-state' | 'inter-state' {
+  const sellerState = resolveIndianState(sellerStateName)
+  const customerState = resolveIndianState(customerStateName)
+  return sellerState && customerState && sellerState.gstCode === customerState.gstCode
+    ? 'intra-state'
+    : 'inter-state'
 }
 
 /**
@@ -71,14 +205,24 @@ export async function syncZohoInvoiceForOrder(payload: Payload, orderId: number 
     const shipping = order.shippingAddress
 
     if (existingInvoice) {
+      const paymentRecorded = await recordPaymentIfNeeded({
+        payload,
+        order,
+        customerId: existingInvoice.customer_id,
+        invoice: existingInvoice,
+      })
+      const syncedInvoice = paymentRecorded
+        ? await getZohoInvoice(existingInvoice.invoice_id).catch(() => existingInvoice)
+        : existingInvoice
+
       await payload.update({
         collection: 'orders',
         id: orderId,
         data: {
-          zohoInvoiceId: existingInvoice.invoice_id,
-          zohoInvoiceNumber: existingInvoice.invoice_number,
-          zohoInvoiceStatus: existingInvoice.status,
-          zohoInvoiceUrl: getInvoicePdfUrl(existingInvoice),
+          zohoInvoiceId: syncedInvoice.invoice_id,
+          zohoInvoiceNumber: syncedInvoice.invoice_number,
+          zohoInvoiceStatus: syncedInvoice.status,
+          zohoInvoiceUrl: getInvoicePdfUrl(syncedInvoice),
           invoiceSyncStatus: 'completed',
           integrationError: { ...order.integrationError, invoice: null },
           lastSyncAt: new Date().toISOString(),
@@ -134,35 +278,11 @@ export async function syncZohoInvoiceForOrder(payload: Payload, orderId: number 
     const siteSettings = await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
     const defaultGstPercent = siteSettings?.taxSettings?.gstRatePercent ?? 18
 
-    const lineItems: ZohoLineItem[] = []
-    for (const item of order.items || []) {
-      const productId = typeof item.product === 'object' ? item.product?.id : item.product
-      if (!productId) continue
+    const businessState = siteSettings?.taxSettings?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka'
+    const customerState = shippingState || billingState
+    const taxType = resolveOrderTaxType(businessState, customerState?.name)
 
-      const product =
-        typeof item.product === 'object' && item.product
-          ? item.product
-          : await payload.findByID({ collection: 'products', id: productId, depth: 0, overrideAccess: true })
-
-      const variant =
-        item.variant && typeof item.variant === 'object'
-          ? item.variant
-          : item.variant
-            ? await payload.findByID({ collection: 'variants', id: item.variant, depth: 0, overrideAccess: true })
-            : undefined
-
-      const gstPercent = product?.gstPercent ?? defaultGstPercent
-      const taxId = await resolveTaxId(gstPercent)
-      const rate = ((variant?.priceInINR ?? product?.priceInINR ?? 0) as number) / 100
-
-      lineItems.push({
-        name: product?.title || 'Product',
-        hsn_or_sac: product?.hsnCode || undefined,
-        rate,
-        quantity: item.quantity ?? 1,
-        tax_id: taxId,
-      })
-    }
+    const lineItems = await buildZohoLineItems(payload, order, taxType, defaultGstPercent)
 
     if (lineItems.length === 0) {
       throw new Error('No valid line items to invoice.')
@@ -178,19 +298,20 @@ export async function syncZohoInvoiceForOrder(payload: Payload, orderId: number 
       gstTreatment,
       gstNo: gstin,
       lineItems,
-      billingAddress: toZohoAddress(billing, billingState),
-      shippingAddress: toZohoAddress(shipping, shippingState),
     })
+
+    const paymentRecorded = await recordPaymentIfNeeded({ payload, order, customerId: contact.contact_id, invoice })
+    const syncedInvoice = paymentRecorded ? await getZohoInvoice(invoice.invoice_id).catch(() => invoice) : invoice
 
     await payload.update({
       collection: 'orders',
       id: orderId,
       data: {
         zohoCustomerId: contact.contact_id,
-        zohoInvoiceId: invoice.invoice_id,
-        zohoInvoiceNumber: invoice.invoice_number,
-        zohoInvoiceStatus: invoice.status,
-        zohoInvoiceUrl: getInvoicePdfUrl(invoice),
+        zohoInvoiceId: syncedInvoice.invoice_id,
+        zohoInvoiceNumber: syncedInvoice.invoice_number,
+        zohoInvoiceStatus: syncedInvoice.status,
+        zohoInvoiceUrl: getInvoicePdfUrl(syncedInvoice),
         zohoInvoiceCreatedAt: new Date().toISOString(),
         invoiceSyncStatus: 'completed',
         integrationError: { ...order.integrationError, invoice: null },

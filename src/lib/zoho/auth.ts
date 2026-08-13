@@ -47,27 +47,36 @@ export async function getZohoAccessToken(): Promise<string> {
 }
 
 /**
- * Shared fetch wrapper for all Zoho Books API calls — attaches the OAuth
- * header + organization id, and normalizes error responses. Zoho Books
- * (unlike Zoho Invoice) takes the organization id as an `organization_id`
- * query parameter rather than a header, so it's merged into whatever query
- * string `path` already has. Responses are always JSON with a `code`/
- * `message` envelope, even on failure.
+ * Issues an authenticated request against the Zoho Books API — attaches the
+ * OAuth header + organization id (merged into whatever query string `path`
+ * already has; Zoho Books, unlike Zoho Invoice, takes it as an
+ * `organization_id` query parameter rather than a header) and returns the
+ * raw Response. Shared by zohoFetch (JSON) and zohoFetchBinary (PDF bytes).
  */
-export async function zohoFetch<T>(path: string, init?: RequestInit): Promise<T> {
+async function zohoRequest(path: string, init?: RequestInit): Promise<Response> {
   const token = await getZohoAccessToken()
 
   const [pathname, existingQuery] = path.split('?')
   const query = new URLSearchParams(existingQuery)
   query.set('organization_id', getZohoOrganizationId())
 
-  const res = await fetch(`${getZohoApiDomain()}/books/v3${pathname}?${query.toString()}`, {
+  return fetch(`${getZohoApiDomain()}/books/v3${pathname}?${query.toString()}`, {
     ...init,
     headers: {
-      'Content-Type': 'application/json',
       Authorization: `Zoho-oauthtoken ${token}`,
       ...init?.headers,
     },
+  })
+}
+
+/**
+ * For JSON endpoints. Responses are always JSON with a `code`/`message`
+ * envelope, even on failure.
+ */
+export async function zohoFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await zohoRequest(path, {
+    ...init,
+    headers: { 'Content-Type': 'application/json', ...init?.headers },
   })
 
   const data = await res.json()
@@ -77,4 +86,22 @@ export async function zohoFetch<T>(path: string, init?: RequestInit): Promise<T>
   }
 
   return data as T
+}
+
+/**
+ * For binary endpoints (PDF export). Zoho still returns a JSON error
+ * envelope on failure despite the endpoint normally producing a PDF, so a
+ * non-PDF content-type on a 200 is treated as an error too.
+ */
+export async function zohoFetchBinary(path: string): Promise<Buffer> {
+  const res = await zohoRequest(path)
+
+  const contentType = res.headers.get('content-type') || ''
+  if (!res.ok || !contentType.includes('pdf')) {
+    const body = await res.text()
+    throw new Error(`Zoho Books API error (${path}): ${res.status} ${body}`)
+  }
+
+  const arrayBuffer = await res.arrayBuffer()
+  return Buffer.from(arrayBuffer)
 }

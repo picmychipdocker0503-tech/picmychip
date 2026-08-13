@@ -13,7 +13,7 @@ import { useAuth } from '@/providers/Auth'
 import { useCompare } from '@/providers/Compare'
 import { useLocale } from '@/providers/Locale'
 import { useWishlist } from '@/providers/Wishlist'
-import { HeartIcon, ScaleIcon, UserIcon } from 'lucide-react'
+import { HeartIcon, LogInIcon, ScaleIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
@@ -34,7 +34,7 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
   const { t } = useLocale()
 
   const iconButtonClass =
-    'relative hidden size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:inline-flex'
+    'relative hidden size-10 items-center justify-center rounded-full text-muted-foreground transition-[background-color,color,transform] hover:bg-muted hover:text-foreground active:scale-95 md:inline-flex'
 
   return (
     <>
@@ -66,7 +66,7 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
           </div>
 
           {/* Right Icons */}
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-1">
             <Link aria-label="Account" className={iconButtonClass} href="/account">
               <UserIcon className="size-5" />
             </Link>
@@ -106,9 +106,9 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
 
           <div className="text-muted-foreground flex items-center gap-3 text-sm">
             <LanguageSwitcher className="select select-ghost select-xs text-muted-foreground hover:text-primary w-auto" />
-            <span className="text-border">|</span>
+            <span className="bg-border h-3 w-px" />
             {user ? (
-              <Link className="hover:text-primary transition-colors" href="/account">
+              <Link className="hover:text-primary font-medium transition-colors" href="/account">
                 Hi, {user.name || 'there'}
               </Link>
             ) : (
@@ -116,8 +116,12 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
                 <Link className="hover:text-primary transition-colors" href="/create-account">
                   {t('createAccount')}
                 </Link>
-                <span className="text-border">|</span>
-                <Link className="hover:text-primary transition-colors" href="/login">
+                <span className="bg-border h-3 w-px" />
+                <Link
+                  className="text-foreground hover:text-primary inline-flex items-center gap-1 font-medium transition-colors"
+                  href="/login"
+                >
+                  <LogInIcon className="size-3.5" />
                   {t('signIn')}
                 </Link>
               </>

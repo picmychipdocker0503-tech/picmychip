@@ -35,7 +35,7 @@ export function OpenCartButton({
     <button
       aria-label="Open cart"
       className={cn(
-        'btn btn-ghost btn-circle relative transition-transform duration-200',
+        'text-muted-foreground hover:bg-muted hover:text-foreground relative inline-flex size-10 items-center justify-center rounded-full transition-[background-color,color,transform] duration-200 active:scale-95',
         bounce && 'scale-125',
         className,
       )}

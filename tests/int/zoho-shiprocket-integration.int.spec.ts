@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { INDIAN_STATES, resolveIndianState } from '@/lib/indianStates'
 import { computeOrderTaxBreakdown } from '@/lib/taxCalculation'
 import { findExistingInvoiceByOrderId, getInvoicePdfUrl } from '@/lib/zoho/invoices'
+import { recordCustomerPayment } from '@/lib/zoho/payments'
 import { resolveTaxId } from '@/lib/zoho/taxes'
 
 describe('resolveIndianState', () => {
@@ -121,7 +122,11 @@ describe('Zoho Books API integration (mocked fetch)', () => {
     process.env = { ...originalEnv }
   })
 
-  it('resolves a tax_id by matching GST% against Settings > Taxes', async () => {
+  it('resolves the correct tax_id for intra- vs inter-state — a rate can have two entries in Zoho', async () => {
+    // Mirrors a real Zoho Books org: "GST18" is a tax_group (CGST+SGST) for
+    // intra-state, "IGST18" is a separate tax with tax_specific_type 'igst'
+    // for inter-state. Picking the wrong one gets the invoice rejected by
+    // Zoho with "IGST has to be applied as this is an interstate transaction".
     vi.stubGlobal(
       'fetch',
       vi.fn(async (url: string) => {
@@ -130,8 +135,10 @@ describe('Zoho Books API integration (mocked fetch)', () => {
           return jsonResponse({
             code: 0,
             taxes: [
-              { tax_id: 'tax-18', tax_name: 'GST18', tax_percentage: 18 },
-              { tax_id: 'tax-28', tax_name: 'GST28', tax_percentage: 28 },
+              { tax_id: 'sgst-tax', tax_name: 'GST', tax_percentage: 2.5, tax_type: 'tax', tax_specific_type: 'sgst' },
+              { tax_id: 'gst18-group', tax_name: 'GST18', tax_percentage: 18, tax_type: 'tax_group' },
+              { tax_id: 'igst18-tax', tax_name: 'IGST18', tax_percentage: 18, tax_type: 'tax', tax_specific_type: 'igst' },
+              { tax_id: 'igst5-tax', tax_name: 'IGST5', tax_percentage: 5, tax_type: 'tax', tax_specific_type: 'igst' },
             ],
           })
         }
@@ -139,17 +146,18 @@ describe('Zoho Books API integration (mocked fetch)', () => {
       }),
     )
 
-    await expect(resolveTaxId(18)).resolves.toBe('tax-18')
-    await expect(resolveTaxId(28)).resolves.toBe('tax-28')
-    await expect(resolveTaxId(5)).resolves.toBeUndefined()
+    await expect(resolveTaxId(18, 'intra-state')).resolves.toBe('gst18-group')
+    await expect(resolveTaxId(18, 'inter-state')).resolves.toBe('igst18-tax')
+    await expect(resolveTaxId(5, 'inter-state')).resolves.toBe('igst5-tax')
+    await expect(resolveTaxId(28, 'intra-state')).resolves.toBeUndefined()
   })
 
   it('ZOHO_TAX_ID_MAP overrides auto-detection without hitting the network', async () => {
-    process.env.ZOHO_TAX_ID_MAP = JSON.stringify({ '18': 'manual-override-id' })
+    process.env.ZOHO_TAX_ID_MAP = JSON.stringify({ '18-inter': 'manual-override-id' })
     const fetchSpy = vi.fn()
     vi.stubGlobal('fetch', fetchSpy)
 
-    await expect(resolveTaxId(18)).resolves.toBe('manual-override-id')
+    await expect(resolveTaxId(18, 'inter-state')).resolves.toBe('manual-override-id')
     expect(fetchSpy).not.toHaveBeenCalled()
   })
 
@@ -164,6 +172,21 @@ describe('Zoho Books API integration (mocked fetch)', () => {
             invoices: [{ invoice_id: 'inv-1', invoice_number: 'INV-000001', status: 'sent', total: 118 }],
           })
         }
+        // Full-detail fetch — the list response above is abbreviated and
+        // lacks fields (customer_id, balance) that payment recording needs.
+        if (url.includes('/invoices/inv-1')) {
+          return jsonResponse({
+            code: 0,
+            invoice: {
+              invoice_id: 'inv-1',
+              invoice_number: 'INV-000001',
+              status: 'sent',
+              total: 118,
+              balance: 118,
+              customer_id: 'contact-1',
+            },
+          })
+        }
         if (url.includes('reference_number=999')) {
           return jsonResponse({ code: 0, invoices: [] })
         }
@@ -171,7 +194,7 @@ describe('Zoho Books API integration (mocked fetch)', () => {
       }),
     )
 
-    await expect(findExistingInvoiceByOrderId(42)).resolves.toMatchObject({ invoice_id: 'inv-1' })
+    await expect(findExistingInvoiceByOrderId(42)).resolves.toMatchObject({ invoice_id: 'inv-1', balance: 118 })
     await expect(findExistingInvoiceByOrderId(999)).resolves.toBeUndefined()
   })
 
@@ -207,5 +230,46 @@ describe('Zoho Books API integration (mocked fetch)', () => {
     expect(getInvoicePdfUrl({ invoice_id: '123', invoice_number: 'INV-1', status: 'sent', total: 100 })).toContain(
       '123',
     )
+  })
+
+  it('records a customer payment into a bank account resolved by exact account name', async () => {
+    let postedBody: Record<string, unknown> | undefined
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url.includes('/oauth/v2/token')) return jsonResponse({ access_token: 'token', expires_in: 3600 })
+        if (url.includes('/chartofaccounts')) {
+          return jsonResponse({
+            code: 0,
+            chartofaccounts: [
+              { account_id: 'cash-1', account_name: 'Cash', account_type: 'cash', is_active: true },
+              { account_id: 'sbi-bkc-id', account_name: 'SBI-BKC', account_type: 'bank', is_active: true },
+            ],
+          })
+        }
+        if (url.includes('/customerpayments')) {
+          postedBody = JSON.parse(String(init?.body))
+          return jsonResponse({ code: 0, payment: { payment_id: 'payment-1' } })
+        }
+        throw new Error(`Unexpected fetch: ${url}`)
+      }),
+    )
+
+    await recordCustomerPayment({
+      customerId: 'contact-1',
+      invoiceId: 'inv-1',
+      amount: 5,
+      date: '2026-08-13',
+      referenceNumber: 'payu-ref',
+      paymentMode: 'PAYU',
+      accountName: 'SBI-BKC',
+    })
+
+    expect(postedBody).toMatchObject({
+      account_id: 'sbi-bkc-id',
+      payment_mode: 'PAYU',
+      reference_number: 'payu-ref',
+    })
   })
 })

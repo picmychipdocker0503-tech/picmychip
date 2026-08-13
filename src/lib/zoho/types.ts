@@ -35,7 +35,10 @@ export type ZohoInvoice = {
   invoice_id: string
   invoice_number: string
   reference_number?: string
+  customer_id?: string
   status: string
   total: number
+  /** Amount still owed on this invoice — 0 once fully paid. Used to decide whether a payment still needs recording. */
+  balance?: number
   invoice_url?: string
 }

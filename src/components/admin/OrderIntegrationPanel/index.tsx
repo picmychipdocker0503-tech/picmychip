@@ -84,7 +84,12 @@ export const OrderIntegrationPanel: React.FC = () => {
               rel="noopener noreferrer"
               target="_blank"
             >
-              View Invoice
+              View in Zoho
+            </a>
+          )}
+          {invoiceSyncStatus === 'completed' && id && (
+            <a className="pmc-btn pmc-btn-xs pmc-btn-outline" href={`/api/orders/${id}/invoice-pdf`}>
+              Download PDF
             </a>
           )}
           <button

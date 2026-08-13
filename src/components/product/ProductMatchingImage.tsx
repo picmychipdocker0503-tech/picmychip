@@ -89,8 +89,8 @@ export function getProductMatchDetails(title = '', slug = '', category = ''): Ma
     return {
       Icon: Inductor,
       label: 'Magnetic Inductor',
-      accentColor: 'text-purple-500',
-      bgGlow: 'from-purple-500/15 via-indigo-500/5 to-transparent',
+      accentColor: 'text-purple',
+      bgGlow: 'from-purple/15 via-purple-light/10 to-transparent',
     }
   }
 

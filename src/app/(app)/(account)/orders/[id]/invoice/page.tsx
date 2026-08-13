@@ -1,8 +1,9 @@
-import type { Order, Product, Variant } from '@/payload-types'
+import type { Product, Variant } from '@/payload-types'
 import type { Metadata } from 'next'
 
 import { Price } from '@/components/Price'
 import { PrintButton } from '@/components/PrintButton'
+import { getAccessibleOrder } from '@/lib/getAccessibleOrder'
 import { formatDateTime } from '@/utilities/formatDateTime'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import configPromise from '@payload-config'
@@ -25,45 +26,14 @@ export default async function InvoicePage({ params, searchParams }: PageProps) {
   const { id } = await params
   const { email = '', accessToken = '' } = await searchParams
 
-  let order: Order | null = null
-
-  try {
-    const {
-      docs: [orderResult],
-    } = await payload.find({
-      collection: 'orders',
-      user,
-      overrideAccess: !Boolean(user),
-      depth: 1,
-      where: {
-        and: [
-          { id: { equals: id } },
-          ...(user
-            ? [{ customer: { equals: user.id } }]
-            : [
-                { accessToken: { equals: accessToken } },
-                ...(email ? [{ customerEmail: { equals: email } }] : []),
-              ]),
-        ],
-      },
-    })
-
-    const canAccessAsGuest =
-      !user && email && accessToken && orderResult && orderResult.customerEmail === email
-    const canAccessAsUser =
-      user &&
-      orderResult &&
-      (typeof orderResult.customer === 'object' ? orderResult.customer?.id : orderResult.customer) ===
-        user.id
-
-    if (orderResult && (canAccessAsGuest || canAccessAsUser)) {
-      order = orderResult
-    }
-  } catch {
-    // fall through to notFound below
-  }
+  const order = await getAccessibleOrder({ payload, id, user, email, accessToken })
 
   if (!order) notFound()
+
+  const downloadQuery = new URLSearchParams({
+    ...(email ? { email } : {}),
+    ...(accessToken ? { accessToken } : {}),
+  }).toString()
 
   const siteSettings = await getCachedGlobal('site-settings', 0)()
   const tax = siteSettings?.taxSettings
@@ -78,16 +48,32 @@ export default async function InvoicePage({ params, searchParams }: PageProps) {
   const gstRate = snapshot?.gstRatePercent ?? tax?.gstRatePercent ?? 18
   const taxableValue = snapshot?.taxableValue ?? amount / (1 + gstRate / 100)
   const totalTax = snapshot?.totalTax ?? amount - taxableValue
+  const businessState = tax?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka'
   const isIntraState = snapshot?.taxType
     ? snapshot.taxType === 'intra-state'
-    : Boolean(tax?.businessState) &&
-      tax?.businessState?.trim().toLowerCase() === order.shippingAddress?.state?.trim().toLowerCase()
+    : businessState.trim().toLowerCase() === order.shippingAddress?.state?.trim().toLowerCase()
 
   return (
     <div className="container flex flex-col gap-6 py-16 print:py-0">
       <div className="flex items-center justify-between print:hidden">
         <h1 className="text-2xl font-bold">Tax Invoice</h1>
-        <PrintButton />
+        <div className="flex items-center gap-3">
+          {order.zohoInvoiceId ? (
+            <a
+              className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium"
+              href={`/api/orders/${order.id}/invoice-pdf${downloadQuery ? `?${downloadQuery}` : ''}`}
+            >
+              Download Invoice (PDF)
+            </a>
+          ) : (
+            order.invoiceSyncStatus !== 'failed' && (
+              <p className="text-muted-foreground text-sm">
+                Your official tax invoice is being generated — check back shortly.
+              </p>
+            )
+          )}
+          <PrintButton />
+        </div>
       </div>
 
       <div className="bg-card border-border rounded-2xl p-2 shadow-sm print:border-none print:p-0 print:shadow-none">

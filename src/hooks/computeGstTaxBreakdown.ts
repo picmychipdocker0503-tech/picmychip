@@ -54,7 +54,7 @@ export const computeGstTaxBreakdown: CollectionAfterChangeHook = async ({ doc, o
       items: validItems,
       amount: doc.amount ?? 0,
       defaultGstPercent,
-      businessState: tax?.businessState,
+      businessState: tax?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka',
       customerState: doc.shippingAddress?.state,
     })
 
