@@ -1,7 +1,11 @@
 import configPromise from '@payload-config'
-import Link from 'next/link'
 import { getPayload } from 'payload'
 import React from 'react'
+
+import { AreaSparkline } from '@/components/admin/charts/AreaSparkline'
+import { DonutChart } from '@/components/admin/charts/DonutChart'
+import { StatCard } from '@/components/admin/StatCard'
+import { getSalesReport } from '@/lib/reports'
 
 const STAT_ICONS: Record<string, React.ReactNode> = {
   Products: (
@@ -34,14 +38,45 @@ const STAT_ICONS: Record<string, React.ReactNode> = {
   ),
 }
 
+const Icon: React.FC<{ label: string }> = ({ label }) => (
+  <svg fill="none" height="16" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="16">
+    {STAT_ICONS[label]}
+  </svg>
+)
+
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount)
+
+const STOCK_SEGMENT_COLORS: Record<string, string> = {
+  'in-stock': 'var(--color-success)',
+  'low-stock': 'var(--color-warning)',
+  'out-of-stock': 'var(--color-error)',
+  backorder: 'var(--theme-elevation-300)',
+}
+
+const STOCK_LABELS: Record<string, string> = {
+  'in-stock': 'In stock',
+  'low-stock': 'Low stock',
+  'out-of-stock': 'Out of stock',
+  backorder: 'Backorder',
+}
+
 export const BeforeDashboard: React.FC = async () => {
   const payload = await getPayload({ config: configPromise })
 
-  const [products, lowStock, orders, pendingReviews] = await Promise.all([
+  const [products, lowStock, orders, pendingReviews, sales, stockBreakdown] = await Promise.all([
     payload.count({ collection: 'products' }),
     payload.count({ collection: 'products', where: { stockStatus: { equals: 'low-stock' } } }),
     payload.count({ collection: 'orders' }).catch(() => ({ totalDocs: 0 })),
     payload.count({ collection: 'reviews', where: { status: { equals: 'pending' } } }),
+    getSalesReport(payload).catch(() => null),
+    Promise.all(
+      Object.keys(STOCK_LABELS).map(async (status) => ({
+        status,
+        count: (await payload.count({ collection: 'products', where: { stockStatus: { equals: status } } }))
+          .totalDocs,
+      })),
+    ),
   ])
 
   const stats = [
@@ -50,6 +85,10 @@ export const BeforeDashboard: React.FC = async () => {
     { href: '/admin/collections/orders', label: 'Orders', value: orders.totalDocs },
     { href: '/admin/collections/reviews', label: 'Reviews Pending', value: pendingReviews.totalDocs },
   ]
+
+  const stockSegments = stockBreakdown
+    .filter((s) => s.count > 0)
+    .map((s) => ({ label: STOCK_LABELS[s.status], value: s.count, color: STOCK_SEGMENT_COLORS[s.status] }))
 
   return (
     <div className="relative isolate mb-8 flex flex-col gap-4 overflow-hidden">
@@ -67,30 +106,34 @@ export const BeforeDashboard: React.FC = async () => {
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {stats.map((stat) => (
-          <Link
-            className="border-base-content/10 bg-base-100/40 pmc-rounded-box hover:bg-base-100/60 group relative flex flex-col gap-3 border p-4 no-underline shadow-md backdrop-blur-xl transition-all hover:-translate-y-0.5 hover:shadow-xl"
+          <StatCard
             href={stat.href}
+            icon={<Icon label={stat.label} />}
             key={stat.label}
-          >
-            <div className="flex items-center justify-between">
-              <span
-                className={`inline-flex h-9 w-9 items-center justify-center rounded-full ${
-                  stat.warn ? 'bg-warning/20 text-warning' : 'bg-primary/15 text-primary'
-                }`}
-              >
-                <svg fill="none" height="18" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="18">
-                  {STAT_ICONS[stat.label]}
-                </svg>
-              </span>
-              {stat.warn ? <span className="pmc-badge pmc-badge-warning pmc-badge-sm">Attention</span> : null}
-            </div>
-            <div>
-              <div className="text-base-content text-3xl font-bold">{stat.value}</div>
-              <div className="text-base-content/70 text-sm">{stat.label}</div>
-            </div>
-          </Link>
+            label={stat.label}
+            value={String(stat.value)}
+            warn={stat.warn}
+          />
         ))}
       </div>
+
+      {sales && (
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <div className="border-base-content/10 bg-base-100/40 pmc-rounded-box border p-4 shadow-md backdrop-blur-xl">
+            <p className="text-base-content m-0 text-sm font-semibold">Revenue trend</p>
+            <p className="text-base-content/50 mb-2 text-xs">Last 14 days · {formatCurrency(sales.totalRevenue)} total</p>
+            <AreaSparkline data={sales.revenueByDay.map((d) => d.revenue)} />
+          </div>
+
+          {stockSegments.length > 0 && (
+            <div className="border-base-content/10 bg-base-100/40 pmc-rounded-box border p-4 shadow-md backdrop-blur-xl">
+              <p className="text-base-content m-0 text-sm font-semibold">Catalog stock mix</p>
+              <p className="text-base-content/50 mb-3 text-xs">Across all {products.totalDocs} products</p>
+              <DonutChart segments={stockSegments} />
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="flex flex-wrap gap-2">
         <a className="pmc-btn pmc-btn-outline pmc-btn-sm rounded-full no-underline" href="/" rel="noreferrer" target="_blank">
@@ -104,6 +147,9 @@ export const BeforeDashboard: React.FC = async () => {
         </a>
         <a className="pmc-btn pmc-btn-outline pmc-btn-sm rounded-full no-underline" href="/admin/reports">
           Reports
+        </a>
+        <a className="pmc-btn pmc-btn-outline pmc-btn-sm rounded-full no-underline" href="/admin/abandoned-checkouts">
+          Abandoned Checkouts
         </a>
       </div>
     </div>

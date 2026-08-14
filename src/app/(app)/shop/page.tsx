@@ -3,13 +3,6 @@ import type { Metadata } from 'next'
 import { ActiveFiltersBar } from '@/components/Search/ActiveFiltersBar'
 import { FacetSidebar } from '@/components/Search/FacetSidebar'
 import { ShopResults } from '@/components/Search/ShopResults'
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination'
 import { EmptyState } from '@/components/illustrations'
 import { getAverageRatings } from '@/lib/getAverageRatings'
 import { getFacetsForSchema } from '@/lib/facetConfig'
@@ -78,16 +71,11 @@ export default async function ShopPage({ searchParams }: Props) {
 
   const resultsText = products.docs.length > 1 ? 'results' : 'result'
 
-  const otherParams = new URLSearchParams()
-  if (searchValue) otherParams.set('q', String(searchValue))
-  if (sort) otherParams.set('sort', String(sort))
-  if (category) otherParams.set('category', String(category))
-
-  const pageHref = (targetPage: number) => {
-    const searchParamsForPage = new URLSearchParams(otherParams)
-    searchParamsForPage.set('page', String(targetPage))
-    return `/shop?${searchParamsForPage.toString()}`
-  }
+  const resultsKey = new URLSearchParams(
+    Object.entries(params).flatMap(([key, value]) =>
+      key === 'page' ? [] : Array.isArray(value) ? value.map((v) => [key, v]) : value ? [[key, value]] : [],
+    ),
+  ).toString()
 
   return (
     <div className="flex flex-col gap-8 md:flex-row md:items-start">
@@ -132,27 +120,14 @@ export default async function ShopPage({ searchParams }: Props) {
         )}
 
         {products?.docs.length > 0 ? (
-          <ShopResults products={products.docs} ratings={ratings} totalDocs={products.totalDocs} />
+          <ShopResults
+            hasNextPage={products.hasNextPage}
+            key={resultsKey}
+            products={products.docs}
+            ratings={ratings}
+            totalDocs={products.totalDocs}
+          />
         ) : null}
-
-        {products.totalPages > 1 && (
-          <div className="flex justify-center mt-12">
-            <Pagination>
-              <PaginationContent>
-                {products.hasPrevPage && (
-                  <PaginationItem>
-                    <PaginationPrevious href={pageHref(pageNum - 1)} />
-                  </PaginationItem>
-                )}
-                {products.hasNextPage && (
-                  <PaginationItem>
-                    <PaginationNext href={pageHref(pageNum + 1)} />
-                  </PaginationItem>
-                )}
-              </PaginationContent>
-            </Pagination>
-          </div>
-        )}
       </div>
     </div>
   )

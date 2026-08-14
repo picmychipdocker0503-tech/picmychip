@@ -40,8 +40,8 @@ type AddressFormValues = {
 
 type Props = {
   addressID?: Config['db']['defaultIDType']
-  initialData?: Omit<Address, 'country' | 'id' | 'updatedAt' | 'createdAt'> & { country?: string; gstin?: string }
-  callback?: (data: Partial<Address> & { gstin?: string }) => void
+  initialData?: Omit<Address, 'country' | 'id' | 'updatedAt' | 'createdAt'> & { country?: string }
+  callback?: (data: Partial<Address>) => void
   /**
    * If true, the form will not submit to the API.
    */

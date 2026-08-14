@@ -25,8 +25,17 @@
  * (e.g. `pmc-btn`, `pmc-input`, `pmc-badge`) to get daisyUI's styling while
  * never touching Payload's own class names.
  */
+/*
+ * `themes: false` disables daisyUI's auto-included built-in "light"/"dark"
+ * presets (indigo/violet primary) — without it, they collide with the custom
+ * "light"/"dark" theme blocks below and win the cascade for some tokens
+ * (confirmed via computed-style probe: `--color-primary` was resolving to
+ * daisyUI's stock `#422ad5` instead of this file's declared brand green).
+ * Same fix already applied to the storefront's globals.css for the same bug.
+ */
 @plugin 'daisyui' {
   prefix: 'pmc-';
+  themes: false;
 }
 
 @plugin 'daisyui/theme' {

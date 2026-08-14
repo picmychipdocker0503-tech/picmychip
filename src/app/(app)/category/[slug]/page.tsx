@@ -1,19 +1,12 @@
 import type { Metadata } from 'next'
 
 import { RenderBlocks } from '@/blocks/RenderBlocks'
-import { Grid } from '@/components/Grid'
 import { JsonLd } from '@/components/JsonLd'
-import { DealProductCard } from '@/components/product/DealProductCard'
 import { ActiveFiltersBar } from '@/components/Search/ActiveFiltersBar'
+import { CategoryResults } from '@/components/Search/CategoryResults'
 import { FacetSidebar } from '@/components/Search/FacetSidebar'
 import { getIllustration } from '@/components/illustrations'
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination'
+import { getAverageRatings } from '@/lib/getAverageRatings'
 import { getFacetsForSchema } from '@/lib/facetConfig'
 import { parseFacetFilters } from '@/lib/facetParams'
 import { searchProducts } from '@/lib/searchProducts'
@@ -86,6 +79,18 @@ export default async function CategoryPage({ params, searchParams }: Args) {
     limit: PRODUCTS_PER_PAGE,
   })
 
+  const ratingsMap = await getAverageRatings(
+    payload,
+    products.docs.map((product) => product.id).filter((id): id is number => typeof id === 'number'),
+  )
+  const ratings = Object.fromEntries(ratingsMap)
+
+  const resultsKey = new URLSearchParams(
+    Object.entries(query).flatMap(([key, value]) =>
+      key === 'page' ? [] : Array.isArray(value) ? value.map((v) => [key, v]) : value ? [[key, value]] : [],
+    ),
+  ).toString()
+
   const Illustration = getIllustration(category.specSchemaType)
 
   const breadcrumb = await getCategoryBreadcrumb(payload, category)
@@ -116,30 +121,16 @@ export default async function CategoryPage({ params, searchParams }: Args) {
           )}
 
           {products.docs.length > 0 ? (
-            <Grid className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-in fade-in-0 duration-500">
-              {products.docs.map((product) => (
-                <DealProductCard key={product.id} product={product} />
-              ))}
-            </Grid>
+            <CategoryResults
+              categoryId={String(category.id)}
+              hasNextPage={products.hasNextPage}
+              key={resultsKey}
+              products={products.docs}
+              ratings={ratings}
+              totalDocs={products.totalDocs}
+            />
           ) : (
             <p className="text-muted-foreground">No products in this category yet.</p>
-          )}
-
-          {products.totalPages > 1 && (
-            <Pagination className="mt-12">
-              <PaginationContent>
-                {products.hasPrevPage && (
-                  <PaginationItem>
-                    <PaginationPrevious href={`/category/${slug}?page=${pageNum - 1}`} />
-                  </PaginationItem>
-                )}
-                {products.hasNextPage && (
-                  <PaginationItem>
-                    <PaginationNext href={`/category/${slug}?page=${pageNum + 1}`} />
-                  </PaginationItem>
-                )}
-              </PaginationContent>
-            </Pagination>
           )}
         </div>
       </div>

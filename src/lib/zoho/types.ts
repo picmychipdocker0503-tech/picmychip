@@ -42,3 +42,24 @@ export type ZohoInvoice = {
   balance?: number
   invoice_url?: string
 }
+
+export type ZohoLinkedInvoice = {
+  invoice_id: string
+  invoice_number: string
+  status: string
+  total: number
+  balance: number
+}
+
+export type ZohoSalesOrder = {
+  salesorder_id: string
+  salesorder_number: string
+  reference_number?: string
+  customer_id?: string
+  status: string
+  /** '' (not yet invoiced) | 'invoiced' | 'partially_invoiced' — set once a linked invoice exists, whether created via our "accept" action or directly in the Zoho Books UI. */
+  invoiced_status?: string
+  total: number
+  /** Present once the sales order has been converted (fully or partially) to one or more invoices — the source of truth for detecting a Zoho-side acceptance. */
+  invoices?: ZohoLinkedInvoice[]
+}

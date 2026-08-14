@@ -4,6 +4,7 @@ import config from '@payload-config'
 import '@payloadcms/next/css'
 import type { ServerFunctionClient } from 'payload'
 import { handleServerFunctions, RootLayout } from '@payloadcms/next/layouts'
+import { GeistSans } from 'geist/font/sans'
 import React from 'react'
 
 import { importMap } from './admin/importMap.js'
@@ -28,7 +29,11 @@ const serverFunction: ServerFunctionClient = async function (args) {
 
 const Layout = ({ children }: Args) => (
   <RootLayout config={config} importMap={importMap} serverFunction={serverFunction}>
-    {children}
+    {/* GeistSans.variable exposes --font-geist-sans; .pmc-font-root (see
+        custom.scss) resolves it into an actual font-family here, matching
+        the storefront's typography. RootLayout owns the real <html>/<body>
+        tags so this wrapper is the highest point we can attach it to. */}
+    <div className={`${GeistSans.variable} pmc-font-root`}>{children}</div>
   </RootLayout>
 )
 

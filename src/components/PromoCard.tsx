@@ -36,7 +36,7 @@ export const PromoCard: React.FC<Props> = ({
   className,
 }) => {
   const wrapperClassName = cn(
-    'group relative flex items-center gap-4 overflow-hidden rounded-3xl px-7 py-7 transition-transform duration-300 sm:px-10',
+    'group relative flex flex-col items-stretch gap-4 overflow-hidden rounded-3xl px-7 py-7 transition-transform duration-300 sm:flex-row sm:items-center sm:px-10',
     tone === 'dark' ? 'bg-neutral-950 text-white hover:-translate-y-0.5' : 'bg-muted text-foreground hover:-translate-y-0.5',
     className,
   )
@@ -75,7 +75,7 @@ export const PromoCard: React.FC<Props> = ({
 
       {typeof image === 'object' && image && (
         <Media
-          className="relative aspect-square w-2/5 shrink-0"
+          className="relative order-first aspect-square w-full max-w-48 shrink-0 self-center sm:order-none sm:w-2/5 sm:max-w-none"
           fill
           imgClassName="object-contain transition-transform duration-300 group-hover:scale-105"
           resource={image}

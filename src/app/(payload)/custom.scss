@@ -41,3 +41,186 @@
   --color-success-950: rgb(2, 13, 7);
   --color-success-1000: rgb(0, 0, 0);
 }
+
+// The --color-success ramp above covers checkboxes/pills/toasts, but
+// Payload's primary buttons (Publish/Save/Login/"Create New") and the active
+// sidebar-nav indicator are driven by the neutral --theme-elevation-* ramp,
+// not --color-success — confirmed via @payloadcms/ui's Button/index.scss
+// (`.btn--style-primary` uses --theme-elevation-800/600/0) and a computed-
+// style probe of the sidebar nav (`.nav__link-indicator` resolves to
+// rgb(47, 47, 47), i.e. --theme-elevation-800). Both are re-pointed here at
+// --color-primary, the brand green already defined in admin-tailwind.css's
+// daisyUI theme — unlayered, same reasoning as the ramp above.
+.btn--style-primary {
+  --bg-color: var(--color-primary);
+  --color: var(--color-primary-content);
+  --hover-bg: color-mix(in oklab, var(--color-primary) 85%, black);
+  --hover-color: var(--color-primary-content);
+
+  // Unlayered rules beat @layer'd ones regardless of specificity, so Payload's
+  // own `.btn--style-primary.btn--disabled` (elevation-gray) rule above would
+  // otherwise lose to the green set here — restate it to keep disabled
+  // buttons visibly disabled instead of green.
+  &.btn--disabled {
+    --bg-color: var(--theme-elevation-200);
+    --color: var(--theme-elevation-800);
+    --hover-bg: var(--bg-color);
+    --hover-color: var(--color);
+  }
+}
+
+.nav__link-indicator {
+  background-color: var(--color-primary) !important;
+}
+
+div.nav__link .nav__link-label {
+  color: var(--color-primary);
+}
+
+// Matches the storefront's typography (same Geist font, loaded via
+// GeistSans in layout.tsx). --font-geist-sans is only in scope on
+// .pmc-font-root and below (RootLayout, from @payloadcms/next/layouts, owns
+// the actual <html>/<body> tags directly, so we can't attach the variable
+// any higher) — font-family is inherited, so resolving it here still
+// cascades to everything inside. Portal-rendered overlays that mount
+// directly on <body> (outside this wrapper) fall back to Payload's default
+// font; an acceptable gap given we don't control the root layout markup.
+.pmc-font-root {
+  font-family: var(--font-geist-sans), var(--font-body);
+}
+
+// ---------------------------------------------------------------------------
+// daisyUI-style layout pass — reskins Payload's existing list/table/nav/tab
+// markup with rounded "card" surfaces, shadows, and brand-green accents
+// (the same visual language as admin-tailwind.css's daisyUI theme and the
+// storefront). Every rule below targets Payload's own stable class names
+// (verified against @payloadcms/ui@3.86.0's compiled scss + a live DOM
+// audit) and only touches paint (background/border/radius/shadow/color) —
+// never display/position/layout — so none of it can change how these
+// elements behave, only how they look.
+// ---------------------------------------------------------------------------
+
+// List view toolbar (search + Filters/Columns pills) as a card.
+.list-controls {
+  background: var(--theme-input-bg);
+  border: 1px solid var(--theme-elevation-100);
+  border-radius: var(--style-radius-m);
+  padding: calc(var(--base) * 0.75);
+  margin-bottom: calc(var(--base) * 0.8);
+}
+
+.search-filter__input {
+  border-radius: var(--style-radius-s);
+}
+
+// Filters/Columns pills get a hairline border so they read as controls
+// sitting inside the toolbar card rather than free-floating text.
+.list-controls .pill--style-light {
+  border: 1px solid var(--theme-elevation-100);
+}
+
+// List table as a card: rounded corners, hairline border, soft shadow, and a
+// hover highlight on rows (Payload only ships zebra-striping by default).
+.table {
+  border: 1px solid var(--theme-elevation-100);
+  border-radius: var(--style-radius-m);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+  padding: calc(var(--base) * 0.3);
+}
+
+.table thead th {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
+.table tbody tr:hover {
+  background: var(--theme-elevation-50);
+}
+
+// Current page number in pagination, brand green instead of neutral gray.
+.paginator__page--is-current {
+  background: color-mix(in oklab, var(--color-primary) 12%, transparent);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+// Sidebar nav group titles ("Content", "Ecommerce"...) as daisyUI menu-title
+// style — small caps, letter-spaced, muted.
+.nav-group__label {
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+// Active document-edit tab (Edit/Versions/API) gets a brand-green underline
+// instead of the neutral default.
+.doc-tab--active {
+  box-shadow: inset 0 -2px 0 0 var(--color-primary);
+  color: var(--color-primary);
+}
+
+// ---------------------------------------------------------------------------
+// Sidebar nav icons — a small monochrome icon before each item's label,
+// keyed by Payload's own stable `#nav-<slug>` (collections) / `#nav-global-
+// <slug>` (globals) ids, confirmed in @payloadcms/next's
+// elements/Nav/index.client.js (`id = 'nav-' + slug` / `'nav-global-' + slug`).
+// Pure CSS via mask-image — doesn't touch Payload's Nav component at all, so
+// grouping/collapse-state/permissions/active-state logic is all untouched;
+// only a decorative icon is added per link. Icons live in public/admin-icons.
+// ---------------------------------------------------------------------------
+.nav__link[id^='nav-'] {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    flex-shrink: 0;
+    width: 15px;
+    height: 15px;
+    background-color: currentColor;
+    opacity: 0.6;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+  }
+}
+
+// The active item is a <div>, not an <a> — bump its icon to full brand-green
+// opacity to match the already-green active label/indicator bar.
+div.nav__link[id^='nav-']::before {
+  opacity: 1;
+  background-color: var(--color-primary);
+}
+
+#nav-users::before { mask-image: url(/admin-icons/users.svg); -webkit-mask-image: url(/admin-icons/users.svg); }
+#nav-pages::before { mask-image: url(/admin-icons/file-text.svg); -webkit-mask-image: url(/admin-icons/file-text.svg); }
+#nav-categories::before { mask-image: url(/admin-icons/tag.svg); -webkit-mask-image: url(/admin-icons/tag.svg); }
+#nav-media::before { mask-image: url(/admin-icons/image.svg); -webkit-mask-image: url(/admin-icons/image.svg); }
+#nav-datasheets::before { mask-image: url(/admin-icons/file.svg); -webkit-mask-image: url(/admin-icons/file.svg); }
+#nav-guides::before { mask-image: url(/admin-icons/book-open.svg); -webkit-mask-image: url(/admin-icons/book-open.svg); }
+#nav-jobs::before { mask-image: url(/admin-icons/briefcase.svg); -webkit-mask-image: url(/admin-icons/briefcase.svg); }
+#nav-brands::before { mask-image: url(/admin-icons/award.svg); -webkit-mask-image: url(/admin-icons/award.svg); }
+#nav-reviews::before { mask-image: url(/admin-icons/star.svg); -webkit-mask-image: url(/admin-icons/star.svg); }
+#nav-services::before { mask-image: url(/admin-icons/wrench.svg); -webkit-mask-image: url(/admin-icons/wrench.svg); }
+#nav-newsletter-subscribers::before { mask-image: url(/admin-icons/mail.svg); -webkit-mask-image: url(/admin-icons/mail.svg); }
+#nav-forms::before { mask-image: url(/admin-icons/clipboard.svg); -webkit-mask-image: url(/admin-icons/clipboard.svg); }
+#nav-form-submissions::before { mask-image: url(/admin-icons/inbox.svg); -webkit-mask-image: url(/admin-icons/inbox.svg); }
+#nav-coupons::before { mask-image: url(/admin-icons/tag.svg); -webkit-mask-image: url(/admin-icons/tag.svg); }
+#nav-gift-cards::before { mask-image: url(/admin-icons/gift.svg); -webkit-mask-image: url(/admin-icons/gift.svg); }
+#nav-stock-alerts::before { mask-image: url(/admin-icons/bell.svg); -webkit-mask-image: url(/admin-icons/bell.svg); }
+#nav-return-requests::before { mask-image: url(/admin-icons/corner-up-left.svg); -webkit-mask-image: url(/admin-icons/corner-up-left.svg); }
+#nav-products::before { mask-image: url(/admin-icons/layout-dashboard.svg); -webkit-mask-image: url(/admin-icons/layout-dashboard.svg); }
+#nav-carts::before { mask-image: url(/admin-icons/shopping-cart.svg); -webkit-mask-image: url(/admin-icons/shopping-cart.svg); }
+#nav-orders::before { mask-image: url(/admin-icons/package.svg); -webkit-mask-image: url(/admin-icons/package.svg); }
+#nav-transactions::before { mask-image: url(/admin-icons/credit-card.svg); -webkit-mask-image: url(/admin-icons/credit-card.svg); }
+#nav-global-header::before { mask-image: url(/admin-icons/layout-top.svg); -webkit-mask-image: url(/admin-icons/layout-top.svg); }
+#nav-global-footer::before { mask-image: url(/admin-icons/layout-bottom.svg); -webkit-mask-image: url(/admin-icons/layout-bottom.svg); }
+#nav-global-site-settings::before { mask-image: url(/admin-icons/settings.svg); -webkit-mask-image: url(/admin-icons/settings.svg); }
+#nav-global-feature-flags::before { mask-image: url(/admin-icons/toggle-left.svg); -webkit-mask-image: url(/admin-icons/toggle-left.svg); }

@@ -43,6 +43,20 @@ const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
+    meta: {
+      titleSuffix: '- Picmychip Admin',
+      description: 'Admin panel for managing Picmychip products, orders, and site content.',
+      icons: [
+        { rel: 'icon', type: 'image/svg+xml', url: '/favicon.svg' },
+        { rel: 'icon', sizes: '32x32', url: '/favicon.ico' },
+      ],
+      openGraph: {
+        siteName: 'Picmychip Admin',
+        title: 'Picmychip Admin',
+        description: 'Admin panel for managing Picmychip products, orders, and site content.',
+        images: [{ url: '/icons/icon-512.png' }],
+      },
+    },
     components: {
       // Renders top-right of every admin page (not just the dashboard).
       actions: ['@/components/admin/EnvironmentBadge#EnvironmentBadge'],
@@ -64,6 +78,10 @@ export default buildConfig({
         reports: {
           Component: '@/components/admin/ReportsView#ReportsView',
           path: '/reports',
+        },
+        abandonedCheckouts: {
+          Component: '@/components/admin/AbandonedCheckoutsView#AbandonedCheckoutsView',
+          path: '/abandoned-checkouts',
         },
       },
     },

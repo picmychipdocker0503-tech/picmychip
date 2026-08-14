@@ -12,7 +12,7 @@ export const SiteSettings: GlobalConfig = {
     update: adminOnly,
   },
   admin: {
-    group: 'Content',
+    group: 'Settings',
   },
   hooks: {
     afterChange: [revalidateGlobal('site-settings')],

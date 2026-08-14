@@ -114,28 +114,13 @@ export default function CartPage() {
         </button>
       </div>
 
-      <div className="bg-card border-border overflow-hidden rounded-2xl border shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="border-border text-muted-foreground border-b text-sm">
-                <th className="px-6 py-4 font-medium">Product</th>
-                <th className="hidden px-6 py-4 font-medium sm:table-cell">Price</th>
-                <th className="hidden px-6 py-4 font-medium sm:table-cell">Quantity</th>
-                <th className="hidden px-6 py-4 font-medium sm:table-cell">Subtotal</th>
-                <th className="px-6 py-4 font-medium">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((item, index) => (
-                <CartRow item={item as CartItem} key={item.id ?? index} priceField={priceField} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <ul className="flex flex-col gap-4">
+        {items.map((item, index) => (
+          <CartRow item={item as CartItem} key={item.id ?? index} priceField={priceField} />
+        ))}
+      </ul>
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-6 pb-24 lg:grid-cols-3 lg:pb-0">
         <div className="bg-card border-border flex flex-col gap-5 rounded-2xl border p-6 shadow-sm lg:col-span-2">
           <div>
             <p className="text-muted-foreground mb-3 font-medium">Have a coupon code?</p>
@@ -267,22 +252,27 @@ export default function CartPage() {
             })}
           </ul>
 
-          <div className="border-border mt-2 flex items-center justify-between border-t pt-4">
-            <span className="text-lg font-bold">Total</span>
-            <span className="text-lg font-bold">
-              <Price amount={cart?.subtotal ?? 0} />
-            </span>
+          {/* Fixed on mobile (matches the PDP buy bar's pattern) so the
+              primary action stays reachable without scrolling past the full
+              summary card; reverts to normal inline flow from lg up. */}
+          <div className="border-border bg-card fixed inset-x-0 bottom-0 z-40 border-t p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lg lg:static lg:inset-auto lg:z-auto lg:mt-2 lg:border-t lg:p-0 lg:pt-4 lg:pb-0 lg:shadow-none">
+            <div className="flex items-center justify-between">
+              <span className="text-lg font-bold">Total</span>
+              <span className="text-lg font-bold">
+                <Price amount={cart?.subtotal ?? 0} />
+              </span>
+            </div>
+
+            <Link
+              className="btn btn-primary mt-3 w-full lg:mt-6"
+              href="/checkout"
+              aria-disabled={isLoading}
+            >
+              Proceed to Checkout
+            </Link>
+
+            <SecureCheckoutBadge className="mt-4 hidden lg:flex" />
           </div>
-
-          <Link
-            className="btn btn-primary mt-6 w-full"
-            href="/checkout"
-            aria-disabled={isLoading}
-          >
-            Proceed to Checkout
-          </Link>
-
-          <SecureCheckoutBadge className="mt-4" />
         </div>
       </div>
     </div>
@@ -338,73 +328,80 @@ const CartRow: React.FC<{ item: CartItem; priceField: `priceIn${string}` }> = ({
   const lineTotal = typeof unitPrice === 'number' ? unitPrice * (item.quantity ?? 0) : undefined
 
   return (
-    <tr className="border-border last:border-b-0 border-b">
-      <td className="px-6 py-4">
-        <Link className="group flex items-center gap-4" href={`/products/${product.slug}`}>
-          <div className="bg-muted relative size-16 shrink-0 overflow-hidden rounded-lg">
-            {image ? (
-              <Media className="relative h-full w-full" fill imgClassName="object-cover" resource={image} />
-            ) : (
-              <div className="text-muted-foreground flex h-full w-full items-center justify-center text-xs">
-                No image
-              </div>
-            )}
+    <li className="bg-card border-border flex gap-4 rounded-2xl border p-4 shadow-sm">
+      <Link className="bg-muted relative size-20 shrink-0 overflow-hidden rounded-xl" href={`/products/${product.slug}`}>
+        {image ? (
+          <Media className="relative h-full w-full" fill imgClassName="object-cover" resource={image} />
+        ) : (
+          <div className="text-muted-foreground flex h-full w-full items-center justify-center text-xs">
+            No image
           </div>
-          <div className="flex flex-col">
-            <span className="group-hover:text-primary font-medium text-foreground transition-colors">
+        )}
+      </Link>
+
+      <div className="flex min-w-0 flex-1 flex-col">
+        <div className="flex items-start justify-between gap-3">
+          <Link className="group min-w-0" href={`/products/${product.slug}`}>
+            <p className="group-hover:text-primary line-clamp-2 font-medium text-foreground transition-colors">
               {product.title}
-            </span>
+            </p>
             {isVariant && variant?.options ? (
-              <span className="text-muted-foreground text-xs capitalize">
+              <p className="text-muted-foreground text-xs capitalize">
                 {variant.options
                   .map((option: VariantOptionItem) => (typeof option === 'object' ? option.label : null))
                   .filter(Boolean)
                   .join(', ')}
-              </span>
+              </p>
             ) : null}
-          </div>
-        </Link>
-      </td>
-      <td className="hidden px-6 py-4 font-semibold sm:table-cell">
-        {typeof unitPrice === 'number' ? <Price amount={unitPrice} /> : '—'}
-      </td>
-      <td className="hidden px-6 py-4 sm:table-cell">
-        <div className="border-border flex w-fit items-center rounded-lg border">
+          </Link>
+
           <button
-            aria-label="Decrease quantity"
-            className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"
+            aria-label="Remove from cart"
+            className="border-border text-muted-foreground hover:border-error hover:text-error inline-flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors"
             disabled={isLoading || !item.id}
-            onClick={() => item.id && decrementItem(item.id)}
+            onClick={() => item.id && removeItem(item.id)}
             type="button"
           >
-            <MinusIcon className="size-4" />
-          </button>
-          <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-          <button
-            aria-label="Increase quantity"
-            className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"
-            disabled={isLoading || !item.id || atMaxInventory}
-            onClick={() => item.id && incrementItem(item.id)}
-            type="button"
-          >
-            <PlusIcon className="size-4" />
+            <Trash2Icon className="size-4" />
           </button>
         </div>
-      </td>
-      <td className="hidden px-6 py-4 font-semibold sm:table-cell">
-        {typeof lineTotal === 'number' ? <Price amount={lineTotal} /> : '—'}
-      </td>
-      <td className="px-6 py-4">
-        <button
-          aria-label="Remove from cart"
-          className="border-border text-muted-foreground hover:border-error hover:text-error inline-flex size-9 items-center justify-center rounded-lg border transition-colors"
-          disabled={isLoading || !item.id}
-          onClick={() => item.id && removeItem(item.id)}
-          type="button"
-        >
-          <Trash2Icon className="size-4" />
-        </button>
-      </td>
-    </tr>
+
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+          <span className="font-semibold text-foreground">
+            {typeof unitPrice === 'number' ? <Price amount={unitPrice} /> : '—'}
+          </span>
+
+          <div className="flex items-center gap-3">
+            <div className="border-border flex w-fit items-center rounded-lg border">
+              <button
+                aria-label="Decrease quantity"
+                className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"
+                disabled={isLoading || !item.id}
+                onClick={() => item.id && decrementItem(item.id)}
+                type="button"
+              >
+                <MinusIcon className="size-4" />
+              </button>
+              <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+              <button
+                aria-label="Increase quantity"
+                className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"
+                disabled={isLoading || !item.id || atMaxInventory}
+                onClick={() => item.id && incrementItem(item.id)}
+                type="button"
+              >
+                <PlusIcon className="size-4" />
+              </button>
+            </div>
+
+            {typeof lineTotal === 'number' && (
+              <span className="text-muted-foreground w-20 shrink-0 text-right text-sm">
+                <Price amount={lineTotal} />
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </li>
   )
 }

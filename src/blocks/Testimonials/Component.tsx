@@ -65,6 +65,15 @@ export const TestimonialsBlock: React.FC<
 
   if (cards.length === 0) return null
 
+  // Two-tone headline: bold/dark statement, then a muted continuation on
+  // its own line — split at an em/en dash if the heading (CMS-provided or
+  // the default below) contains one, otherwise it just renders as one
+  // solid-color line.
+  const headingText = heading || 'What Hardware Builders Say — And Keep Coming Back.'
+  const dashIndex = headingText.search(/[–—]/)
+  const headingMain = dashIndex === -1 ? headingText : headingText.slice(0, dashIndex).trim()
+  const headingSub = dashIndex === -1 ? null : headingText.slice(dashIndex).trim()
+
   return (
     <section className="container my-20">
       <div className="mx-auto max-w-3xl text-center mb-12">
@@ -72,8 +81,14 @@ export const TestimonialsBlock: React.FC<
           <MessageSquareHeart className="size-3.5" />
           COMMUNITY FEEDBACK
         </span>
-        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight text-foreground">
-          {heading || 'What Hardware Builders Say'}
+        <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">
+          <span className="text-foreground">{headingMain}</span>
+          {headingSub && (
+            <>
+              <br />
+              <span className="text-muted-foreground">{headingSub}</span>
+            </>
+          )}
         </h2>
         <p className="mt-2 text-sm sm:text-base text-muted-foreground">
           Real feedback from engineers, makers, and labs who rely on our spec-verified component catalog.

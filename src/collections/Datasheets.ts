@@ -11,7 +11,7 @@ const dirname = path.dirname(filename)
 export const Datasheets: CollectionConfig = {
   slug: 'datasheets',
   admin: {
-    group: 'Content',
+    group: 'Catalog',
     useAsTitle: 'title',
   },
   access: {

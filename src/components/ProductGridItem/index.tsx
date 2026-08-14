@@ -19,6 +19,7 @@ type Props = {
   product: Partial<Product>
   averageRating?: number
   reviewCount?: number
+  priority?: boolean
 }
 
 const STOCK_BADGE = {
@@ -34,7 +35,7 @@ const STOCK_LABEL: Record<string, { label: string; className: string; dot: strin
   backorder: { label: 'Backorder', className: 'text-amber-500', dot: 'bg-amber-500' },
 }
 
-export const ProductGridItem: React.FC<Props> = ({ product, averageRating, reviewCount }) => {
+export const ProductGridItem: React.FC<Props> = ({ product, averageRating, reviewCount, priority }) => {
   const { gallery, title, stockStatus, slug, categories } = product
   const { toggle, isComparing } = useCompare()
   const { toggle: toggleWishlist, isSaved } = useWishlist()
@@ -104,6 +105,7 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
             category={firstCategory}
             className="w-full h-full"
             image={image}
+            priority={priority}
             slug={slug}
             title={title}
           />

@@ -187,7 +187,7 @@ const WishlistRow: React.FC<{
       </td>
       <td className="px-6 py-4">
         <button
-          className="btn btn-secondary btn-sm"
+          className="btn btn-ghost btn-sm border border-white/30 bg-white/10 text-foreground shadow-sm backdrop-blur-md backdrop-saturate-150 hover:border-white/40 hover:bg-white/20"
           disabled={isCartLoading || stockStatus === 'out-of-stock'}
           onClick={onAddToCart}
           type="button"

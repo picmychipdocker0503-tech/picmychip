@@ -18,6 +18,7 @@ type Props = {
   product: Partial<Product>
   averageRating?: number
   reviewCount?: number
+  priority?: boolean
 }
 
 const STOCK_LABEL: Record<string, { label: string; className: string }> = {
@@ -27,7 +28,7 @@ const STOCK_LABEL: Record<string, { label: string; className: string }> = {
   backorder: { label: 'Backorder', className: 'text-warning' },
 }
 
-export const DealProductCard: React.FC<Props> = ({ product, averageRating, reviewCount }) => {
+export const DealProductCard: React.FC<Props> = ({ product, averageRating, reviewCount, priority }) => {
   const { currency } = useCurrency()
   const { open } = useQuickView()
   const { toggle: toggleWishlist, isSaved } = useWishlist()
@@ -62,7 +63,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
 
   return (
     <div className="card-hover group bg-card border-border relative flex h-full flex-col items-center gap-4 rounded-2xl border p-6 text-center">
-      <div className="absolute top-1/2 right-3 z-10 flex -translate-y-1/2 flex-col gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+      <div className="absolute top-1/2 right-3 z-10 flex -translate-y-1/2 flex-col gap-2 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
         <button
           aria-label="Quick view"
           className="bg-background text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-110"
@@ -130,6 +131,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
               className="relative h-full w-full"
               fill
               imgClassName="object-contain transition-transform duration-300 group-hover:scale-105"
+              priority={priority}
               resource={image}
             />
           ) : (
@@ -144,7 +146,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
         <span className={`text-xs font-medium ${stockInfo.className}`}>{stockInfo.label}</span>
         <button
           aria-label="Add to cart"
-          className="btn btn-secondary btn-xs"
+          className="btn btn-ghost btn-xs border border-white/30 bg-white/10 text-foreground shadow-sm backdrop-blur-md backdrop-saturate-150 hover:border-white/40 hover:bg-white/20"
           disabled={isOutOfStock || isLoading}
           onClick={handleAddToCart}
           type="button"

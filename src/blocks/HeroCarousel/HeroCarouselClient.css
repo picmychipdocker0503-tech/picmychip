@@ -231,11 +231,19 @@
   letter-spacing: -0.025em;
   /* Capped at 2 lines — the hero card is a fixed height (see .pmc-hero),
      and a longer heading wrapping to 3 lines was the thing pushing content
-     past it. */
+     past it. Relaxed below 900px, where .pmc-hero switches to height: auto
+     and there's no fixed box left to overflow. */
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .pmc-heading {
+    -webkit-line-clamp: unset;
+    overflow: visible;
+  }
 }
 
 .pmc-description {

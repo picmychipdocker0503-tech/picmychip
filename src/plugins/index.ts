@@ -21,7 +21,7 @@ import { isDocumentOwner } from '@/access/isDocumentOwner'
 import { applyCartDiscounts } from '@/hooks/applyCartDiscounts'
 import { applyOrderDiscountSideEffects } from '@/hooks/applyOrderDiscountSideEffects'
 import { computeGstTaxBreakdown } from '@/hooks/computeGstTaxBreakdown'
-import { createZohoInvoice } from '@/hooks/createZohoInvoice'
+import { createZohoSalesOrder } from '@/hooks/createZohoSalesOrder'
 import { createShiprocketShipment } from '@/hooks/createShiprocketShipment'
 import { flagPotentialFraud } from '@/hooks/flagPotentialFraud'
 import { issueGiftCardsForOrder } from '@/hooks/issueGiftCardsForOrder'
@@ -29,7 +29,7 @@ import { sendOrderLifecycleEmails } from '@/hooks/sendOrderLifecycleEmails'
 import { billingDetailsAddressFields, businessDetailsGroup } from '@/fields/businessDetails'
 
 const generateTitle: GenerateTitle<Product | Page | Category | Guide> = ({ doc }) => {
-  return doc?.title ? `${doc.title} | Payload Ecommerce Template` : 'Payload Ecommerce Template'
+  return doc?.title ? `${doc.title} | Picmychip` : 'Picmychip'
 }
 
 const generateURL: GenerateURL<Product | Page | Category | Guide> = ({ doc }) => {
@@ -68,7 +68,7 @@ export const plugins: Plugin[] = [
         update: isAdmin,
       },
       admin: {
-        group: 'Content',
+        group: 'Marketing',
       },
     },
     formOverrides: {
@@ -83,7 +83,7 @@ export const plugins: Plugin[] = [
         create: isAdmin,
       },
       admin: {
-        group: 'Content',
+        group: 'Marketing',
       },
       fields: ({ defaultFields }) => {
         return defaultFields.map((field) => {
@@ -131,12 +131,15 @@ export const plugins: Plugin[] = [
           ...defaultCollection.admin,
           components: {
             ...defaultCollection.admin?.components,
+            beforeList: ['@/components/admin/OrdersListStats#OrdersListStats'],
             edit: {
               ...defaultCollection.admin?.components?.edit,
               // Invoice/shipment sync status + retry actions, shown above the save controls.
               beforeDocumentControls: ['@/components/admin/OrderIntegrationPanel#OrderIntegrationPanel'],
             },
           },
+          defaultColumns: ['id', 'customer', 'status', 'amount', 'createdAt'],
+          group: 'Sales',
         },
         hooks: {
           ...defaultCollection.hooks,
@@ -145,14 +148,28 @@ export const plugins: Plugin[] = [
             applyOrderDiscountSideEffects,
             issueGiftCardsForOrder,
             computeGstTaxBreakdown,
-            createZohoInvoice,
+            createZohoSalesOrder,
             createShiprocketShipment,
             sendOrderLifecycleEmails,
             flagPotentialFraud,
           ],
         },
         fields: [
-          ...defaultCollection.fields,
+          ...defaultCollection.fields.map((field) => {
+            if ('name' in field && field.name === 'status') {
+              return {
+                ...field,
+                admin: {
+                  ...field.admin,
+                  components: {
+                    ...field.admin?.components,
+                    Cell: '@/components/admin/cells/OrderStatusCell#OrderStatusCell',
+                  },
+                },
+              } as typeof field
+            }
+            return field
+          }),
           {
             name: 'accessToken',
             type: 'text',
@@ -322,10 +339,36 @@ export const plugins: Plugin[] = [
             type: 'text',
             admin: { position: 'sidebar', readOnly: true },
           },
+          // Every order first becomes a Zoho Sales Order — an admin (or Zoho
+          // Books staff directly) confirms component availability, then
+          // "accepts" it, which converts it into the actual invoice below.
+          {
+            name: 'zohoSalesOrderId',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoSalesOrderNumber',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoSalesOrderStatus',
+            type: 'text',
+            admin: {
+              position: 'sidebar',
+              readOnly: true,
+              description: 'Zoho’s own sales order status (draft/confirmed/invoiced/etc.), as last synced.',
+            },
+          },
           {
             name: 'zohoInvoiceId',
             type: 'text',
-            admin: { position: 'sidebar', readOnly: true },
+            admin: {
+              position: 'sidebar',
+              readOnly: true,
+              description: 'Set once the sales order has been accepted — either via the button below, or detected here after being converted directly in Zoho Books.',
+            },
           },
           {
             name: 'zohoInvoiceNumber',
@@ -380,11 +423,23 @@ export const plugins: Plugin[] = [
           },
           // Integration sync bookkeeping
           {
-            name: 'invoiceSyncStatus',
+            name: 'salesOrderSyncStatus',
             type: 'select',
             defaultValue: 'pending',
             options: [
               { label: 'Pending', value: 'pending' },
+              { label: 'Processing', value: 'processing' },
+              { label: 'Completed', value: 'completed' },
+              { label: 'Failed', value: 'failed' },
+            ],
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'invoiceSyncStatus',
+            type: 'select',
+            defaultValue: 'pending',
+            options: [
+              { label: 'Pending (awaiting acceptance)', value: 'pending' },
               { label: 'Processing', value: 'processing' },
               { label: 'Completed', value: 'completed' },
               { label: 'Failed', value: 'failed' },
@@ -411,6 +466,7 @@ export const plugins: Plugin[] = [
               description: 'Last error message from each integration, if any — cleared on the next successful sync.',
             },
             fields: [
+              { name: 'salesOrder', type: 'text', admin: { readOnly: true } },
               { name: 'invoice', type: 'text', admin: { readOnly: true } },
               { name: 'shipment', type: 'text', admin: { readOnly: true } },
             ],
@@ -423,9 +479,29 @@ export const plugins: Plugin[] = [
         ],
       }),
     },
+    addresses: {
+      addressesCollectionOverride: ({ defaultCollection }) => ({
+        ...defaultCollection,
+        fields: [
+          ...defaultCollection.fields,
+          {
+            name: 'gstin',
+            type: 'text',
+            label: 'GSTIN',
+            admin: {
+              description: 'Optional — used to generate a GST tax invoice for orders billed to this address.',
+            },
+          },
+        ],
+      }),
+    },
     carts: {
       cartsCollectionOverride: ({ defaultCollection }) => ({
         ...defaultCollection,
+        admin: {
+          ...defaultCollection.admin,
+          group: 'Sales',
+        },
         hooks: {
           ...defaultCollection.hooks,
           beforeChange: [...(defaultCollection.hooks?.beforeChange ?? []), applyCartDiscounts],
@@ -478,6 +554,10 @@ export const plugins: Plugin[] = [
     transactions: {
       transactionsCollectionOverride: ({ defaultCollection }) => ({
         ...defaultCollection,
+        admin: {
+          ...defaultCollection.admin,
+          group: 'Sales',
+        },
         fields: [...defaultCollection.fields, businessDetailsGroup()],
       }),
     },

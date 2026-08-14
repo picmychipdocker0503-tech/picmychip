@@ -25,7 +25,13 @@ export async function Footer() {
   const copyrightName = COMPANY_NAME || SITE_NAME || ''
 
   return (
-    <footer className="bg-muted text-muted-foreground text-sm">
+    // Forced to dark theme regardless of the site's active theme — same
+    // black-background treatment as TopUtilityBar, and since every child
+    // here uses semantic tokens (text-foreground, text-primary, etc.),
+    // scoping data-theme to just this element is enough to recolor
+    // everything correctly via the existing CSS variable cascade, no
+    // per-component edits needed.
+    <footer className="bg-background text-muted-foreground text-sm" data-theme="dark">
       {/* Newsletter */}
       <div className="container pt-16">
         <div className="border-border bg-card relative overflow-hidden rounded-2xl border px-8 py-10 sm:px-12">

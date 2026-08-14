@@ -18,7 +18,10 @@ export const ReturnRequests: CollectionConfig = {
     afterChange: [processReturnRefund],
   },
   admin: {
-    group: 'Ecommerce',
+    group: 'Sales',
+    components: {
+      beforeList: ['@/components/admin/ReturnsListStats#ReturnsListStats'],
+    },
     defaultColumns: ['order', 'reason', 'status', 'refundStatus', 'createdAt'],
     useAsTitle: 'id',
   },
@@ -70,6 +73,9 @@ export const ReturnRequests: CollectionConfig = {
       },
       admin: {
         position: 'sidebar',
+        components: {
+          Cell: '@/components/admin/cells/ReturnStatusCell#ReturnStatusCell',
+        },
       },
     },
     {

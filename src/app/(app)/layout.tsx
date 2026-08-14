@@ -1,10 +1,13 @@
+import type { Viewport } from 'next'
 import type { ReactNode } from 'react'
 
 import { CompareBar } from '@/components/CompareBar'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
+import { InstallPrompt } from '@/components/InstallPrompt'
 import { JsonLd } from '@/components/JsonLd'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
+import { MobileTabBar } from '@/components/MobileTabBar'
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
 import { ensureStartsWith } from '@/utilities/ensureStartsWith'
 import { buildOrganizationJsonLd } from '@/utilities/jsonLd'
@@ -19,6 +22,16 @@ import React from 'react'
 import './globals.css'
 
 const GA_MEASUREMENT_ID = 'G-65M0W91R3Q'
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#005d1e' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
+}
 
 /* const { SITE_NAME, TWITTER_CREATOR, TWITTER_SITE } = process.env
 const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
@@ -62,6 +75,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <link href="/favicon.ico" rel="icon" sizes="32x32" />
         <link href="/favicon.svg" rel="icon" type="image/svg+xml" />
         <link href="/icons/apple-touch-icon.png" rel="apple-touch-icon" />
+        <meta content="yes" name="apple-mobile-web-app-capable" />
+        <meta content="Picmychip" name="apple-mobile-web-app-title" />
       </head>
       <body>
         <Script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
@@ -83,9 +98,13 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           </a>
 
           <Header />
-          <main id="main-content">{children}</main>
+          <main className="pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0" id="main-content">
+            {children}
+          </main>
           <Footer />
           <CompareBar />
+          <InstallPrompt />
+          <MobileTabBar />
         </Providers>
       </body>
     </html>

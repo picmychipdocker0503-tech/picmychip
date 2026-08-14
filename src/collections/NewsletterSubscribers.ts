@@ -18,7 +18,7 @@ export const NewsletterSubscribers: CollectionConfig = {
     afterChange: [sendNewsletterWelcome],
   },
   admin: {
-    group: 'Content',
+    group: 'Marketing',
     defaultColumns: ['email', 'subscribedAt'],
     useAsTitle: 'email',
   },

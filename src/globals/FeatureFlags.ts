@@ -10,7 +10,7 @@ export const FeatureFlags: GlobalConfig = {
     update: adminOnly,
   },
   admin: {
-    group: 'Content',
+    group: 'Settings',
     description: 'Toggle storefront features on/off without a deploy.',
   },
   hooks: {

@@ -4,7 +4,13 @@ import { INDIAN_STATES, resolveIndianState } from '@/lib/indianStates'
 import { computeOrderTaxBreakdown } from '@/lib/taxCalculation'
 import { findExistingInvoiceByOrderId, getInvoicePdfUrl } from '@/lib/zoho/invoices'
 import { recordCustomerPayment } from '@/lib/zoho/payments'
+import {
+  convertSalesOrderToInvoice,
+  createZohoSalesOrder,
+  findExistingSalesOrderByOrderId,
+} from '@/lib/zoho/salesOrders'
 import { resolveTaxId } from '@/lib/zoho/taxes'
+import { resolveOrderTaxType } from '@/lib/orderIntegrations/syncZohoSalesOrder'
 
 describe('resolveIndianState', () => {
   it('resolves canonical names case-insensitively and trims whitespace', () => {
@@ -271,5 +277,94 @@ describe('Zoho Books API integration (mocked fetch)', () => {
       payment_mode: 'PAYU',
       reference_number: 'payu-ref',
     })
+  })
+
+  it('resolveOrderTaxType mirrors computeOrderTaxBreakdown\'s intra/inter-state logic', () => {
+    expect(resolveOrderTaxType('Karnataka', 'Karnataka')).toBe('intra-state')
+    expect(resolveOrderTaxType('Karnataka', 'Maharashtra')).toBe('inter-state')
+    expect(resolveOrderTaxType('Karnataka', 'Somewhere Else')).toBe('inter-state')
+  })
+
+  it('createZohoSalesOrder posts to /salesorders with the given line items', async () => {
+    let postedBody: Record<string, unknown> | undefined
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url.includes('/oauth/v2/token')) return jsonResponse({ access_token: 'token', expires_in: 3600 })
+        if (url.includes('/salesorders')) {
+          postedBody = JSON.parse(String(init?.body))
+          return jsonResponse({
+            code: 0,
+            salesorder: { salesorder_id: 'so-1', salesorder_number: 'SO-00001', status: 'draft', total: 100 },
+          })
+        }
+        throw new Error(`Unexpected fetch: ${url}`)
+      }),
+    )
+
+    const result = await createZohoSalesOrder({
+      customerId: 'contact-1',
+      referenceNumber: '42',
+      date: '2026-08-14',
+      lineItems: [{ name: '1KΩ Resistor', hsn_or_sac: '8533', rate: 4.24, quantity: 10 }],
+    })
+
+    expect(result.salesorder_id).toBe('so-1')
+    expect(postedBody).toMatchObject({ reference_number: '42' })
+    expect((postedBody?.line_items as unknown[])[0]).toMatchObject({ hsn_or_sac: '8533' })
+  })
+
+  it('convertSalesOrderToInvoice posts to /invoices/fromsalesorder with the sales order id', async () => {
+    const calledUrls: string[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        calledUrls.push(url)
+        if (url.includes('/oauth/v2/token')) return jsonResponse({ access_token: 'token', expires_in: 3600 })
+        return jsonResponse({
+          code: 0,
+          invoice: { invoice_id: 'inv-9', invoice_number: 'INV-000009', status: 'draft', total: 100 },
+        })
+      }),
+    )
+
+    const invoice = await convertSalesOrderToInvoice('so-1')
+
+    expect(invoice.invoice_id).toBe('inv-9')
+    const callUrl = calledUrls.find((url) => url.includes('/invoices/fromsalesorder'))
+    expect(callUrl).toContain('salesorder_id=so-1')
+  })
+
+  it('findExistingSalesOrderByOrderId is the idempotency guard, including any already-linked invoices', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url.includes('/oauth/v2/token')) return jsonResponse({ access_token: 'token', expires_in: 3600 })
+        if (url.includes('reference_number=42')) {
+          return jsonResponse({ code: 0, salesorders: [{ salesorder_id: 'so-1', salesorder_number: 'SO-00001' }] })
+        }
+        if (url.includes('/salesorders/so-1')) {
+          return jsonResponse({
+            code: 0,
+            salesorder: {
+              salesorder_id: 'so-1',
+              salesorder_number: 'SO-00001',
+              status: 'invoiced',
+              invoiced_status: 'invoiced',
+              total: 100,
+              invoices: [{ invoice_id: 'inv-9', invoice_number: 'INV-000009', status: 'draft', total: 100, balance: 100 }],
+            },
+          })
+        }
+        if (url.includes('reference_number=999')) {
+          return jsonResponse({ code: 0, salesorders: [] })
+        }
+        throw new Error(`Unexpected fetch: ${url}`)
+      }),
+    )
+
+    const found = await findExistingSalesOrderByOrderId(42)
+    expect(found?.invoices?.[0]?.invoice_id).toBe('inv-9')
+    await expect(findExistingSalesOrderByOrderId(999)).resolves.toBeUndefined()
   })
 })

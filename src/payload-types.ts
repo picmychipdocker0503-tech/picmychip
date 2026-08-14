@@ -396,6 +396,15 @@ export interface Order {
     panNumber?: string | null;
   };
   zohoCustomerId?: string | null;
+  zohoSalesOrderId?: string | null;
+  zohoSalesOrderNumber?: string | null;
+  /**
+   * Zoho’s own sales order status (draft/confirmed/invoiced/etc.), as last synced.
+   */
+  zohoSalesOrderStatus?: string | null;
+  /**
+   * Set once the sales order has been accepted — either via the button below, or detected here after being converted directly in Zoho Books.
+   */
   zohoInvoiceId?: string | null;
   zohoInvoiceNumber?: string | null;
   /**
@@ -409,12 +418,14 @@ export interface Order {
   shiprocketDeliveryStatus?: string | null;
   shiprocketEstimatedDeliveryDate?: string | null;
   shiprocketCreatedAt?: string | null;
+  salesOrderSyncStatus?: ('pending' | 'processing' | 'completed' | 'failed') | null;
   invoiceSyncStatus?: ('pending' | 'processing' | 'completed' | 'failed') | null;
   shipmentSyncStatus?: ('pending' | 'processing' | 'completed' | 'failed') | null;
   /**
    * Last error message from each integration, if any — cleared on the next successful sync.
    */
   integrationError?: {
+    salesOrder?: string | null;
     invoice?: string | null;
     shipment?: string | null;
   };
@@ -1843,6 +1854,10 @@ export interface Address {
     | 'SE'
     | 'CH';
   phone?: string | null;
+  /**
+   * Optional — used to generate a GST tax invoice for orders billed to this address.
+   */
+  gstin?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3283,6 +3298,7 @@ export interface AddressesSelect<T extends boolean = true> {
   postalCode?: T;
   country?: T;
   phone?: T;
+  gstin?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3616,6 +3632,9 @@ export interface OrdersSelect<T extends boolean = true> {
         panNumber?: T;
       };
   zohoCustomerId?: T;
+  zohoSalesOrderId?: T;
+  zohoSalesOrderNumber?: T;
+  zohoSalesOrderStatus?: T;
   zohoInvoiceId?: T;
   zohoInvoiceNumber?: T;
   zohoInvoiceStatus?: T;
@@ -3626,11 +3645,13 @@ export interface OrdersSelect<T extends boolean = true> {
   shiprocketDeliveryStatus?: T;
   shiprocketEstimatedDeliveryDate?: T;
   shiprocketCreatedAt?: T;
+  salesOrderSyncStatus?: T;
   invoiceSyncStatus?: T;
   shipmentSyncStatus?: T;
   integrationError?:
     | T
     | {
+        salesOrder?: T;
         invoice?: T;
         shipment?: T;
       };

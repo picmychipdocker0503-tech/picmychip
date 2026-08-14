@@ -1,0 +1,61 @@
+import { getAverageRatings } from '@/lib/getAverageRatings'
+import { getFacetsForSchema } from '@/lib/facetConfig'
+import { parseFacetFilters } from '@/lib/facetParams'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+import { searchProducts } from '@/lib/searchProducts'
+import configPromise from '@payload-config'
+import { NextRequest, NextResponse } from 'next/server'
+import { getPayload } from 'payload'
+
+const PRODUCTS_PER_PAGE = 12
+
+export async function GET(request: NextRequest) {
+  const ip = getClientIp(request.headers)
+  const { allowed } = checkRateLimit(`products-load-more:${ip}`, 60, 60_000)
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests.' }, { status: 429 })
+  }
+
+  const params = request.nextUrl.searchParams
+  const searchValue = params.get('q') ?? undefined
+  const sort = params.get('sort') ?? undefined
+  const categoryId = params.get('category') ?? undefined
+  const page = Number(params.get('page')) || 1
+  const priceMinNum = Number(params.get('priceMin'))
+  const priceMaxNum = Number(params.get('priceMax'))
+
+  const paramsRecord = Object.fromEntries(params.entries())
+
+  let facets: ReturnType<typeof getFacetsForSchema> = []
+  if (categoryId) {
+    const payload = await getPayload({ config: configPromise })
+    const categoryDoc = await payload.findByID({ collection: 'categories', id: categoryId }).catch(() => null)
+    facets = getFacetsForSchema(categoryDoc?.specSchemaType)
+  }
+
+  const products = await searchProducts({
+    query: searchValue,
+    categoryId,
+    facetFilters: parseFacetFilters(paramsRecord, facets),
+    facetAttributes: facets.map((facet) => facet.attribute),
+    sort,
+    page,
+    limit: PRODUCTS_PER_PAGE,
+    priceMin: Number.isFinite(priceMinNum) && params.has('priceMin') ? priceMinNum : undefined,
+    priceMax: Number.isFinite(priceMaxNum) && params.has('priceMax') ? priceMaxNum : undefined,
+  })
+
+  const payload = await getPayload({ config: configPromise })
+  const ratingsMap = await getAverageRatings(
+    payload,
+    products.docs.map((product) => product.id).filter((id): id is number => typeof id === 'number'),
+  )
+  const ratings = Object.fromEntries(ratingsMap)
+
+  return NextResponse.json({
+    docs: products.docs,
+    ratings,
+    hasNextPage: products.hasNextPage,
+    totalDocs: products.totalDocs,
+  })
+}

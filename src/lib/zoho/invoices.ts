@@ -16,12 +16,13 @@ export type CreateZohoInvoiceArgs = {
 }
 
 /**
- * Idempotency guard — searches by `reference_number` (we always set it to the
- * order id) before creating anything, so a retried hook or a manual admin
- * retry never produces a duplicate invoice. Fetches the full invoice (not
- * just the abbreviated list-response object, which omits fields like
- * `customer_id`/`balance` that recordPaymentIfNeeded relies on) once a match
- * is found.
+ * Idempotency guard for invoices created directly (not via a sales order) —
+ * searches by `reference_number` before creating anything. Not used by the
+ * default sales-order-first flow (src/lib/orderIntegrations/syncZohoSalesOrder.ts),
+ * whose invoices inherit the *sales order's* reference number instead and are
+ * linked back via `salesorder_id`/the sales order's own `invoices[]` field —
+ * kept here for the lower-level createZohoInvoice/updateZohoInvoiceLineItems
+ * primitives this file still exposes.
  */
 export async function findExistingInvoiceByOrderId(orderId: string | number): Promise<ZohoInvoice | undefined> {
   const params = new URLSearchParams({ reference_number: String(orderId) })
@@ -45,9 +46,11 @@ export async function createZohoInvoice(args: CreateZohoInvoiceArgs): Promise<Zo
     customer_id: args.customerId,
     reference_number: args.referenceNumber,
     date: args.date,
+    // place_of_supply is needed for EVERY transaction — see the identical
+    // comment in src/lib/zoho/salesOrders.ts for why it must NOT be gated on
+    // GSTIN presence the way gst_treatment/gst_no are.
     place_of_supply: args.placeOfSupply,
-    gst_treatment: args.gstTreatment,
-    gst_no: args.gstNo,
+    ...(args.gstNo ? { gst_treatment: args.gstTreatment, gst_no: args.gstNo } : {}),
     line_items: args.lineItems.map((item) => ({
       name: item.name,
       description: item.description,

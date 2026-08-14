@@ -33,6 +33,8 @@ import * as migration_20260811_190000_add_jobs_collection from './20260811_19000
 import * as migration_20260813_043522_fix_users_verify_column from './20260813_043522_fix_users_verify_column';
 import * as migration_20260813_062510_add_zoho_shiprocket_integration from './20260813_062510_add_zoho_shiprocket_integration';
 import * as migration_20260813_101501_revert_verification_token_rename from './20260813_101501_revert_verification_token_rename';
+import * as migration_20260814_104514_add_zoho_sales_order_tracking from './20260814_104514_add_zoho_sales_order_tracking';
+import * as migration_20260814_123027_add_address_gstin from './20260814_123027_add_address_gstin';
 
 export const migrations = [
   {
@@ -208,6 +210,16 @@ export const migrations = [
   {
     up: migration_20260813_101501_revert_verification_token_rename.up,
     down: migration_20260813_101501_revert_verification_token_rename.down,
-    name: '20260813_101501_revert_verification_token_rename'
+    name: '20260813_101501_revert_verification_token_rename',
+  },
+  {
+    up: migration_20260814_104514_add_zoho_sales_order_tracking.up,
+    down: migration_20260814_104514_add_zoho_sales_order_tracking.down,
+    name: '20260814_104514_add_zoho_sales_order_tracking',
+  },
+  {
+    up: migration_20260814_123027_add_address_gstin.up,
+    down: migration_20260814_123027_add_address_gstin.down,
+    name: '20260814_123027_add_address_gstin'
   },
 ];

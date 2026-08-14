@@ -7,9 +7,19 @@ import type {
   TopProductsReport,
 } from '@/lib/reports'
 
+import { DonutChart } from '../charts/DonutChart'
 import { BarRow } from './BarRow'
 import { RevenueTrendChart } from './RevenueTrendChart'
 import { StatTile } from './StatTile'
+
+const CATEGORY_COLORS = [
+  'var(--color-primary)',
+  'var(--color-accent)',
+  'var(--color-info-content)',
+  'var(--theme-elevation-300)',
+  'var(--color-warning)',
+  'var(--theme-elevation-500)',
+]
 
 type Props = {
   customers: CustomerActivityReport
@@ -106,18 +116,31 @@ export const ReportsDashboard: React.FC<Props> = ({ sales, inventory, topProduct
           </div>
           <div>
             <p className="text-base-content/60 mb-3 text-xs font-semibold uppercase">Top categories (revenue)</p>
-            <div className="flex flex-col gap-2.5">
-              {topProducts.topCategories.length === 0 && <p className="text-base-content/50 text-sm">No sales yet.</p>}
-              {topProducts.topCategories.map((category) => (
-                <BarRow
-                  key={category.title}
-                  label={category.title}
-                  value={formatCurrency(category.revenue)}
-                  valueRaw={category.revenue}
-                  maxValue={maxCategoryRevenue}
+            {topProducts.topCategories.length === 0 ? (
+              <p className="text-base-content/50 text-sm">No sales yet.</p>
+            ) : (
+              <>
+                <DonutChart
+                  segments={topProducts.topCategories.map((category, index) => ({
+                    label: category.title,
+                    value: category.revenue,
+                    color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
+                  }))}
+                  size={96}
                 />
-              ))}
-            </div>
+                <div className="mt-3 flex flex-col gap-2.5">
+                  {topProducts.topCategories.map((category) => (
+                    <BarRow
+                      key={category.title}
+                      label={category.title}
+                      value={formatCurrency(category.revenue)}
+                      valueRaw={category.revenue}
+                      maxValue={maxCategoryRevenue}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </SectionCard>

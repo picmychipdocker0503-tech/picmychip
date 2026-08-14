@@ -215,7 +215,13 @@ export const Search: React.FC<Props> = ({ className }) => {
                   >
                     <div className="bg-muted relative size-10 shrink-0 overflow-hidden rounded-md">
                       {suggestion.imageUrl && (
-                        <Image alt={suggestion.title} className="object-contain" fill src={suggestion.imageUrl} />
+                        <Image
+                          alt={suggestion.title}
+                          className="object-contain"
+                          fill
+                          sizes="40px"
+                          src={suggestion.imageUrl}
+                        />
                       )}
                     </div>
                     <span className="min-w-0 flex-1">

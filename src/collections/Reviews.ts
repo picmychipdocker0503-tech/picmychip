@@ -42,7 +42,7 @@ export const Reviews: CollectionConfig = {
     update: adminOnly,
   },
   admin: {
-    group: 'Content',
+    group: 'Catalog',
     defaultColumns: ['product', 'rating', 'status', 'verifiedPurchase', 'createdAt'],
     useAsTitle: 'id',
   },

@@ -14,7 +14,7 @@ export const zohoIsConfigured = Boolean(
 // the env var in a beforeEach, since that runs after this module's first import).
 export const getZohoApiDomain = (): string => process.env.ZOHO_API_DOMAIN || 'https://www.zohoapis.in'
 const getZohoAccountsDomain = (): string => process.env.ZOHO_ACCOUNTS_DOMAIN || 'https://accounts.zoho.in'
-const getZohoOrganizationId = (): string => process.env.ZOHO_ORGANIZATION_ID || ''
+export const getZohoOrganizationId = (): string => process.env.ZOHO_ORGANIZATION_ID || ''
 
 // Zoho access tokens are valid ~1 hour. Caching in module scope (same pattern as
 // src/lib/shiprocket.ts's cachedToken) avoids a refresh round-trip on every request.

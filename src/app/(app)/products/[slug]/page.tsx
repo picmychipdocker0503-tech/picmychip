@@ -193,7 +193,7 @@ export default async function ProductPage({ params }: Args) {
         price={price}
       />
       <TrackRecentlyViewed productId={String(product.id)} />
-      <div className="container pt-6 pb-8">
+      <div className="container pt-6 pb-24 lg:pb-8">
         {breadcrumb && (
           <Breadcrumb className="mb-5">
             <BreadcrumbList>

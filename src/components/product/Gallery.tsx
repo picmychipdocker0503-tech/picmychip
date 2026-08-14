@@ -84,7 +84,7 @@ export const Gallery: React.FC<Props> = ({ gallery, categorySlug }) => {
 
               return (
                 <CarouselItem
-                  className="basis-1/5"
+                  className="basis-1/4 sm:basis-1/5"
                   key={`${item.image.id}-${i}`}
                   onClick={() => setCurrent(i)}
                 >

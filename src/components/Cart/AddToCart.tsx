@@ -5,7 +5,6 @@ import type { Product, Variant } from '@/payload-types'
 
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
 import { useLocale } from '@/providers/Locale'
-import clsx from 'clsx'
 import { CheckIcon, MinusIcon, PlusIcon } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import posthog from 'posthog-js'
@@ -155,8 +154,8 @@ export function AddToCart({ product }: Props) {
   )
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
-      <div className="border-border bg-background flex items-center rounded-lg border">
+    <div className="fixed inset-x-0 bottom-0 z-40 flex flex-wrap items-center gap-3 border-t border-border bg-card p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lg lg:static lg:inset-auto lg:z-auto lg:border-0 lg:bg-transparent lg:p-0 lg:pb-0 lg:shadow-none">
+      <div className="border-border bg-background hidden items-center rounded-lg border lg:flex">
         <button
           aria-label="Decrease quantity"
           className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"
@@ -180,10 +179,8 @@ export function AddToCart({ product }: Props) {
 
       <Button
         aria-label="Add to cart"
-        variant={'secondary'}
-        className={clsx({
-          'hover:opacity-90': true,
-        })}
+        variant={'outline'}
+        className="border-white/30 bg-white/10 text-foreground shadow-md backdrop-blur-md backdrop-saturate-150 hover:border-white/40 hover:bg-white/20"
         disabled={disabled || isLoading}
         onClick={addToCart}
         type="button"

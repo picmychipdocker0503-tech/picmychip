@@ -11,8 +11,9 @@ export const Coupons: CollectionConfig = {
     update: adminOnly,
   },
   admin: {
-    group: 'Ecommerce',
+    group: 'Sales',
     components: {
+      beforeList: ['@/components/admin/CouponsListStats#CouponsListStats'],
       // Redemption progress, shown above the save/publish controls on the edit view.
       edit: {
         beforeDocumentControls: ['@/components/admin/CouponUsageSummary#CouponUsageSummary'],
@@ -106,6 +107,9 @@ export const Coupons: CollectionConfig = {
       defaultValue: true,
       admin: {
         position: 'sidebar',
+        components: {
+          Cell: '@/components/admin/cells/CouponStatusCell#CouponStatusCell',
+        },
       },
     },
   ],

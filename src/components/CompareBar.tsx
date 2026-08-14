@@ -12,7 +12,7 @@ export const CompareBar: React.FC = () => {
   if (ids.length === 0) return null
 
   return (
-    <div className="bg-card fixed inset-x-0 bottom-0 z-50 border-t">
+    <div className="bg-card fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-50 border-t md:bottom-0">
       <div className="container flex items-center justify-between gap-4 py-3">
         <span className="text-sm">
           {ids.length} product{ids.length > 1 ? 's' : ''} selected to compare

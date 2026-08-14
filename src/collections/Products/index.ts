@@ -46,7 +46,12 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   },
   admin: {
     ...defaultCollection?.admin,
-    defaultColumns: ['title', 'enableVariants', '_status', 'variants.variants'],
+    components: {
+      ...defaultCollection?.admin?.components,
+      beforeList: ['@/components/admin/ProductsListStats#ProductsListStats'],
+    },
+    defaultColumns: ['title', 'stockStatus', 'categories', 'priceInINR', '_status'],
+    group: 'Catalog',
     livePreview: {
       url: ({ data, req }) =>
         generatePreviewPath({
@@ -74,9 +79,19 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     priceInINR: true,
     inventory: true,
     meta: true,
+    sku: true,
   },
   fields: [
-    { name: 'title', type: 'text', required: true },
+    {
+      name: 'title',
+      type: 'text',
+      required: true,
+      admin: {
+        components: {
+          Cell: '@/components/admin/cells/ProductTitleCell#ProductTitleCell',
+        },
+      },
+    },
     {
       name: 'highlights',
       type: 'array',
@@ -332,6 +347,9 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
         position: 'sidebar',
         description:
           'Auto-derived from Inventory on save, unless set to "Backorder" (which is a manual business decision and is left alone).',
+        components: {
+          Cell: '@/components/admin/cells/ProductStockCell#ProductStockCell',
+        },
       },
     },
     {

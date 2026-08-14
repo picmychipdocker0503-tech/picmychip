@@ -20,19 +20,33 @@ export type FindOrCreateZohoCustomerResult = {
   wasUpdated: boolean
 }
 
-const gstTreatmentFor = (args: FindOrCreateZohoCustomerArgs): string => {
-  if (args.gstin) return 'business_gst'
-  if (args.companyName) return 'business_none'
-  return 'consumer'
-}
-
-const buildContactPayload = (args: FindOrCreateZohoCustomerArgs) => ({
-  contact_name: args.contactName,
+// Some Zoho orgs reject `gst_treatment`/`gst_no`/`place_of_contact` outright
+// ("Invalid Element gst_treatment", code 8) when GST/India compliance isn't
+// enabled on that org — confirmed against a live org during testing. Only
+// sending these when there's an actual GSTIN to report keeps contact
+// creation working on orgs with and without GST enabled, rather than always
+// asserting a treatment (e.g. "consumer") that not every org accepts.
+//
+// `includeName` defaults true (needed on create) but is set to false for
+// updates — Zoho enforces a unique contact_name org-wide, and the name we'd
+// compute for *this* order (from its billing address) can legitimately
+// differ from what an earlier order under the same email/GSTIN/phone used
+// (different capitalization, a guest checkout typo, etc.). Carrying that
+// name onto an update collided with a *different* existing contact that
+// already held it, rejecting an otherwise-unrelated update (e.g. one only
+// changing company_name). The contact's identity/display name, once set, is
+// left alone by later syncs.
+const buildContactPayload = (args: FindOrCreateZohoCustomerArgs, includeName = true) => ({
+  ...(includeName ? { contact_name: args.contactName } : {}),
   company_name: args.companyName || undefined,
   contact_type: 'customer',
-  gst_no: args.gstin || undefined,
-  gst_treatment: gstTreatmentFor(args),
-  place_of_contact: args.billingAddress?.state_code || args.shippingAddress?.state_code || undefined,
+  ...(args.gstin
+    ? {
+        gst_no: args.gstin,
+        gst_treatment: 'business_gst',
+        place_of_contact: args.billingAddress?.state_code || args.shippingAddress?.state_code || undefined,
+      }
+    : {}),
   billing_address: args.billingAddress,
   shipping_address: args.shippingAddress,
   contact_persons: args.email || args.phone ? [{ email: args.email, phone: args.phone, is_primary_contact: true }] : undefined,
@@ -80,6 +94,12 @@ async function findByGstinOrPhone(gstin?: string, phone?: string): Promise<ZohoC
   )
 }
 
+async function findByExactName(name: string): Promise<ZohoContact | undefined> {
+  const params = new URLSearchParams({ search_text: name })
+  const data = await zohoFetch<{ contacts: ZohoContact[] }>(`/contacts?${params.toString()}`)
+  return data.contacts?.find((c) => c.contact_name.trim().toLowerCase() === name.trim().toLowerCase())
+}
+
 async function createContact(args: FindOrCreateZohoCustomerArgs): Promise<ZohoContact> {
   const data = await zohoFetch<{ contact: ZohoContact }>('/contacts', {
     method: 'POST',
@@ -91,7 +111,7 @@ async function createContact(args: FindOrCreateZohoCustomerArgs): Promise<ZohoCo
 async function updateContact(contactId: string, args: FindOrCreateZohoCustomerArgs): Promise<ZohoContact> {
   const data = await zohoFetch<{ contact: ZohoContact }>(`/contacts/${contactId}`, {
     method: 'PUT',
-    body: JSON.stringify(buildContactPayload(args)),
+    body: JSON.stringify(buildContactPayload(args, false)),
   })
   return data.contact
 }
@@ -119,6 +139,20 @@ export async function findOrCreateZohoCustomer(
     return { contact: existing, wasCreated: false, wasUpdated: false }
   }
 
-  const created = await createContact(args)
-  return { contact: created, wasCreated: true, wasUpdated: false }
+  try {
+    const created = await createContact(args)
+    return { contact: created, wasCreated: true, wasUpdated: false }
+  } catch (err) {
+    // Zoho enforces a unique contact_name org-wide (code 3062, "already
+    // exists — specify a different name") — hit for real when the same
+    // person places orders under different emails/as a guest each time.
+    // Rather than fail the whole sync over a naming collision, fall back to
+    // reusing whatever contact already holds that exact name.
+    const message = err instanceof Error ? err.message : String(err)
+    if (message.includes('"code":3062')) {
+      const byName = await findByExactName(args.contactName)
+      if (byName) return { contact: byName, wasCreated: false, wasUpdated: false }
+    }
+    throw err
+  }
 }

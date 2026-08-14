@@ -12,7 +12,10 @@ export const StockAlerts: CollectionConfig = {
     update: adminOnly,
   },
   admin: {
-    group: 'Ecommerce',
+    group: 'Sales',
+    components: {
+      beforeList: ['@/components/admin/StockAlertsListStats#StockAlertsListStats'],
+    },
     defaultColumns: ['product', 'email', 'notifiedAt', 'createdAt'],
     useAsTitle: 'email',
   },
@@ -39,6 +42,9 @@ export const StockAlerts: CollectionConfig = {
       admin: {
         position: 'sidebar',
         readOnly: true,
+        components: {
+          Cell: '@/components/admin/cells/StockAlertStatusCell#StockAlertStatusCell',
+        },
         description: 'Set automatically once the notification email has been sent.',
       },
     },

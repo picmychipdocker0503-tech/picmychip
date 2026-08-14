@@ -13,7 +13,10 @@ export const GiftCards: CollectionConfig = {
     update: adminOnly,
   },
   admin: {
-    group: 'Ecommerce',
+    group: 'Sales',
+    components: {
+      beforeList: ['@/components/admin/GiftCardsListStats#GiftCardsListStats'],
+    },
     defaultColumns: ['code', 'balance', 'currency', 'status', 'recipientEmail'],
     useAsTitle: 'code',
   },
@@ -86,6 +89,9 @@ export const GiftCards: CollectionConfig = {
       ],
       admin: {
         position: 'sidebar',
+        components: {
+          Cell: '@/components/admin/cells/GiftCardStatusCell#GiftCardStatusCell',
+        },
       },
     },
     {

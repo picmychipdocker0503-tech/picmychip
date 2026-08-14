@@ -24,10 +24,6 @@ import { Address, Product, Variant } from '@/payload-types'
 
 type GalleryItem = NonNullable<Product['gallery']>[number]
 type VariantOptionItem = NonNullable<Variant['options']>[number]
-// AddressForm collects GSTIN alongside the address itself (not persisted on
-// the Address collection — see its own comment) rather than in a separate
-// checkout-page section; this widens the address state to carry it through.
-type AddressWithGstin = Partial<Address> & { gstin?: string }
 import { Checkbox } from '@/components/ui/checkbox'
 import { AddressItem } from '@/components/addresses/AddressItem'
 import { FormItem } from '@/components/forms/FormItem'
@@ -49,8 +45,8 @@ export const CheckoutPage: React.FC = () => {
   const [isInitiatingPayment, setIsInitiatingPayment] = useState(false)
   const { initiatePayment } = usePayments()
   const { addresses } = useAddresses()
-  const [shippingAddress, setShippingAddress] = useState<AddressWithGstin>()
-  const [billingAddress, setBillingAddress] = useState<AddressWithGstin>()
+  const [shippingAddress, setShippingAddress] = useState<Partial<Address>>()
+  const [billingAddress, setBillingAddress] = useState<Partial<Address>>()
   const [billingAddressSameAsShipping, setBillingAddressSameAsShipping] = useState(true)
   const [isProcessingPayment, setProcessingPayment] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>('card')

@@ -7,10 +7,11 @@ import { Price } from '@/components/Price'
 import { ProductGridItem } from '@/components/ProductGridItem'
 import { ProductMatchingImage } from '@/components/product/ProductMatchingImage'
 import { sorting } from '@/lib/constants'
+import { useLoadMoreProducts } from '@/lib/useLoadMoreProducts'
 import { useLocale } from '@/providers/Locale'
 import { createUrl } from '@/utilities/createUrl'
 import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
-import { LayoutGridIcon, ListIcon, ShieldCheck } from 'lucide-react'
+import { LayoutGridIcon, ListIcon, Loader2Icon, ShieldCheck } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useState } from 'react'
@@ -19,9 +20,10 @@ type Props = {
   products: Partial<Product>[]
   totalDocs: number
   ratings?: Record<number, { average: number; count: number }>
+  hasNextPage?: boolean
 }
 
-export const ShopResults: React.FC<Props> = ({ products, totalDocs, ratings }) => {
+export const ShopResults: React.FC<Props> = ({ products, totalDocs, ratings, hasNextPage = false }) => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -29,6 +31,19 @@ export const ShopResults: React.FC<Props> = ({ products, totalDocs, ratings }) =
   const { currency } = useCurrency()
   const priceField = `priceIn${currency.code}` as keyof Product
   const [view, setView] = useState<'grid' | 'list'>('grid')
+
+  const {
+    items,
+    ratings: loadedRatings,
+    hasNextPage: canLoadMore,
+    isLoading,
+    loadMore,
+  } = useLoadMoreProducts({
+    initialDocs: products,
+    initialRatings: ratings ?? {},
+    initialHasNextPage: hasNextPage,
+    totalDocs,
+  })
 
   const currentSort = searchParams.get('sort') ?? ''
 
@@ -58,7 +73,7 @@ export const ShopResults: React.FC<Props> = ({ products, totalDocs, ratings }) =
         </select>
 
         <span className="text-muted-foreground text-xs">
-          {t('showing')} <strong className="text-foreground">{products.length}</strong> {t('of')}{' '}
+          {t('showing')} <strong className="text-foreground">{items.length}</strong> {t('of')}{' '}
           <strong className="text-foreground">{totalDocs}</strong> {t('products')}
         </span>
 
@@ -94,18 +109,19 @@ export const ShopResults: React.FC<Props> = ({ products, totalDocs, ratings }) =
 
       {view === 'grid' ? (
         <Grid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6 animate-in fade-in-0 duration-300">
-          {products.map((product) => (
+          {items.map((product, index) => (
             <ProductGridItem
-              averageRating={product.id ? ratings?.[product.id]?.average : undefined}
+              averageRating={product.id ? loadedRatings?.[product.id]?.average : undefined}
               key={product.id}
+              priority={index < 4}
               product={product}
-              reviewCount={product.id ? ratings?.[product.id]?.count : undefined}
+              reviewCount={product.id ? loadedRatings?.[product.id]?.count : undefined}
             />
           ))}
         </Grid>
       ) : (
         <ul className="animate-in fade-in-0 flex flex-col gap-3 duration-300">
-          {products.map((product) => {
+          {items.map((product) => {
             const image = product.gallery?.[0]?.image
             const firstCategory =
               Array.isArray(product.categories) && product.categories[0]
@@ -161,6 +177,20 @@ export const ShopResults: React.FC<Props> = ({ products, totalDocs, ratings }) =
             )
           })}
         </ul>
+      )}
+
+      {canLoadMore && (
+        <div className="flex justify-center mt-4">
+          <button
+            className="inline-flex items-center gap-2 rounded-xl border border-border/80 bg-card px-6 py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-primary/50 hover:text-primary disabled:opacity-60 cursor-pointer"
+            disabled={isLoading}
+            onClick={loadMore}
+            type="button"
+          >
+            {isLoading && <Loader2Icon className="size-4 animate-spin" />}
+            {isLoading ? 'Loading…' : t('loadMore')}
+          </button>
+        </div>
       )}
     </div>
   )
