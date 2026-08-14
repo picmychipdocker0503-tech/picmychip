@@ -183,7 +183,7 @@ const QuickViewBody: React.FC<{ product: Product }> = ({ product }) => {
 
         <div className="mt-2 flex flex-wrap gap-3">
           <button
-            className="btn btn-primary flex-1"
+            className="btn btn-secondary flex-1"
             disabled={isOutOfStock || isLoading}
             onClick={handleAddToCart}
             type="button"

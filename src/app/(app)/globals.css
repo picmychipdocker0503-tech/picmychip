@@ -23,13 +23,42 @@
 }
 
 @plugin "@tailwindcss/typography";
-@plugin "daisyui";
+/*
+ * Bare `@plugin "daisyui";` auto-includes daisyUI's OWN built-in theme set
+ * (its stock "light"/"dark", both marked default/prefersdark) in addition
+ * to the ~31 custom `@plugin "daisyui/theme" { name: ... }` blocks below —
+ * since several of ours reuse daisyUI's own stock names (light, dark,
+ * cupcake, forest, retro, ...), that collided: daisyUI's built-in stock
+ * "light"/"dark" (its factory indigo primary/pink secondary) fought our
+ * override for the same default/prefersdark slot, with some properties
+ * winning from one definition and some from the other depending on
+ * selector specificity — e.g. daisyUI *component* classes like
+ * `.btn-primary` silently kept the factory indigo even after `--primary`
+ * was repointed to green, while plain Tailwind utilities like `bg-primary`
+ * (a separate code path via the `@theme inline` block further down) were
+ * unaffected. `themes: false` disables daisyUI's auto-included built-ins
+ * entirely, leaving only our own explicit theme blocks in play.
+ */
+@plugin "daisyui" {
+  themes: false;
+}
 
 /*
  * daisyUI themes named "light"/"dark" to match the existing data-theme
- * toggle in src/providers/Theme — no changes needed there. Values are
- * var() references into the :root / [data-theme='dark'] blocks below so
- * the brand palette has one source of truth, not a second copy here.
+ * toggle in src/providers/Theme — no changes needed there.
+ *
+ * These two are `default`/`prefersdark`, which makes daisyUI statically
+ * precompute their color-space fallbacks (oklch/lab/hex, for the
+ * @supports-gated progressive-enhancement blocks it generates) at build
+ * time — var() references inside them get resolved ONCE and baked in as
+ * concrete values, not kept live. Every other named theme below (including
+ * "high-contrast") isn't default/prefersdark and correctly keeps its
+ * var(--primary) etc. references dynamic — confirmed by testing.
+ * So unlike those, light/dark are hardcoded to literally match the
+ * :root / [data-theme='dark'] blocks further down: if you change the brand
+ * palette there, update these two blocks too or daisyUI component classes
+ * (.btn-primary etc, as opposed to Tailwind utilities like bg-primary)
+ * will silently go stale on just these two themes.
  */
 @plugin "daisyui/theme" {
   name: 'light';
@@ -37,32 +66,32 @@
   prefersdark: false;
   color-scheme: light;
 
-  --color-base-100: var(--background);
-  --color-base-200: var(--card);
-  --color-base-300: var(--border);
-  --color-base-content: var(--foreground);
+  --color-base-100: oklch(98.5% 0 0deg);
+  --color-base-200: oklch(100% 0 0deg);
+  --color-base-300: oklch(90% 0 0deg);
+  --color-base-content: oklch(14.5% 0 0deg);
 
-  --color-primary: var(--primary);
-  --color-primary-content: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-content: var(--secondary-foreground);
-  --color-accent: var(--orange);
-  --color-accent-content: var(--foreground);
-  --color-neutral: var(--secondary);
-  --color-neutral-content: var(--secondary-foreground);
+  --color-primary: oklch(40% 0.15 155deg);
+  --color-primary-content: oklch(98.5% 0 0deg);
+  --color-secondary: oklch(97% 0 0deg);
+  --color-secondary-content: oklch(20.5% 0 0deg);
+  --color-accent: oklch(63% 0.2 35deg);
+  --color-accent-content: oklch(14.5% 0 0deg);
+  --color-neutral: oklch(97% 0 0deg);
+  --color-neutral-content: oklch(20.5% 0 0deg);
 
-  --color-info: var(--muted);
-  --color-info-content: var(--foreground);
-  --color-success: var(--success);
-  --color-success-content: var(--foreground);
-  --color-warning: var(--warning);
-  --color-warning-content: var(--foreground);
-  --color-error: var(--error);
-  --color-error-content: var(--foreground);
+  --color-info: oklch(97% 0 0deg);
+  --color-info-content: oklch(14.5% 0 0deg);
+  --color-success: oklch(78% 0.08 200deg);
+  --color-success-content: oklch(14.5% 0 0deg);
+  --color-warning: oklch(89% 0.1 75deg);
+  --color-warning-content: oklch(14.5% 0 0deg);
+  --color-error: oklch(58% 0.22 25deg);
+  --color-error-content: oklch(14.5% 0 0deg);
 
-  --radius-selector: var(--radius-sm);
-  --radius-field: var(--radius-md);
-  --radius-box: var(--radius-lg);
+  --radius-selector: 0.375rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.625rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
@@ -76,32 +105,32 @@
   prefersdark: true;
   color-scheme: dark;
 
-  --color-base-100: var(--background);
-  --color-base-200: var(--card);
-  --color-base-300: var(--border);
-  --color-base-content: var(--foreground);
+  --color-base-100: oklch(14.5% 0 0deg);
+  --color-base-200: oklch(17% 0 0deg);
+  --color-base-300: oklch(26.9% 0 0deg);
+  --color-base-content: oklch(98.5% 0 0deg);
 
-  --color-primary: var(--primary);
-  --color-primary-content: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-content: var(--secondary-foreground);
-  --color-accent: var(--orange);
-  --color-accent-content: var(--foreground);
-  --color-neutral: var(--secondary);
-  --color-neutral-content: var(--secondary-foreground);
+  --color-primary: oklch(62% 0.16 155deg);
+  --color-primary-content: oklch(15% 0.02 155deg);
+  --color-secondary: oklch(26.9% 0 0deg);
+  --color-secondary-content: oklch(98.5% 0 0deg);
+  --color-accent: oklch(75% 0.12 35deg);
+  --color-accent-content: oklch(98.5% 0 0deg);
+  --color-neutral: oklch(26.9% 0 0deg);
+  --color-neutral-content: oklch(98.5% 0 0deg);
 
-  --color-info: var(--muted);
-  --color-info-content: var(--foreground);
-  --color-success: var(--success);
-  --color-success-content: var(--foreground);
-  --color-warning: var(--warning);
-  --color-warning-content: var(--foreground);
-  --color-error: var(--error);
-  --color-error-content: var(--foreground);
+  --color-info: oklch(26.9% 0 0deg);
+  --color-info-content: oklch(98.5% 0 0deg);
+  --color-success: oklch(28% 0.1 200deg);
+  --color-success-content: oklch(98.5% 0 0deg);
+  --color-warning: oklch(35% 0.08 70deg);
+  --color-warning-content: oklch(98.5% 0 0deg);
+  --color-error: oklch(45% 0.1 25deg);
+  --color-error-content: oklch(98.5% 0 0deg);
 
-  --radius-selector: var(--radius-sm);
-  --radius-field: var(--radius-md);
-  --radius-box: var(--radius-lg);
+  --radius-selector: 0.375rem;
+  --radius-field: 0.5rem;
+  --radius-box: 0.625rem;
   --size-selector: 0.25rem;
   --size-field: 0.25rem;
   --border: 1px;
@@ -1384,13 +1413,13 @@
 }
 
 :root {
-  --background: oklch(100% 0 0deg);
+  --background: oklch(98.5% 0 0deg);
   --foreground: oklch(14.5% 0 0deg);
   --card: oklch(100% 0 0deg);
   --card-foreground: oklch(14.5% 0 0deg);
   --popover: oklch(100% 0 0deg);
   --popover-foreground: oklch(14.5% 0 0deg);
-  --primary: oklch(42% 0.27 300deg);
+  --primary: oklch(40% 0.15 155deg);
   --primary-foreground: oklch(98.5% 0 0deg);
   --secondary: oklch(97% 0 0deg);
   --secondary-foreground: oklch(20.5% 0 0deg);
@@ -1433,8 +1462,8 @@
   --card-foreground: oklch(98.5% 0 0deg);
   --popover: oklch(14.5% 0 0deg);
   --popover-foreground: oklch(98.5% 0 0deg);
-  --primary: oklch(65% 0.2 300deg);
-  --primary-foreground: oklch(98.5% 0 0deg);
+  --primary: oklch(62% 0.16 155deg);
+  --primary-foreground: oklch(15% 0.02 155deg);
   --secondary: oklch(26.9% 0 0deg);
   --secondary-foreground: oklch(98.5% 0 0deg);
   --muted: oklch(26.9% 0 0deg);
@@ -1477,7 +1506,7 @@
   --card-foreground: oklch(0% 0 0deg);
   --popover: oklch(100% 0 0deg);
   --popover-foreground: oklch(0% 0 0deg);
-  --primary: oklch(35% 0.28 300deg);
+  --primary: oklch(30% 0.17 155deg);
   --primary-foreground: oklch(100% 0 0deg);
   --secondary: oklch(92% 0 0deg);
   --secondary-foreground: oklch(0% 0 0deg);
@@ -1489,7 +1518,7 @@
   --destructive-foreground: oklch(100% 0 0deg);
   --border: oklch(70% 0 0deg);
   --input: oklch(70% 0 0deg);
-  --ring: oklch(35% 0.28 300deg);
+  --ring: oklch(30% 0.17 155deg);
   --success: oklch(35% 0.12 200deg);
   --warning: oklch(45% 0.15 75deg);
   --error: oklch(45% 0.2 25deg);

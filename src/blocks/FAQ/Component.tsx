@@ -41,8 +41,6 @@ export const FAQBlock: React.FC<
 
             {contactCard?.enabled !== false && (
               <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl p-6 sm:p-8 mt-8 shadow-sm">
-                <div className="pointer-events-none absolute -right-8 -bottom-8 size-32 rounded-full bg-primary/10 blur-2xl" />
-                
                 <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary border border-primary/20 mb-4">
                   <LifeBuoy className="size-6" />
                 </div>
@@ -74,8 +72,6 @@ export const FAQBlock: React.FC<
         {/* Right Column: Interactive Accordion */}
         <div className="lg:col-span-7">
           <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl p-4 sm:p-8 shadow-sm">
-            <div className="pointer-events-none absolute -left-10 -top-10 size-40 rounded-full bg-primary/8 blur-3xl" />
-
             <Accordion className="divide-border divide-y" type="single" collapsible>
               {items.map((item, index) => (
                 <AccordionItem key={index} className="relative border-none py-2" value={`item-${index}`}>

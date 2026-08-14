@@ -58,7 +58,7 @@ export const AdminBar: React.FC<{
         className="text-white"
         classNames={{
           controls: 'font-medium text-white',
-          logo: 'font-bold text-purple-300',
+          logo: 'font-bold text-emerald-300',
           user: 'text-white',
         }}
         cmsURL={process.env.NEXT_PUBLIC_SERVER_URL}

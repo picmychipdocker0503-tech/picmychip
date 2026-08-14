@@ -54,11 +54,7 @@ export const TrustBadgesStripBlock: React.FC<
 
   return (
     <section className="container my-12">
-      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl p-8 sm:p-12 shadow-lg shadow-primary/5">
-        {/* Subtle Ambient Background Gradients */}
-        <div className="pointer-events-none absolute -left-20 -top-20 size-60 rounded-full bg-primary/10 blur-3xl" />
-        <div className="pointer-events-none absolute -right-20 -bottom-20 size-60 rounded-full bg-orange-500/10 blur-3xl" />
-
+      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl p-8 sm:p-12">
         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 rounded-full border border-primary/20 mb-3">

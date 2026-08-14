@@ -24,6 +24,10 @@ import { Address, Product, Variant } from '@/payload-types'
 
 type GalleryItem = NonNullable<Product['gallery']>[number]
 type VariantOptionItem = NonNullable<Variant['options']>[number]
+// AddressForm collects GSTIN alongside the address itself (not persisted on
+// the Address collection — see its own comment) rather than in a separate
+// checkout-page section; this widens the address state to carry it through.
+type AddressWithGstin = Partial<Address> & { gstin?: string }
 import { Checkbox } from '@/components/ui/checkbox'
 import { AddressItem } from '@/components/addresses/AddressItem'
 import { FormItem } from '@/components/forms/FormItem'
@@ -45,13 +49,18 @@ export const CheckoutPage: React.FC = () => {
   const [isInitiatingPayment, setIsInitiatingPayment] = useState(false)
   const { initiatePayment } = usePayments()
   const { addresses } = useAddresses()
-  const [shippingAddress, setShippingAddress] = useState<Partial<Address>>()
-  const [billingAddress, setBillingAddress] = useState<Partial<Address>>()
+  const [shippingAddress, setShippingAddress] = useState<AddressWithGstin>()
+  const [billingAddress, setBillingAddress] = useState<AddressWithGstin>()
   const [billingAddressSameAsShipping, setBillingAddressSameAsShipping] = useState(true)
   const [isProcessingPayment, setProcessingPayment] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>('card')
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
-  const [businessDetails, setBusinessDetails] = useState({ companyName: '', gstin: '', panNumber: '' })
+  // Derived, not separately captured — GSTIN/company come from the billing
+  // address itself (see AddressForm's gstin field and the existing company field).
+  const businessDetails =
+    billingAddress?.gstin || billingAddress?.company
+      ? { companyName: billingAddress?.company || undefined, gstin: billingAddress?.gstin || undefined }
+      : undefined
   const [couponInput, setCouponInput] = useState('')
   const [giftCardInput, setGiftCardInput] = useState('')
   const [couponError, setCouponError] = useState<string | null>(null)
@@ -116,7 +125,7 @@ export const CheckoutPage: React.FC = () => {
           email: email || user?.email,
           shippingAddress: billingAddressSameAsShipping ? billingAddress : shippingAddress,
           billingAddress,
-          businessDetails: businessDetails.gstin || businessDetails.companyName ? businessDetails : undefined,
+          businessDetails,
         }),
       })
       const data = await res.json()
@@ -135,17 +144,7 @@ export const CheckoutPage: React.FC = () => {
       setIsPlacingOrder(false)
       setProcessingPayment(false)
     }
-  }, [
-    cart?.id,
-    email,
-    user?.email,
-    billingAddress,
-    billingAddressSameAsShipping,
-    shippingAddress,
-    businessDetails,
-    clearCart,
-    router,
-  ])
+  }, [cart?.id, email, user?.email, billingAddress, billingAddressSameAsShipping, shippingAddress, clearCart, router])
 
   const canGoToPayment = Boolean(
     (email || user) && billingAddress && (billingAddressSameAsShipping || shippingAddress),
@@ -193,7 +192,7 @@ export const CheckoutPage: React.FC = () => {
           ...(email ? { customerEmail: email } : {}),
           billingAddress,
           shippingAddress: billingAddressSameAsShipping ? billingAddress : shippingAddress,
-          ...(businessDetails.gstin || businessDetails.companyName ? { businessDetails } : {}),
+          ...(businessDetails ? { businessDetails } : {}),
         },
       })) as unknown as PayuRedirectFields
 
@@ -377,45 +376,6 @@ export const CheckoutPage: React.FC = () => {
             )}
           </>
         )}
-
-        <div className="flex flex-col gap-4">
-          <div>
-            <h2 className="font-medium text-3xl">Business / GST details</h2>
-            <p className="text-muted-foreground text-sm">
-              Optional — add your company name and GSTIN to receive a GST tax invoice.
-            </p>
-          </div>
-          <div className="flex flex-col gap-4 md:flex-row">
-            <FormItem>
-              <Label htmlFor="companyName">Company name</Label>
-              <Input
-                id="companyName"
-                value={businessDetails.companyName}
-                onChange={(e) => setBusinessDetails((prev) => ({ ...prev, companyName: e.target.value }))}
-              />
-            </FormItem>
-            <FormItem>
-              <Label htmlFor="gstin">GSTIN</Label>
-              <Input
-                id="gstin"
-                value={businessDetails.gstin}
-                onChange={(e) =>
-                  setBusinessDetails((prev) => ({ ...prev, gstin: e.target.value.toUpperCase() }))
-                }
-              />
-            </FormItem>
-            <FormItem>
-              <Label htmlFor="panNumber">PAN</Label>
-              <Input
-                id="panNumber"
-                value={businessDetails.panNumber}
-                onChange={(e) =>
-                  setBusinessDetails((prev) => ({ ...prev, panNumber: e.target.value.toUpperCase() }))
-                }
-              />
-            </FormItem>
-          </div>
-        </div>
 
         <DeliveryEstimate
           cartId={cart?.id}

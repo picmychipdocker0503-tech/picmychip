@@ -102,7 +102,7 @@ export default async function Page({ params }: Args) {
       <RenderHero {...hero} />
       {isHome ? (
         <>
-          <RenderBlocks blocks={firstBlock} />
+          <RenderBlocks blocks={firstBlock} noTopSpacing />
           <ScrollReveal>
             <FeaturedCategories />
           </ScrollReveal>

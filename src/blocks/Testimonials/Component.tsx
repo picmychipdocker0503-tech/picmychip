@@ -83,12 +83,9 @@ export const TestimonialsBlock: React.FC<
       <div className="-mx-4 flex snap-x snap-mandatory gap-6 overflow-x-auto px-4 pb-4 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-3">
         {cards.map((card) => (
           <div
-            className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-card hover:shadow-lg hover:shadow-primary/5 w-[85%] shrink-0 snap-start sm:w-auto"
+            className="group relative flex flex-col justify-between overflow-hidden rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl p-7 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-card hover:shadow-lg w-[85%] shrink-0 snap-start sm:w-auto"
             key={card.key}
           >
-            {/* Ambient hover glow */}
-            <div className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/15 transition-colors" />
-
             <div>
               <div className="flex items-center justify-between gap-2 mb-4">
                 <RatingStars rating={card.rating} />

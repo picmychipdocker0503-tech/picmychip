@@ -144,7 +144,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
         <span className={`text-xs font-medium ${stockInfo.className}`}>{stockInfo.label}</span>
         <button
           aria-label="Add to cart"
-          className="btn btn-primary btn-xs"
+          className="btn btn-secondary btn-xs"
           disabled={isOutOfStock || isLoading}
           onClick={handleAddToCart}
           type="button"

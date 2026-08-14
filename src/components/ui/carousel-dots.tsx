@@ -7,9 +7,21 @@ import * as React from 'react'
 type Props = {
   api: CarouselApi
   className?: string
+  /** Inactive-dot classes. Defaults to today's size/color if omitted. */
+  dotClassName?: string
+  /** Active-dot classes. Defaults to today's size/color if omitted. */
+  activeDotClassName?: string
 }
 
-export function CarouselDots({ api, className }: Props) {
+const DEFAULT_DOT_CLASSNAME = 'size-2 bg-primary/30 hover:bg-primary/50'
+const DEFAULT_ACTIVE_DOT_CLASSNAME = 'w-6 bg-primary'
+
+export function CarouselDots({
+  api,
+  className,
+  dotClassName = DEFAULT_DOT_CLASSNAME,
+  activeDotClassName = DEFAULT_ACTIVE_DOT_CLASSNAME,
+}: Props) {
   const [selectedIndex, setSelectedIndex] = React.useState(0)
   const [scrollSnaps, setScrollSnaps] = React.useState<number[]>([])
 
@@ -37,10 +49,7 @@ export function CarouselDots({ api, className }: Props) {
       {scrollSnaps.map((_, index) => (
         <button
           aria-label={`Go to slide ${index + 1}`}
-          className={cn(
-            'size-2 rounded-full transition-all',
-            index === selectedIndex ? 'bg-primary w-6' : 'bg-primary/30 hover:bg-primary/50',
-          )}
+          className={cn('rounded-full transition-all', index === selectedIndex ? activeDotClassName : dotClassName)}
           key={index}
           onClick={() => api?.scrollTo(index)}
           type="button"

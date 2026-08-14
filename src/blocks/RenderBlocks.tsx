@@ -58,8 +58,12 @@ const blockComponents = {
 
 export const RenderBlocks: React.FC<{
   blocks: Page['layout'][0][]
+  /** Skips the wrapper's top margin — for a block sitting directly under the
+   * header (e.g. the home page's hero), where `my-16`'s top half reads as a
+   * large dead gap rather than rhythm between blocks. */
+  noTopSpacing?: boolean
 }> = (props) => {
-  const { blocks } = props
+  const { blocks, noTopSpacing } = props
 
   const hasBlocks = blocks && Array.isArray(blocks) && blocks.length > 0
 
@@ -74,7 +78,7 @@ export const RenderBlocks: React.FC<{
 
             if (Block) {
               return (
-                <div className="my-16" key={index}>
+                <div className={noTopSpacing ? 'mb-16' : 'my-16'} key={index}>
                   <ScrollReveal>
                     {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
                     {/* @ts-ignore - weird type mismatch here */}

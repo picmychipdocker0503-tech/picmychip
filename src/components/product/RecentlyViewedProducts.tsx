@@ -50,7 +50,7 @@ export const RecentlyViewedProducts: React.FC<Props> = ({ excludeProductId }) =>
         <HistoryIcon className="size-3.5" />
         Pick Up Where You Left Off
       </span>
-      <h2 className="mt-2 mb-8 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+      <h2 className="mt-2 mb-8 text-2xl font-semibold tracking-tight text-foreground md:text-3xl lg:text-4xl">
         Recently Viewed
       </h2>
       <div className="flex gap-4 overflow-x-auto pb-2">

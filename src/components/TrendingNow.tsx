@@ -29,7 +29,7 @@ export const TrendingNow: React.FC = async () => {
         <FlameIcon className="size-3.5" />
         Trending Now
       </span>
-      <h2 className="mt-2 mb-8 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+      <h2 className="mt-2 mb-8 text-2xl font-semibold tracking-tight text-foreground md:text-3xl lg:text-4xl">
         Best Sellers This Month
       </h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

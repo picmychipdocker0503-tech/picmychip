@@ -2,7 +2,7 @@ import React from 'react'
 
 import { LogoIcon } from './logo'
 
-const BRAND_PURPLE = '#6a00c5'
+const BRAND_GREEN = '#005d1e'
 
 /**
  * Payload admin.components.graphics.Logo — shown on the login screen.
@@ -16,10 +16,10 @@ const BRAND_PURPLE = '#6a00c5'
 export const AdminLogo: React.FC = () => (
   <div style={{ alignItems: 'center', display: 'inline-flex', fontSize: '1.5rem', fontWeight: 700, justifyContent: 'center' }}>
     Pic
-    <LogoIcon size={32} style={{ color: BRAND_PURPLE, margin: '0 0.15em' }} />
+    <LogoIcon size={32} style={{ color: BRAND_GREEN, margin: '0 0.15em' }} />
     chip
   </div>
 )
 
 /** Payload admin.components.graphics.Icon — shown in the collapsed nav bar. */
-export const AdminIcon: React.FC = () => <LogoIcon size={28} style={{ color: BRAND_PURPLE }} />
+export const AdminIcon: React.FC = () => <LogoIcon size={28} style={{ color: BRAND_GREEN }} />

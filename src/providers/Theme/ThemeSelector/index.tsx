@@ -35,26 +35,26 @@ const THEME_OPTIONS: ThemeOption[] = [
     description: 'Match system setting',
     swatch: {
       bg: 'linear-gradient(135deg, oklch(100% 0 0deg) 50%, oklch(14.5% 0 0deg) 50%)',
-      primary: 'oklch(55% 0.24 300deg)',
+      primary: 'oklch(50% 0.16 155deg)',
     },
   },
   {
     value: 'light',
     label: 'Light',
     description: 'Clean & bright',
-    swatch: { bg: 'oklch(100% 0 0deg)', primary: 'oklch(42% 0.27 300deg)' },
+    swatch: { bg: 'oklch(98.5% 0 0deg)', primary: 'oklch(40% 0.15 155deg)' },
   },
   {
     value: 'dark',
     label: 'Dark',
     description: 'Neutral black',
-    swatch: { bg: 'oklch(14.5% 0 0deg)', primary: 'oklch(65% 0.2 300deg)' },
+    swatch: { bg: 'oklch(14.5% 0 0deg)', primary: 'oklch(62% 0.16 155deg)' },
   },
   {
     value: 'high-contrast',
     label: 'High Contrast',
     description: 'AAA accessible',
-    swatch: { bg: 'oklch(100% 0 0deg)', primary: 'oklch(35% 0.28 300deg)' },
+    swatch: { bg: 'oklch(100% 0 0deg)', primary: 'oklch(30% 0.17 155deg)' },
   },
   {
     value: 'midnight',

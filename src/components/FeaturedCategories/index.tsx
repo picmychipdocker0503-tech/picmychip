@@ -36,14 +36,14 @@ export async function FeaturedCategories() {
   if (categories.length === 0) return null
 
   return (
-    <section className="container my-20">
+    <section className="container mb-20">
       <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 rounded-full border border-primary/20 mb-3">
             <Layers className="size-3.5" />
             BROWSE HARDWARE ECOSYSTEM
           </span>
-          <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
+          <h2 className="text-2xl font-semibold tracking-tight text-foreground md:text-3xl lg:text-4xl">
             Shop by Component Category
           </h2>
           <p className="mt-2 max-w-lg text-sm sm:text-base text-muted-foreground">
@@ -67,17 +67,14 @@ export async function FeaturedCategories() {
             <ScrollReveal index={index} key={category.id} staggerMs={50}>
               <Link
                 href={`/category/${category.slug}`}
-                className="group relative flex flex-col items-center gap-4 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-md px-6 py-8 text-center transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-card hover:shadow-lg hover:shadow-primary/5 overflow-hidden"
+                className="group relative flex flex-col items-center gap-4 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-md px-6 py-8 text-center transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-card hover:shadow-lg overflow-hidden"
               >
-                {/* Subtle hover background glow */}
-                <div className="pointer-events-none absolute -right-10 -top-10 size-28 rounded-full bg-primary/5 blur-2xl group-hover:bg-primary/15 transition-colors" />
-
                 <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground border border-border/80 group-hover:border-primary/30 group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-110 transition-all duration-300 shadow-sm">
                   <Icon className="size-7" />
                 </div>
 
                 <div>
-                  <span className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors block">
+                  <span className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors block">
                     {category.title}
                   </span>
                   <span className="mt-1 text-[11px] font-medium text-muted-foreground block">

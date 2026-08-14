@@ -176,7 +176,7 @@ export const Search: React.FC<Props> = ({ className }) => {
           value={query}
         />
         <button
-          className="bg-orange hover:bg-orange/90 shrink-0 rounded-full px-5 py-2 text-sm font-semibold whitespace-nowrap text-white transition-colors"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground shrink-0 rounded-full px-5 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
           type="submit"
         >
           Search

@@ -85,11 +85,7 @@ export const CustomerInteractionBlock: React.FC<
 
   return (
     <section className="container my-16">
-      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl shadow-xl shadow-primary/5 grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-        
-        {/* Subtle Ambient Background Gradients */}
-        <div className="pointer-events-none absolute -left-24 -top-24 size-72 rounded-full bg-primary/10 blur-3xl" />
-        <div className="pointer-events-none absolute -right-24 -bottom-24 size-72 rounded-full bg-orange-500/10 blur-3xl" />
+      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
 
         {/* Left Side: Sourcing Channels & CTA */}
         <div className="relative z-10 p-8 sm:p-10 lg:p-12">

@@ -1,35 +1,26 @@
 'use client'
 
-import type { HeroCarouselBlock, SiteSetting } from '@/payload-types'
+import type { HeroCarouselBlock } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
 import { Media } from '@/components/Media'
 import { Carousel, CarouselContent, CarouselItem, type CarouselApi } from '@/components/ui/carousel'
 import { CarouselDots } from '@/components/ui/carousel-dots'
-import { getSocialIcon } from '@/utilities/getSocialIcon'
 import Autoplay from 'embla-carousel-autoplay'
-import {
-  ArrowRight,
-  CheckCircle2,
-  Lock,
-  ShieldCheck,
-  Sparkles,
-  Truck,
-  Zap,
-} from 'lucide-react'
+import { ArrowRight, Sparkles, StarIcon, Zap } from 'lucide-react'
 import Link from 'next/link'
 import React, { useRef, useState } from 'react'
 
 import './HeroCarouselClient.css'
 
 type Slide = NonNullable<HeroCarouselBlock['slides']>[number]
-type SocialLink = NonNullable<SiteSetting['sameAs']>[number]
+type HeroStats = { componentCount: number; reviewMessage: string }
 
 /* -------------------------------------------------------------------------- */
 /* Hero content                                                                */
 /* -------------------------------------------------------------------------- */
 
-const HeroContent = ({ slide, socialLinks }: { slide: Slide; socialLinks: SocialLink[] }) => {
+const HeroContent = ({ slide, stats }: { slide: Slide; stats: HeroStats }) => {
   return (
     <div className="pmc-hero-content">
       {slide.badge && (
@@ -59,46 +50,18 @@ const HeroContent = ({ slide, socialLinks }: { slide: Slide; socialLinks: Social
         </Link>
       </div>
 
-      <div className="pmc-trust-row">
-        <div className="pmc-trust-item">
-          <ShieldCheck className="size-4 text-emerald-500 shrink-0" />
-          <span>Genuine Components</span>
-        </div>
-
-        <div className="pmc-trust-item">
-          <Truck className="size-4 text-primary shrink-0" />
-          <span>Fast Delivery</span>
-        </div>
-
-        <div className="pmc-trust-item">
-          <Lock className="size-4 text-amber-500 shrink-0" />
-          <span>Secure Checkout</span>
+      <div className="pmc-hero-trust">
+        <div className="pmc-stat-line">
+          <span>
+            <strong>{stats.componentCount}+</strong> components in stock
+          </span>
+          <span className="pmc-stat-divider" />
+          <span className="pmc-stat-rating">
+            <StarIcon className="size-3.5 fill-current" />
+            {stats.reviewMessage}
+          </span>
         </div>
       </div>
-
-      {socialLinks.length > 0 && (
-        <div className="pmc-social-row">
-          <span>Follow us on:</span>
-          <div className="pmc-social-icons">
-            {socialLinks.map((social, index) => {
-              const Icon = getSocialIcon(social.url)
-              if (!Icon) return null
-              return (
-                <a
-                  aria-label="Social link"
-                  className="pmc-social-icon"
-                  href={social.url}
-                  key={social.id ?? index}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  <Icon className="size-3.5" />
-                </a>
-              )
-            })}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -128,27 +91,6 @@ const ProductVisual = ({ slide, priority }: { slide: Slide; priority?: boolean }
           </div>
         )}
       </div>
-
-      {/* Floating Badges */}
-      <div className="pmc-floating-badge badge-top">
-        <div className="pmc-badge-icon bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-          <CheckCircle2 className="size-3.5" />
-        </div>
-        <div>
-          <strong>Spec-Verified</strong>
-          <small>Datasheet guaranteed</small>
-        </div>
-      </div>
-
-      <div className="pmc-floating-badge badge-bottom">
-        <div className="pmc-badge-icon bg-primary/10 text-primary border border-primary/20">
-          <Truck className="size-3.5" />
-        </div>
-        <div>
-          <strong>Ready to Ship</strong>
-          <small>Dispatches in 24h</small>
-        </div>
-      </div>
     </div>
   )
 }
@@ -160,18 +102,18 @@ const ProductVisual = ({ slide, priority }: { slide: Slide; priority?: boolean }
 const SplitSlide = ({
   slide,
   priority,
-  socialLinks,
+  stats,
 }: {
   slide: Slide
   priority?: boolean
-  socialLinks: SocialLink[]
+  stats: HeroStats
 }) => {
   return (
     <div className="pmc-hero">
       <div className="pmc-hero-bg" />
 
       <div className="pmc-hero-left">
-        <HeroContent slide={slide} socialLinks={socialLinks} />
+        <HeroContent slide={slide} stats={stats} />
       </div>
 
       <div className="pmc-hero-right">
@@ -188,11 +130,11 @@ const SplitSlide = ({
 const FullBleedSlide = ({
   slide,
   priority,
-  socialLinks,
+  stats,
 }: {
   slide: Slide
   priority?: boolean
-  socialLinks: SocialLink[]
+  stats: HeroStats
 }) => {
   return (
     <div className="pmc-full-slide">
@@ -207,7 +149,7 @@ const FullBleedSlide = ({
       <div className="pmc-full-overlay" />
 
       <div className="pmc-full-content">
-        <HeroContent slide={slide} socialLinks={socialLinks} />
+        <HeroContent slide={slide} stats={stats} />
       </div>
     </div>
   )
@@ -219,8 +161,8 @@ const FullBleedSlide = ({
 
 export const HeroCarouselClient: React.FC<{
   slides: Slide[]
-  socialLinks?: SocialLink[]
-}> = ({ slides, socialLinks = [] }) => {
+  stats: HeroStats
+}> = ({ slides, stats }) => {
   const [api, setApi] = useState<CarouselApi>()
 
   const autoplay = useRef(
@@ -247,16 +189,23 @@ export const HeroCarouselClient: React.FC<{
           {slides.map((slide, index) => (
             <CarouselItem key={slide.id ?? index}>
               {slide.layout === 'split' ? (
-                <SplitSlide slide={slide} priority={index === 0} socialLinks={socialLinks} />
+                <SplitSlide priority={index === 0} slide={slide} stats={stats} />
               ) : (
-                <FullBleedSlide slide={slide} priority={index === 0} socialLinks={socialLinks} />
+                <FullBleedSlide priority={index === 0} slide={slide} stats={stats} />
               )}
             </CarouselItem>
           ))}
         </CarouselContent>
       </Carousel>
 
-      {slides.length > 1 && <CarouselDots api={api} className="pmc-carousel-dots" />}
+      {slides.length > 1 && (
+        <CarouselDots
+          activeDotClassName="w-8 bg-primary"
+          api={api}
+          className="pmc-carousel-dots"
+          dotClassName="size-2.5 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+        />
+      )}
     </div>
   )
 }

@@ -35,7 +35,7 @@ export const RecommendedForYou: React.FC = () => {
   return (
     <div className="container my-20">
       <span className="eyebrow">For You</span>
-      <h2 className="mt-2 mb-8 text-2xl font-semibold tracking-tight text-foreground md:text-3xl">
+      <h2 className="mt-2 mb-8 text-2xl font-semibold tracking-tight text-foreground md:text-3xl lg:text-4xl">
         Recommended for You
       </h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

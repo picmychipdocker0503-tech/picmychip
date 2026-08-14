@@ -66,3 +66,15 @@ export const resolveIndianState = (name: string | null | undefined): IndianState
   if (!name) return undefined
   return STATE_BY_NORMALIZED_NAME.get(normalize(name))
 }
+
+const STATE_BY_GST_CODE = new Map(INDIAN_STATES.map((state) => [state.gstCode, state]))
+
+/**
+ * A GSTIN's first two digits are the state code it was issued under (e.g.
+ * "29" = Karnataka) — used by the checkout address form to auto-select the
+ * State field as soon as a valid-looking GSTIN is typed.
+ */
+export const resolveStateByGstin = (gstin: string | null | undefined): IndianState | undefined => {
+  if (!gstin || gstin.length < 2) return undefined
+  return STATE_BY_GST_CODE.get(gstin.slice(0, 2))
+}

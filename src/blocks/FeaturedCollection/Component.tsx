@@ -1,9 +1,22 @@
 import type { FeaturedCollectionBlock as FeaturedCollectionBlockProps } from '@/payload-types'
 
-import { CMSLink } from '@/components/Link'
-import { Media } from '@/components/Media'
-import { ArrowUpRightIcon } from 'lucide-react'
+import { PromoCard } from '@/components/PromoCard'
+import { cn } from '@/utilities/cn'
 import React from 'react'
+
+type Panel = NonNullable<FeaturedCollectionBlockProps['panels']>[number]
+
+/* Mirrors CMSLink's own href resolution (src/components/Link/index.tsx) —
+   duplicated rather than reused because here we need to know up front
+   whether a href exists at all, to decide between a clickable card and a
+   plain, non-linking one. */
+const resolvePanelHref = (link: Panel['link']): string | null => {
+  if (!link) return null
+  if (link.type === 'reference' && typeof link.reference?.value === 'object' && link.reference.value?.slug) {
+    return `${link.reference.relationTo !== 'pages' ? `/${link.reference.relationTo}` : ''}/${link.reference.value.slug}`
+  }
+  return link.url ?? null
+}
 
 export const FeaturedCollectionBlock: React.FC<
   FeaturedCollectionBlockProps & {
@@ -12,45 +25,41 @@ export const FeaturedCollectionBlock: React.FC<
 > = ({ panels }) => {
   if (!panels?.length) return null
 
+  const [primary, ...rest] = panels
+
   return (
-    <div className="container">
-      <div className={`grid grid-cols-1 gap-6 ${panels.length > 1 ? 'md:grid-cols-2' : ''}`}>
-        {panels.map((panel, index) => (
-          <div
-            className="group border-border bg-muted relative aspect-[16/9] overflow-hidden rounded-2xl border"
-            key={panel.id ?? index}
-          >
-            {typeof panel.image === 'object' && (
-              <Media
-                className="absolute inset-0"
-                fill
-                imgClassName="object-contain p-10 pb-20 transition-transform duration-300 group-hover:scale-105 sm:p-12 sm:pb-24"
-                resource={panel.image}
+    <section className="container my-20">
+      <div className={cn('grid grid-cols-1 gap-6', rest.length > 0 && 'lg:grid-cols-[1.6fr_1fr]')}>
+        <PromoCard
+          buttonLabel={primary.link?.label || 'Shop Now'}
+          className="min-h-[260px] lg:min-h-[440px]"
+          description={primary.copy}
+          eyebrow="Featured"
+          heading={primary.heading}
+          headingSize="lg"
+          href={resolvePanelHref(primary.link)}
+          image={primary.image}
+          tone="dark"
+        />
+
+        {rest.length > 0 && (
+          <div className="flex flex-col gap-6">
+            {rest.map((panel, index) => (
+              <PromoCard
+                buttonLabel={panel.link?.label || 'Shop Now'}
+                className="min-h-[180px] flex-1"
+                description={panel.copy}
+                eyebrow="Featured"
+                heading={panel.heading}
+                href={resolvePanelHref(panel.link)}
+                image={panel.image}
+                key={panel.id ?? index}
+                tone="light"
               />
-            )}
-            <div className="from-background/95 via-background/40 absolute inset-0 bg-gradient-to-t to-transparent" />
-
-            {panel.link?.label && (
-              <div className="border-border bg-card/90 text-foreground absolute top-4 right-4 flex size-9 items-center justify-center rounded-full border backdrop-blur-sm transition-transform group-hover:scale-105">
-                <ArrowUpRightIcon className="size-4" />
-              </div>
-            )}
-
-            <div className="relative z-10 flex h-full flex-col justify-end gap-1.5 p-6">
-              <span className="text-primary text-xs font-bold tracking-wide uppercase">Featured</span>
-              <h3 className="text-foreground text-xl font-bold sm:text-2xl">{panel.heading}</h3>
-              {panel.copy && <p className="text-muted-foreground max-w-sm text-sm">{panel.copy}</p>}
-              {panel.link?.label && (
-                <CMSLink
-                  {...panel.link}
-                  appearance="inline"
-                  className="text-foreground group-hover:text-primary mt-2 inline-flex w-fit items-center gap-1.5 text-sm font-semibold underline-offset-4 group-hover:underline"
-                />
-              )}
-            </div>
+            ))}
           </div>
-        ))}
+        )}
       </div>
-    </div>
+    </section>
   )
 }
