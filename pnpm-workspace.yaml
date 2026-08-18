@@ -1,7 +1,10 @@
 allowBuilds:
   '@parcel/watcher': set this to true or false
   '@swc/core': set this to true or false
-  '@vercel/git-hooks': true
+  # false, not true: its postinstall symlinks git hooks, which fails with
+  # EPERM on Windows without Developer Mode/admin rights and aborts the
+  # whole `pnpm install` before it finishes relinking anything else.
+  '@vercel/git-hooks': false
   core-js: false
   esbuild: true
   sharp: true
@@ -24,5 +27,9 @@ overrides:
   nanoid: '>=3.3.17'
   postcss: '>=8.5.23'
   sharp: '>=0.35.0'
-  undici: '>=7.29.0'
+  # Capped below 8.0.0 — jsdom (pulled in by vitest 4.1's jsdom@28) requires
+  # undici ^7.20.0 and calls an internal path (lib/handler/wrap-handler.js)
+  # that undici 8 removed; the open-ended '>=7.29.0' let pnpm's override
+  # float every resolution in the tree to 8.10.0, breaking jsdom's require.
+  undici: '>=7.29.0 <8.0.0'
   vitest: '>=4.1.0'
