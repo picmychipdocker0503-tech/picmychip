@@ -2,6 +2,7 @@ import type { Payload } from 'payload'
 
 import { zohoIsConfigured } from '@/lib/zoho/auth'
 import { findOrCreateZohoCustomer } from '@/lib/zoho/customers'
+import { findOrCreateZohoItem } from '@/lib/zoho/items'
 import { getZohoOrganizationState } from '@/lib/zoho/organization'
 import { resolveTaxId } from '@/lib/zoho/taxes'
 import { getInvoicePdfUrl, getZohoInvoice } from '@/lib/zoho/invoices'
@@ -13,6 +14,7 @@ import {
 } from '@/lib/zoho/salesOrders'
 import type { ZohoAddress, ZohoLineItem, ZohoSalesOrder } from '@/lib/zoho/types'
 import { IndianState, resolveIndianState } from '@/lib/indianStates'
+import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 
 type AddressLike = {
   addressLine1?: string | null
@@ -28,7 +30,7 @@ type AddressLike = {
 
 export const toZohoAddress = (address: AddressLike, state?: IndianState): ZohoAddress | undefined => {
   if (!address) return undefined
-  return {
+  const zohoAddress: ZohoAddress = {
     attention: `${address.firstName || ''} ${address.lastName || ''}`.trim() || undefined,
     address: address.addressLine1 || '',
     street2: address.addressLine2 || undefined,
@@ -39,6 +41,13 @@ export const toZohoAddress = (address: AddressLike, state?: IndianState): ZohoAd
     country: address.country || 'India',
     phone: address.phone || undefined,
   }
+  // Belt-and-suspenders: ZohoAddress has no email field by type, but this
+  // guarantees it even if a caller ever spreads extra fields in — a Zoho
+  // billing/shipping address must never carry the customer's email.
+  delete (zohoAddress as Record<string, unknown>).email
+  delete (zohoAddress as Record<string, unknown>).email_id
+  delete (zohoAddress as Record<string, unknown>).customer_email
+  return zohoAddress
 }
 
 /**
@@ -61,8 +70,15 @@ export function resolveOrderTaxType(
 
 /**
  * Builds Zoho line items for an order's items (name, HSN/SAC, GST-exclusive
- * rate, tax_id) — shared by sales order creation and, for a one-off
- * correction, direct invoice edits.
+ * rate, tax_id, and a matched-or-created Zoho catalog item_id) — shared by
+ * sales order creation and, for a one-off correction, direct invoice edits.
+ *
+ * Every item is resolved against Zoho's Items catalog (find-or-create, never
+ * duplicated) and every rate is resolved against Zoho's configured taxes
+ * *before* anything is created — a failure on either aborts the whole sync
+ * (thrown, not swallowed) so a Sales Order is never created with an
+ * incomplete or mis-taxed item list. Processed sequentially, not in
+ * parallel, so nothing races to create the same item twice within one order.
  */
 export async function buildZohoLineItems(
   payload: Payload,
@@ -92,11 +108,60 @@ export async function buildZohoLineItems(
     const gstPercent = product?.gstPercent ?? defaultGstPercent
     const taxId = await resolveTaxId(gstPercent, taxType)
 
-    // priceInINR is GST-inclusive (same assumption as taxCalculation.ts) but
-    // Zoho's line-item `rate` is the pre-tax base — it adds tax_id's rate on
-    // top when computing the total.
-    const taxInclusiveRate = ((variant?.priceInINR ?? product?.priceInINR ?? 0) as number) / 100
-    const rate = gstPercent > 0 ? taxInclusiveRate / (1 + gstPercent / 100) : taxInclusiveRate
+    if (gstPercent > 0 && !taxId) {
+      payload.logger.error({
+        msg: 'No Zoho tax configuration found for product',
+        productId,
+        sku: product?.sku,
+        itemName: product?.title,
+        hsnCode: product?.hsnCode,
+        gstPercent,
+        taxType,
+      })
+      throw new Error(
+        `No Zoho tax configuration found for ${gstPercent}% (${taxType}) — configure it in Zoho Books Settings → Taxes.`,
+      )
+    }
+
+    // priceInINR is GST-exclusive — Zoho's line-item `rate` is the pre-tax
+    // base too, so it's used directly; Zoho adds tax_id's rate on top.
+    const rate = ((variant?.priceInINR ?? product?.priceInINR ?? 0) as number) / 100
+
+    let itemId: string | undefined
+    try {
+      const result = await findOrCreateZohoItem({
+        zohoItemId: product?.zohoItemId || undefined,
+        name: product?.title || 'Product',
+        sku: product?.sku || undefined,
+        description: richTextToPlainText(product?.description) || undefined,
+        hsnCode: product?.hsnCode || undefined,
+        taxId,
+        rate,
+      })
+      itemId = result.itemId
+
+      if (product?.id && result.itemId !== product?.zohoItemId) {
+        await payload.update({
+          collection: 'products',
+          id: product.id,
+          data: { zohoItemId: result.itemId },
+          overrideAccess: true,
+          context: { disableRevalidate: true },
+        })
+      }
+    } catch (err) {
+      payload.logger.error({
+        msg: 'Failed to resolve/create Zoho item',
+        productId,
+        sku: product?.sku,
+        itemName: product?.title,
+        hsnCode: product?.hsnCode,
+        gstPercent,
+        zohoItemId: product?.zohoItemId,
+        err,
+      })
+      throw err
+    }
 
     lineItems.push({
       name: product?.title || 'Product',
@@ -104,6 +169,7 @@ export async function buildZohoLineItems(
       rate,
       quantity: item.quantity ?? 1,
       tax_id: taxId,
+      item_id: itemId,
     })
   }
 
@@ -125,16 +191,21 @@ async function resolveCustomerForOrder(
   const customerName =
     `${billing?.firstName || ''} ${billing?.lastName || ''}`.trim() || order.customerEmail || 'Customer'
 
-  const customerId = typeof order.customer === 'object' ? order.customer?.id : order.customer
-  let existingContactId: string | undefined
-  if (customerId) {
-    const customerDoc = await payload.findByID({ collection: 'users', id: customerId, depth: 0, overrideAccess: true })
-    existingContactId = (customerDoc as { zohoCustomerId?: string })?.zohoCustomerId || undefined
-  }
-
+  // Matched on THIS order's own email/GSTIN/phone only — deliberately does
+  // NOT check a cached zohoCustomerId on the logged-in account. That
+  // shortcut used to force every order from the same account onto one
+  // shared Zoho contact regardless of what billing name/phone was actually
+  // entered — confirmed live: a logged-in account placing orders under two
+  // different real names ("Keerthan Kumar P" vs "Praveen kumar.D") had them
+  // collapse into a single contact, and each re-sync flipped its name to
+  // whichever order ran last, showing the wrong customer on the others'
+  // sales orders. One Zoho contact per distinct set of order details is what
+  // a repeat customer naturally gets anyway, since they'd enter the same
+  // details each time; this only diverges — correctly — when they don't.
   const { contact } = await findOrCreateZohoCustomer({
-    existingContactId,
     contactName: customerName,
+    firstName: billing?.firstName || undefined,
+    lastName: billing?.lastName || undefined,
     companyName,
     email: order.customerEmail || undefined,
     phone: billing?.phone || shipping?.phone || undefined,
@@ -142,12 +213,6 @@ async function resolveCustomerForOrder(
     billingAddress: toZohoAddress(billing, billingState),
     shippingAddress: toZohoAddress(shipping, shippingState),
   })
-
-  if (customerId && contact.contact_id) {
-    await payload
-      .update({ collection: 'users', id: customerId, data: { zohoCustomerId: contact.contact_id } as never, overrideAccess: true })
-      .catch((err) => payload.logger.warn({ msg: 'Could not save zohoCustomerId on user', err, customerId }))
-  }
 
   return { contactId: contact.contact_id }
 }

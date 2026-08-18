@@ -6,7 +6,7 @@ import { AddToCart } from '@/components/Cart/AddToCart'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
 import { useCompare } from '@/providers/Compare'
-import { useLocale } from '@/providers/Locale'
+import { useTranslations } from 'next-intl'
 import { useWishlist } from '@/providers/Wishlist'
 import { cn } from '@/utilities/cn'
 import { CheckIcon, HeartIcon, ScaleIcon, TagIcon } from 'lucide-react'
@@ -40,7 +40,7 @@ export function ProductDescription({
   categorySlug,
 }: Props) {
   const { currency } = useCurrency()
-  const { t } = useLocale()
+  const t = useTranslations('product')
   const { toggle, isComparing } = useCompare()
   const { toggle: toggleWishlist, isSaved } = useWishlist()
   const productId = String(product.id)

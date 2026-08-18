@@ -67,6 +67,7 @@ const run = async () => {
         inventory: 100,
         weightInGrams: 1,
         gallery: [{ image: media.id }],
+        hsnCode: '8533',
       } as any,
       overrideAccess: true,
       context: { disableRevalidate: true },

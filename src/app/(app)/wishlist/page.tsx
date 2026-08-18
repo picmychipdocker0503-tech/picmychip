@@ -7,19 +7,33 @@ import { Price } from '@/components/Price'
 import { useWishlist } from '@/providers/Wishlist'
 import { getClientSideURL } from '@/utilities/getURL'
 import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
+import {
+  createColumnHelper,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type SortingState,
+} from '@tanstack/react-table'
 import clsx from 'clsx'
 import {
   AlertCircleIcon,
+  ArrowDownIcon,
+  ArrowUpIcon,
+  ArrowUpDownIcon,
   CheckCircle2Icon,
+  ChevronLeftIcon,
   ChevronRightIcon,
   ClockIcon,
   HeartIcon,
+  ShoppingCartIcon,
   XCircleIcon,
   XIcon,
 } from 'lucide-react'
-import posthog from 'posthog-js'
 import Link from 'next/link'
-import React, { useEffect, useState } from 'react'
+import posthog from 'posthog-js'
+import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
 const STOCK_DISPLAY = {
@@ -29,12 +43,21 @@ const STOCK_DISPLAY = {
   backorder: { label: 'Backorder', icon: ClockIcon, className: 'text-warning' },
 } as const
 
+type TableMeta = {
+  isCartLoading: boolean
+  onAddToCart: (product: Product) => void
+  onRemove: (product: Product) => void
+}
+
+const columnHelper = createColumnHelper<Product>()
+
 export default function WishlistPage() {
   const { ids, toggle, clear } = useWishlist()
   const { addItem, isLoading } = useCart()
   const { currency } = useCurrency()
   const [products, setProducts] = useState<Product[]>([])
   const [isFetching, setIsFetching] = useState(true)
+  const [sorting, setSorting] = useState<SortingState>([])
 
   useEffect(() => {
     if (ids.length === 0) {
@@ -54,6 +77,134 @@ export default function WishlistPage() {
       .finally(() => setIsFetching(false))
   }, [ids])
 
+  const priceField = `priceIn${currency.code}` as keyof Product
+
+  const meta = useMemo<TableMeta>(
+    () => ({
+      isCartLoading: isLoading,
+      onAddToCart: (product) => {
+        posthog.capture('wishlist_item_added_to_cart', {
+          product_id: product.id,
+          product_title: product.title,
+        })
+        addItem({ product: product.id }).then(() => {
+          toast.success('Item added to cart.')
+        })
+      },
+      onRemove: (product) => toggle(String(product.id)),
+    }),
+    [isLoading, addItem, toggle],
+  )
+
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor('title', {
+        cell: (info) => {
+          const product = info.row.original
+          const image =
+            product.gallery?.[0]?.image && typeof product.gallery[0]?.image !== 'string'
+              ? product.gallery[0]?.image
+              : false
+
+          return (
+            <Link className="group flex items-center gap-4" href={`/products/${product.slug}`}>
+              <div className="bg-muted relative size-16 shrink-0 overflow-hidden rounded-lg">
+                {image ? (
+                  <Media className="relative h-full w-full" fill imgClassName="object-cover" resource={image} />
+                ) : (
+                  <div className="text-muted-foreground flex h-full w-full items-center justify-center text-xs">
+                    No image
+                  </div>
+                )}
+              </div>
+              <span className="group-hover:text-primary font-medium text-foreground transition-colors">
+                {info.getValue()}
+              </span>
+            </Link>
+          )
+        },
+        header: 'Product',
+      }),
+      columnHelper.accessor((product) => (typeof product[priceField] === 'number' ? (product[priceField] as number) : null), {
+        id: 'price',
+        cell: (info) => {
+          const value = info.getValue()
+          return <span className="font-semibold">{typeof value === 'number' ? <Price amount={value} /> : '—'}</span>
+        },
+        header: 'Unit Price',
+        meta: { className: 'hidden sm:table-cell' },
+      }),
+      columnHelper.accessor('stockStatus', {
+        cell: (info) => {
+          const stockStatus = info.getValue()
+          const stock =
+            stockStatus && stockStatus in STOCK_DISPLAY
+              ? STOCK_DISPLAY[stockStatus as keyof typeof STOCK_DISPLAY]
+              : STOCK_DISPLAY['in-stock']
+          const StockIcon = stock.icon
+          return (
+            <span className={clsx('inline-flex items-center gap-1.5 text-sm font-medium', stock.className)}>
+              <StockIcon className="size-4" />
+              {stock.label}
+            </span>
+          )
+        },
+        header: 'Stock Status',
+        meta: { className: 'hidden sm:table-cell' },
+      }),
+      columnHelper.display({
+        cell: (info) => {
+          const product = info.row.original
+          const tableMeta = info.table.options.meta as TableMeta
+          return (
+            <button
+              className="btn btn-ghost btn-sm gap-1.5 border border-white/30 bg-white/10 text-foreground shadow-sm backdrop-blur-md backdrop-saturate-150 hover:border-white/40 hover:bg-white/20"
+              disabled={tableMeta.isCartLoading || product.stockStatus === 'out-of-stock'}
+              onClick={() => tableMeta.onAddToCart(product)}
+              type="button"
+            >
+              <ShoppingCartIcon className="size-4" />
+              Add to Cart
+            </button>
+          )
+        },
+        header: 'Action',
+        id: 'action',
+      }),
+      columnHelper.display({
+        cell: (info) => {
+          const product = info.row.original
+          const tableMeta = info.table.options.meta as TableMeta
+          return (
+            <button
+              aria-label="Remove from wishlist"
+              className="border-border text-muted-foreground hover:border-error hover:text-error inline-flex size-8 items-center justify-center rounded-full border transition-colors"
+              onClick={() => tableMeta.onRemove(product)}
+              type="button"
+            >
+              <XIcon className="size-4" />
+            </button>
+          )
+        },
+        header: '',
+        id: 'remove',
+      }),
+    ],
+    [priceField],
+  )
+
+  const table = useReactTable({
+    columns,
+    data: products,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    initialState: { pagination: { pageSize: 10 } },
+    meta,
+    onSortingChange: setSorting,
+    state: { sorting },
+  })
+
   if (!isFetching && ids.length === 0) {
     return (
       <div className="container flex flex-col items-center gap-4 py-24 text-center">
@@ -71,8 +222,6 @@ export default function WishlistPage() {
     )
   }
 
-  const priceField = `priceIn${currency.code}` as keyof Product
-
   return (
     <div className="container flex flex-col gap-6 py-16">
       <nav className="text-muted-foreground flex items-center gap-1.5 text-sm">
@@ -86,11 +235,7 @@ export default function WishlistPage() {
       <div className="flex items-end justify-between gap-4">
         <h1 className="text-2xl font-bold md:text-3xl">Your Wishlist</h1>
         {products.length > 0 && (
-          <button
-            className="text-primary text-sm font-medium hover:underline"
-            onClick={clear}
-            type="button"
-          >
+          <button className="text-primary text-sm font-medium hover:underline" onClick={clear} type="button">
             Clear Wishlist
           </button>
         )}
@@ -103,108 +248,80 @@ export default function WishlistPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
-                <tr className="border-border text-muted-foreground border-b text-sm">
-                  <th className="px-6 py-4 font-medium">Product</th>
-                  <th className="hidden px-6 py-4 font-medium sm:table-cell">Unit Price</th>
-                  <th className="hidden px-6 py-4 font-medium sm:table-cell">Stock Status</th>
-                  <th className="px-6 py-4 font-medium">Action</th>
-                  <th className="w-14 px-4 py-4" />
-                </tr>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr className="border-border text-muted-foreground border-b text-sm" key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      const sortDirection = header.column.getIsSorted()
+                      const className = (header.column.columnDef.meta as { className?: string } | undefined)?.className
+
+                      return (
+                        <th className={clsx('px-6 py-4 font-medium', className)} key={header.id}>
+                          {header.column.getCanSort() ? (
+                            <button
+                              className="flex cursor-pointer items-center gap-1 select-none"
+                              onClick={header.column.getToggleSortingHandler()}
+                              type="button"
+                            >
+                              {flexRender(header.column.columnDef.header, header.getContext())}
+                              {sortDirection === 'asc' && <ArrowUpIcon className="size-3" />}
+                              {sortDirection === 'desc' && <ArrowDownIcon className="size-3" />}
+                              {!sortDirection && <ArrowUpDownIcon className="size-3 opacity-30" />}
+                            </button>
+                          ) : (
+                            flexRender(header.column.columnDef.header, header.getContext())
+                          )}
+                        </th>
+                      )
+                    })}
+                  </tr>
+                ))}
               </thead>
               <tbody>
-                {products.map((product) => (
-                  <WishlistRow
-                    key={product.id}
-                    isCartLoading={isLoading}
-                    onAddToCart={() => {
-                      posthog.capture('wishlist_item_added_to_cart', {
-                        product_id: product.id,
-                        product_title: product.title,
-                      })
-                      addItem({ product: product.id }).then(() => {
-                        toast.success('Item added to cart.')
-                      })
-                    }}
-                    onRemove={() => toggle(String(product.id))}
-                    priceField={priceField}
-                    product={product}
-                  />
+                {table.getRowModel().rows.map((row) => (
+                  <tr className="border-border last:border-b-0 border-b" key={row.id}>
+                    {row.getVisibleCells().map((cell) => {
+                      const className = (cell.column.columnDef.meta as { className?: string } | undefined)?.className
+                      return (
+                        <td className={clsx('px-6 py-4', className)} key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      )
+                    })}
+                  </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {table.getPageCount() > 1 && (
+            <div className="border-border flex items-center justify-between gap-3 border-t px-6 py-3">
+              <span className="text-muted-foreground text-sm">
+                Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  className="btn btn-ghost btn-sm"
+                  disabled={!table.getCanPreviousPage()}
+                  onClick={() => table.previousPage()}
+                  type="button"
+                >
+                  <ChevronLeftIcon className="size-4" />
+                  Prev
+                </button>
+                <button
+                  className="btn btn-ghost btn-sm"
+                  disabled={!table.getCanNextPage()}
+                  onClick={() => table.nextPage()}
+                  type="button"
+                >
+                  Next
+                  <ChevronRightIcon className="size-4" />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
-  )
-}
-
-const WishlistRow: React.FC<{
-  product: Product
-  priceField: keyof Product
-  isCartLoading: boolean
-  onAddToCart: () => void
-  onRemove: () => void
-}> = ({ product, priceField, isCartLoading, onAddToCart, onRemove }) => {
-  const { gallery, title, slug, stockStatus } = product
-
-  const image = gallery?.[0]?.image && typeof gallery[0]?.image !== 'string' ? gallery[0]?.image : false
-  const price = product[priceField] as number | null | undefined
-  const stock = stockStatus && stockStatus in STOCK_DISPLAY ? STOCK_DISPLAY[stockStatus as keyof typeof STOCK_DISPLAY] : STOCK_DISPLAY['in-stock']
-  const StockIcon = stock.icon
-
-  return (
-    <tr className="border-border last:border-b-0 border-b">
-      <td className="px-6 py-4">
-        <Link className="group flex items-center gap-4" href={`/products/${slug}`}>
-          <div className="bg-muted relative size-16 shrink-0 overflow-hidden rounded-lg">
-            {image ? (
-              <Media
-                className="relative h-full w-full"
-                fill
-                imgClassName="object-cover"
-                resource={image}
-              />
-            ) : (
-              <div className="text-muted-foreground flex h-full w-full items-center justify-center text-xs">
-                No image
-              </div>
-            )}
-          </div>
-          <span className="group-hover:text-primary font-medium text-foreground transition-colors">
-            {title}
-          </span>
-        </Link>
-      </td>
-      <td className="hidden px-6 py-4 font-semibold sm:table-cell">
-        {typeof price === 'number' ? <Price amount={price} /> : '—'}
-      </td>
-      <td className="hidden px-6 py-4 sm:table-cell">
-        <span className={clsx('inline-flex items-center gap-1.5 text-sm font-medium', stock.className)}>
-          <StockIcon className="size-4" />
-          {stock.label}
-        </span>
-      </td>
-      <td className="px-6 py-4">
-        <button
-          className="btn btn-ghost btn-sm border border-white/30 bg-white/10 text-foreground shadow-sm backdrop-blur-md backdrop-saturate-150 hover:border-white/40 hover:bg-white/20"
-          disabled={isCartLoading || stockStatus === 'out-of-stock'}
-          onClick={onAddToCart}
-          type="button"
-        >
-          Add to Cart
-        </button>
-      </td>
-      <td className="px-4 py-4 text-right">
-        <button
-          aria-label="Remove from wishlist"
-          className="border-border text-muted-foreground hover:border-error hover:text-error inline-flex size-8 items-center justify-center rounded-full border transition-colors"
-          onClick={onRemove}
-          type="button"
-        >
-          <XIcon className="size-4" />
-        </button>
-      </td>
-    </tr>
   )
 }

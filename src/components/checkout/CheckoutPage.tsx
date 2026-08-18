@@ -20,6 +20,7 @@ import { DeliveryEstimate } from '@/components/checkout/DeliveryEstimate'
 import { CreateAddressModal } from '@/components/addresses/CreateAddressModal'
 import { getClientSideURL } from '@/utilities/getURL'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
+import { computeOrderTaxAddOn, type TaxLineItem } from '@/lib/taxCalculation'
 import { Address, Product, Variant } from '@/payload-types'
 
 type GalleryItem = NonNullable<Product['gallery']>[number]
@@ -30,7 +31,10 @@ import { FormItem } from '@/components/forms/FormItem'
 import { toast } from 'sonner'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
 
-export const CheckoutPage: React.FC = () => {
+export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: number }> = ({
+  businessState,
+  defaultGstPercent,
+}) => {
   const { user } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -68,6 +72,32 @@ export const CheckoutPage: React.FC = () => {
   const fullyCoveredByGiftCard = !cartIsEmpty && subtotalAfterDiscounts <= 0
   // PayU only settles in INR — USD carts fall back to Cash on Delivery.
   const cardPaymentAvailable = cart?.currency === 'INR'
+
+  // cart.subtotal (and each product's priceInINR) is GST-exclusive — GST is
+  // added on top here for display only; the server independently computes
+  // and charges the authoritative amount (initiatePayment.ts / place-order).
+  const customerState = (billingAddressSameAsShipping ? billingAddress : shippingAddress)?.state
+  const taxBreakdown =
+    !cartIsEmpty && cart?.currency === 'INR'
+      ? computeOrderTaxAddOn({
+          items: (cart.items || []).reduce<TaxLineItem[]>((acc, item) => {
+            if (typeof item.product !== 'object' || !item.product || !item.quantity) return acc
+            const unitPrice =
+              item.variant && typeof item.variant === 'object'
+                ? (item.variant.priceInINR ?? item.product.priceInINR ?? 0)
+                : (item.product.priceInINR ?? 0)
+            acc.push({
+              gstPercent: item.product.gstPercent ?? defaultGstPercent,
+              nominal: unitPrice * item.quantity,
+            })
+            return acc
+          }, []),
+          amount: subtotalAfterDiscounts,
+          defaultGstPercent,
+          businessState,
+          customerState,
+        })
+      : null
 
   const applyDiscount = useCallback(
     async (args: { couponCode?: string; giftCardCode?: string; remove?: 'coupon' | 'gift-card' }) => {
@@ -653,10 +683,30 @@ export const CheckoutPage: React.FC = () => {
           </div>
 
           <hr />
-          <div className="flex justify-between items-center gap-2">
-            <span className="uppercase">Total</span>{' '}
-            <Price className="text-3xl font-medium" amount={cart.subtotal || 0} />
-          </div>
+          {taxBreakdown ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex justify-between items-center text-sm">
+                <span>Subtotal</span>
+                <Price amount={subtotalAfterDiscounts} />
+              </div>
+              <div className="flex justify-between items-center text-sm text-muted-foreground">
+                <span>GST ({taxBreakdown.gstRatePercent.toFixed(0)}%)</span>
+                <Price amount={taxBreakdown.totalTax} />
+              </div>
+              <div className="flex justify-between items-center gap-2">
+                <span className="uppercase">Total</span>
+                <Price
+                  className="text-3xl font-medium"
+                  amount={subtotalAfterDiscounts + taxBreakdown.totalTax}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="flex justify-between items-center gap-2">
+              <span className="uppercase">Total</span>{' '}
+              <Price className="text-3xl font-medium" amount={cart.subtotal || 0} />
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -44,6 +44,47 @@ const Icon: React.FC<{ label: string }> = ({ label }) => (
   </svg>
 )
 
+const ACTION_ICONS: Record<string, React.ReactNode> = {
+  externalLink: (
+    <>
+      <path d="M18 13V19A2 2 0 0116 21H5A2 2 0 013 19V8A2 2 0 015 6H11" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points="15 3 21 3 21 9" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="10" y1="14" x2="21" y2="3" strokeLinecap="round" strokeLinejoin="round" />
+    </>
+  ),
+  plus: <path d="M12 5V19M5 12H19" strokeLinecap="round" strokeLinejoin="round" />,
+  list: (
+    <>
+      <line x1="8" y1="6" x2="21" y2="6" strokeLinecap="round" />
+      <line x1="8" y1="12" x2="21" y2="12" strokeLinecap="round" />
+      <line x1="8" y1="18" x2="21" y2="18" strokeLinecap="round" />
+      <line x1="3" y1="6" x2="3.01" y2="6" strokeLinecap="round" />
+      <line x1="3" y1="12" x2="3.01" y2="12" strokeLinecap="round" />
+      <line x1="3" y1="18" x2="3.01" y2="18" strokeLinecap="round" />
+    </>
+  ),
+  barChart: (
+    <>
+      <line x1="18" y1="20" x2="18" y2="10" strokeLinecap="round" />
+      <line x1="12" y1="20" x2="12" y2="4" strokeLinecap="round" />
+      <line x1="6" y1="20" x2="6" y2="14" strokeLinecap="round" />
+    </>
+  ),
+  cart: (
+    <path
+      d="M9 22A1 1 0 109 24A1 1 0 009 22ZM20 22A1 1 0 1020 24A1 1 0 0020 22ZM1 1H5L7.68 14.39A2 2 0 009.62 16H19.4A2 2 0 0021.34 14.39L23 6H6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  ),
+}
+
+const ActionIcon: React.FC<{ path: keyof typeof ACTION_ICONS }> = ({ path }) => (
+  <svg fill="none" height="14" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" width="14">
+    {ACTION_ICONS[path]}
+  </svg>
+)
+
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount)
 
@@ -136,19 +177,35 @@ export const BeforeDashboard: React.FC = async () => {
       )}
 
       <div className="flex flex-wrap gap-2">
-        <a className="pmc-btn pmc-btn-outline pmc-btn-sm rounded-full no-underline" href="/" rel="noreferrer" target="_blank">
+        <a
+          className="pmc-btn pmc-btn-outline pmc-btn-sm gap-1.5 rounded-full no-underline"
+          href="/"
+          rel="noreferrer"
+          target="_blank"
+        >
+          <ActionIcon path="externalLink" />
           View Storefront
         </a>
-        <a className="pmc-btn pmc-btn-outline pmc-btn-sm rounded-full no-underline" href="/admin/collections/products/create">
+        <a
+          className="pmc-btn pmc-btn-outline pmc-btn-sm gap-1.5 rounded-full no-underline"
+          href="/admin/collections/products/create"
+        >
+          <ActionIcon path="plus" />
           Add Product
         </a>
-        <a className="pmc-btn pmc-btn-outline pmc-btn-sm rounded-full no-underline" href="/admin/bulk-stock">
+        <a className="pmc-btn pmc-btn-outline pmc-btn-sm gap-1.5 rounded-full no-underline" href="/admin/bulk-stock">
+          <ActionIcon path="list" />
           Bulk Stock Update
         </a>
-        <a className="pmc-btn pmc-btn-outline pmc-btn-sm rounded-full no-underline" href="/admin/reports">
+        <a className="pmc-btn pmc-btn-outline pmc-btn-sm gap-1.5 rounded-full no-underline" href="/admin/reports">
+          <ActionIcon path="barChart" />
           Reports
         </a>
-        <a className="pmc-btn pmc-btn-outline pmc-btn-sm rounded-full no-underline" href="/admin/abandoned-checkouts">
+        <a
+          className="pmc-btn pmc-btn-outline pmc-btn-sm gap-1.5 rounded-full no-underline"
+          href="/admin/abandoned-checkouts"
+        >
+          <ActionIcon path="cart" />
           Abandoned Checkouts
         </a>
       </div>

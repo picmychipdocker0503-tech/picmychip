@@ -1,0 +1,48 @@
+{
+  "account": {
+    "createAccount": "Create an account",
+    "signIn": "Sign In",
+    "account": "Account",
+    "favorites": "Favorites"
+  },
+  "cart": {
+    "addToCart": "Add To Cart",
+    "added": "Added",
+    "buyNow": "Buy Now",
+    "redirecting": "Redirecting..."
+  },
+  "search": {
+    "searchPlaceholder": "Search for products...",
+    "showing": "Showing",
+    "of": "of",
+    "products": "products",
+    "gridView": "Grid view",
+    "listView": "List view",
+    "loadMore": "Load More",
+    "sortBy": "Sort by"
+  },
+  "product": {
+    "compare": "Compare",
+    "comparing": "Comparing",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites"
+  },
+  "footer": {
+    "newsletterHeading": "Subscribe to our Newsletter",
+    "quickLinks": "Quick Links",
+    "securePayments": "Secure payments via PayU",
+    "backToBlog": "Back to Blog",
+    "newsletterForm": {
+      "emailPlaceholder": "Enter your email",
+      "subscribe": "Subscribe",
+      "subscribing": "Subscribing…",
+      "subscribeSuccess": "Subscribed! You're on the list.",
+      "subscribeError": "Something went wrong — please try again."
+    }
+  },
+  "topbar": {
+    "chat": "Chat",
+    "help": "Help",
+    "trackOrder": "Track order"
+  }
+}

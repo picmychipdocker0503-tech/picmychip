@@ -82,6 +82,7 @@ export interface Config {
     brands: Brand;
     reviews: Review;
     services: Service;
+    'community-feedback': CommunityFeedback;
     'newsletter-subscribers': NewsletterSubscriber;
     coupons: Coupon;
     'gift-cards': GiftCard;
@@ -126,6 +127,7 @@ export interface Config {
     brands: BrandsSelect<false> | BrandsSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
+    'community-feedback': CommunityFeedbackSelect<false> | CommunityFeedbackSelect<true>;
     'newsletter-subscribers': NewsletterSubscribersSelect<false> | NewsletterSubscribersSelect<true>;
     coupons: CouponsSelect<false> | CouponsSelect<true>;
     'gift-cards': GiftCardsSelect<false> | GiftCardsSelect<true>;
@@ -669,9 +671,13 @@ export interface Product {
    */
   sku?: string | null;
   /**
-   * HSN/SAC code for GST invoicing. Left blank, the Zoho invoice line item omits it.
+   * HSN/SAC code for GST invoicing — required on every product for a compliant Zoho invoice.
    */
-  hsnCode?: string | null;
+  hsnCode: string;
+  /**
+   * Zoho Books catalog item this product is linked to — set automatically on first sales-order sync.
+   */
+  zohoItemId?: string | null;
   /**
    * GST rate applied to this product on Zoho invoices and the internal tax breakdown. Falls back to Site Settings → Tax Invoicing → GST rate when left blank.
    */
@@ -1597,7 +1603,7 @@ export interface TrustBadgesStripBlock {
  */
 export interface TestimonialsBlock {
   heading?: string | null;
-  populateBy?: ('manual' | 'reviews') | null;
+  populateBy?: ('manual' | 'reviews' | 'communityFeedback') | null;
   testimonials?:
     | {
         name: string;
@@ -2030,6 +2036,27 @@ export interface Review {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "community-feedback".
+ */
+export interface CommunityFeedback {
+  id: number;
+  name: string;
+  /**
+   * Job title, e.g. "Senior Hardware Engineer" or "Robotics Student".
+   */
+  designation?: string | null;
+  companyName?: string | null;
+  image?: (number | null) | Media;
+  feedback: string;
+  /**
+   * Only featured entries are shown when a Testimonials section pulls from Community Feedback.
+   */
+  featured?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "newsletter-subscribers".
  */
 export interface NewsletterSubscriber {
@@ -2246,6 +2273,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'services';
         value: number | Service;
+      } | null)
+    | ({
+        relationTo: 'community-feedback';
+        value: number | CommunityFeedback;
       } | null)
     | ({
         relationTo: 'newsletter-subscribers';
@@ -3027,6 +3058,20 @@ export interface ServicesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "community-feedback_select".
+ */
+export interface CommunityFeedbackSelect<T extends boolean = true> {
+  name?: T;
+  designation?: T;
+  companyName?: T;
+  image?: T;
+  feedback?: T;
+  featured?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "newsletter-subscribers_select".
  */
 export interface NewsletterSubscribersSelect<T extends boolean = true> {
@@ -3504,6 +3549,7 @@ export interface ProductsSelect<T extends boolean = true> {
   weightInGrams?: T;
   sku?: T;
   hsnCode?: T;
+  zohoItemId?: T;
   gstPercent?: T;
   compareAtPriceInINR?: T;
   isGiftCard?: T;
@@ -3949,7 +3995,7 @@ export interface SiteSetting {
      */
     businessPan?: string | null;
     /**
-     * Default rate, assumed inclusive in listed prices. Individual products can override this via their own GST % field.
+     * Default rate, added on top of the GST-exclusive listed price at checkout. Individual products can override this via their own GST % field.
      */
     gstRatePercent?: number | null;
   };

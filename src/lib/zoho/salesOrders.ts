@@ -33,6 +33,7 @@ export async function createZohoSalesOrder(args: CreateZohoSalesOrderArgs): Prom
     // Same reasoning applied to contact creation (src/lib/zoho/customers.ts).
     ...(args.gstNo ? { gst_treatment: args.gstTreatment, gst_no: args.gstNo } : {}),
     line_items: args.lineItems.map((item) => ({
+      item_id: item.item_id,
       name: item.name,
       description: item.description,
       rate: item.rate,

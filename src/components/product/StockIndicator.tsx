@@ -4,16 +4,17 @@ import { useSearchParams } from 'next/navigation'
 import { useMemo } from 'react'
 
 import { Badge } from '@/components/ui/badge'
+import { AlertTriangleIcon, CheckCircle2Icon, ClockIcon, XCircleIcon } from 'lucide-react'
 
 type Props = {
   product: Product
 }
 
 const STOCK_STATUS_BADGE = {
-  'in-stock': { label: 'In Stock', variant: 'success' as const },
-  'low-stock': { label: 'Low Stock', variant: 'warning' as const },
-  'out-of-stock': { label: 'Out of Stock', variant: 'destructive' as const },
-  backorder: { label: 'Backorder', variant: 'warning' as const },
+  'in-stock': { label: 'In Stock', variant: 'success' as const, Icon: CheckCircle2Icon },
+  'low-stock': { label: 'Low Stock', variant: 'warning' as const, Icon: AlertTriangleIcon },
+  'out-of-stock': { label: 'Out of Stock', variant: 'destructive' as const, Icon: XCircleIcon },
+  backorder: { label: 'Backorder', variant: 'warning' as const, Icon: ClockIcon },
 }
 
 export const StockIndicator: React.FC<Props> = ({ product }) => {
@@ -59,7 +60,10 @@ export const StockIndicator: React.FC<Props> = ({ product }) => {
     <div className="flex flex-col gap-2">
       {statusBadge && (
         <div className="flex items-center gap-2">
-          <Badge variant={statusBadge.variant}>{statusBadge.label}</Badge>
+          <Badge variant={statusBadge.variant}>
+            <statusBadge.Icon className="size-3" />
+            {statusBadge.label}
+          </Badge>
           {product.stockStatus === 'backorder' && product.leadTimeDays ? (
             <span className="text-muted-foreground text-sm">Ships in {product.leadTimeDays} days</span>
           ) : null}

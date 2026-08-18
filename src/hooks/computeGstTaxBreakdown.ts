@@ -1,6 +1,6 @@
 import type { CollectionAfterChangeHook } from 'payload'
 
-import { computeOrderTaxBreakdown, type TaxLineItem } from '@/lib/taxCalculation'
+import { computeOrderTaxAddOn, type TaxLineItem } from '@/lib/taxCalculation'
 
 /**
  * Snapshots the GST split (CGST+SGST for intra-state vs IGST for inter-state)
@@ -11,8 +11,15 @@ import { computeOrderTaxBreakdown, type TaxLineItem } from '@/lib/taxCalculation
  * admin changes the GST rate or business state later.
  *
  * Computed per line item (each product can carry its own gstPercent, falling
- * back to the site default) via computeOrderTaxBreakdown, matching what the
- * Zoho invoice charges per item.
+ * back to the site default) via computeOrderTaxAddOn — the same GST-add
+ * computation checkout used to arrive at doc.amount, applied to the same
+ * discounted base (reconstructed here from the nominal item total minus any
+ * coupon/gift-card discount). Deliberately does NOT decompose doc.amount
+ * directly: for a cart mixing multiple GST rates, decomposing an inclusive
+ * total with nominal-weighted proration reconstructs a slightly different
+ * split than the one actually charged, since each rate's true share of the
+ * total shifts once tax is added. Recomputing with the same add-on formula
+ * and inputs as checkout keeps this snapshot exact.
  */
 export const computeGstTaxBreakdown: CollectionAfterChangeHook = async ({ doc, operation, req }) => {
   if (operation !== 'create') return doc
@@ -49,10 +56,15 @@ export const computeGstTaxBreakdown: CollectionAfterChangeHook = async ({ doc, o
     )
 
     const validItems = itemsWithNominal.filter((item): item is TaxLineItem => Boolean(item))
+    const nominalTotal = validItems.reduce((sum, item) => sum + item.nominal, 0)
+    const discountedBase = Math.max(
+      0,
+      nominalTotal - (doc.couponApplied?.discountAmount ?? 0) - (doc.giftCardApplied?.amountApplied ?? 0),
+    )
 
-    const taxBreakdown = computeOrderTaxBreakdown({
+    const taxBreakdown = computeOrderTaxAddOn({
       items: validItems,
-      amount: doc.amount ?? 0,
+      amount: discountedBase,
       defaultGstPercent,
       businessState: tax?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka',
       customerState: doc.shippingAddress?.state,

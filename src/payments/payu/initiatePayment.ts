@@ -1,6 +1,7 @@
 import type { PaymentAdapter } from '@payloadcms/plugin-ecommerce/types'
 import crypto from 'crypto'
 import { getServerSideURL } from '@/utilities/getURL'
+import { computeCheckoutTotal } from '@/lib/checkoutTax'
 
 type InitiatePaymentProps = {
   merchantKey: string
@@ -32,7 +33,6 @@ export const initiatePayment =
     const businessDetails = (data as Record<string, unknown>).businessDetails as
       | { companyName?: string; gstin?: string; panNumber?: string }
       | undefined
-    const amountInPaise = cart?.subtotal
 
     if (currency !== 'INR') {
       throw new Error('Card / UPI / NetBanking payment via PayU is only available for INR orders.')
@@ -43,6 +43,25 @@ export const initiatePayment =
     if (!customerEmail || typeof customerEmail !== 'string') {
       throw new Error('A valid customer email is required to make a purchase.')
     }
+
+    // cart.subtotal is the GST-exclusive base subtotal (net of coupon/gift-card
+    // discounts) — GST is added on top here to get the amount actually charged.
+    const siteSettings = await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
+    const tax = siteSettings?.taxSettings
+    const defaultGstPercent = tax?.gstRatePercent ?? 18
+    const businessState = tax?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka'
+    const customerState = shippingAddress?.state || billingAddress?.state
+
+    const { finalAmount } = await computeCheckoutTotal({
+      payload,
+      items: cart.items,
+      baseSubtotal: cart.subtotal ?? 0,
+      businessState,
+      customerState,
+      defaultGstPercent,
+    })
+    const amountInPaise = Math.round(finalAmount)
+
     if (!amountInPaise || typeof amountInPaise !== 'number' || amountInPaise < 100) {
       throw new Error('A valid amount of at least ₹1 is required to initiate a payment.')
     }

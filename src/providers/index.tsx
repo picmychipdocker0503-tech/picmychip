@@ -3,7 +3,6 @@
 import { AuthProvider } from '@/providers/Auth'
 import { CompareProvider } from '@/providers/Compare'
 import { EcommerceAuthSync } from '@/providers/EcommerceAuthSync'
-import { LocaleProvider } from '@/providers/Locale'
 import { QuickViewProvider } from '@/providers/QuickView'
 import { RecentlyViewedProvider } from '@/providers/RecentlyViewed'
 import { WishlistProvider } from '@/providers/Wishlist'
@@ -39,6 +38,7 @@ export const Providers: React.FC<{
                       title: true,
                       gallery: true,
                       inventory: true,
+                      gstPercent: true,
                     },
                     variants: {
                       title: true,
@@ -74,7 +74,7 @@ export const Providers: React.FC<{
                 <WishlistProvider>
                   <RecentlyViewedProvider>
                     <QuickViewProvider>
-                      <LocaleProvider>{children}</LocaleProvider>
+                      {children}
                       <QuickViewModal />
                     </QuickViewProvider>
                   </RecentlyViewedProvider>

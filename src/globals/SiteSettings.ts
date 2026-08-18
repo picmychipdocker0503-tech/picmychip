@@ -130,7 +130,7 @@ export const SiteSettings: GlobalConfig = {
           defaultValue: 18,
           admin: {
             description:
-              'Default rate, assumed inclusive in listed prices. Individual products can override this via their own GST % field.',
+              'Default rate, added on top of the GST-exclusive listed price at checkout. Individual products can override this via their own GST % field.',
           },
         },
       ],

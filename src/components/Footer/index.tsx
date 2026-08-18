@@ -11,12 +11,14 @@ import { ThemeSelector } from '@/providers/Theme/ThemeSelector'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { getSocialIcon } from '@/utilities/getSocialIcon'
 import { Headset } from 'lucide-react'
+import { getTranslations } from 'next-intl/server'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
 const { COMPANY_NAME, SITE_NAME } = process.env
 
 export async function Footer() {
+  const t = await getTranslations('footer')
   const footer: Footer = await getCachedGlobal('footer', 1)()
   const siteSettings: SiteSetting = await getCachedGlobal('site-settings', 1)()
   const menu = footer.navItems || []
@@ -136,7 +138,7 @@ export async function Footer() {
           <div className="flex flex-col items-center gap-3 md:items-end">
             <ThemeSelector />
             <div className="text-muted-foreground flex flex-col items-center gap-1 text-center text-xs tracking-wide md:items-end md:text-right">
-              <p>Secure payments via PayU</p>
+              <p>{t('securePayments')}</p>
               <p>CIN : U47912KA2024PTC189267</p>
             </div>
           </div>

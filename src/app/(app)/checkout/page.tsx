@@ -1,11 +1,15 @@
 import type { Metadata } from 'next'
 
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
+import { getCachedGlobal } from '@/utilities/getGlobals'
 import React, { Fragment, Suspense } from 'react'
 
 import { CheckoutPage } from '@/components/checkout/CheckoutPage'
 
-export default function Checkout() {
+export default async function Checkout() {
+  const siteSettings = await getCachedGlobal('site-settings', 0)()
+  const tax = siteSettings?.taxSettings
+
   return (
     <div className="container min-h-[90vh] flex">
       {!process.env.PAYU_MERCHANT_KEY && (
@@ -35,7 +39,10 @@ export default function Checkout() {
       <h1 className="sr-only">Checkout</h1>
 
       <Suspense>
-        <CheckoutPage />
+        <CheckoutPage
+          businessState={tax?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka'}
+          defaultGstPercent={tax?.gstRatePercent ?? 18}
+        />
       </Suspense>
     </div>
   )

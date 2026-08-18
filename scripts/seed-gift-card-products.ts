@@ -77,6 +77,11 @@ const run = async () => {
           { text: 'No expiry' },
         ],
         _status: 'published',
+        // Placeholder only — a gift card isn't a physical good, and its GST/SAC treatment
+        // (voucher issuance vs. the underlying goods/services on redemption) needs the user's
+        // own determination, not an assumed classification. Flagged the same way the existing
+        // 3 gift card products were flagged in scripts/backfill-hsn-codes.ts.
+        hsnCode: '9971',
       },
       overrideAccess: true,
     })

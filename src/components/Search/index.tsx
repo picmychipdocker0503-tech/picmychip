@@ -1,7 +1,7 @@
 'use client'
 
 import { Price } from '@/components/Price'
-import { useLocale } from '@/providers/Locale'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/utilities/cn'
 import { createUrl } from '@/utilities/createUrl'
 import { getClientSideURL } from '@/utilities/getURL'
@@ -50,7 +50,7 @@ const HighlightedText: React.FC<{ text: string; query: string }> = ({ text, quer
 export const Search: React.FC<Props> = ({ className }) => {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { t } = useLocale()
+  const t = useTranslations('search')
 
   const [query, setQuery] = useState(searchParams?.get('q') || '')
   const [suggestions, setSuggestions] = useState<Suggestion[]>([])
@@ -176,9 +176,10 @@ export const Search: React.FC<Props> = ({ className }) => {
           value={query}
         />
         <button
-          className="bg-primary hover:bg-primary/90 text-primary-foreground shrink-0 rounded-full px-5 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
+          className="bg-primary hover:bg-primary/90 text-primary-foreground inline-flex shrink-0 items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
           type="submit"
         >
+          <SearchIcon className="size-4" />
           Search
         </button>
       </form>

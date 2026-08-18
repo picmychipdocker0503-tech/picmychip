@@ -22,6 +22,7 @@ import { GenerateCodeField as GenerateCodeField_c48ea289ef3b8d57fc7a93f5995721e5
 import { CouponStatusCell as CouponStatusCell_7ae11c32998a38ec721d67a651953200 } from '@/components/admin/cells/CouponStatusCell'
 import { CouponsListStats as CouponsListStats_edacfc9537004448552dee380112cb17 } from '@/components/admin/CouponsListStats'
 import { CouponUsageSummary as CouponUsageSummary_86c56ff4d765e9e57d4b83765d6d3b3a } from '@/components/admin/CouponUsageSummary'
+import { CouponsListView as CouponsListView_b079c28f081cf01d4b26aecb8016de57 } from '@/components/admin/collections/CouponsListView'
 import { GiftCardStatusCell as GiftCardStatusCell_04c70ac56c9277b3263f9e7668df33b5 } from '@/components/admin/cells/GiftCardStatusCell'
 import { GiftCardsListStats as GiftCardsListStats_c2c1ac6abe2b48f8a4d37dcad0fac77c } from '@/components/admin/GiftCardsListStats'
 import { StockAlertStatusCell as StockAlertStatusCell_db2b91574eb681597531ff7a14e5ec4a } from '@/components/admin/cells/StockAlertStatusCell'
@@ -75,6 +76,7 @@ export const importMap = {
   "@/components/admin/cells/CouponStatusCell#CouponStatusCell": CouponStatusCell_7ae11c32998a38ec721d67a651953200,
   "@/components/admin/CouponsListStats#CouponsListStats": CouponsListStats_edacfc9537004448552dee380112cb17,
   "@/components/admin/CouponUsageSummary#CouponUsageSummary": CouponUsageSummary_86c56ff4d765e9e57d4b83765d6d3b3a,
+  "@/components/admin/collections/CouponsListView#CouponsListView": CouponsListView_b079c28f081cf01d4b26aecb8016de57,
   "@/components/admin/cells/GiftCardStatusCell#GiftCardStatusCell": GiftCardStatusCell_04c70ac56c9277b3263f9e7668df33b5,
   "@/components/admin/GiftCardsListStats#GiftCardsListStats": GiftCardsListStats_c2c1ac6abe2b48f8a4d37dcad0fac77c,
   "@/components/admin/cells/StockAlertStatusCell#StockAlertStatusCell": StockAlertStatusCell_db2b91574eb681597531ff7a14e5ec4a,

@@ -42,6 +42,72 @@
   --color-success-1000: rgb(0, 0, 0);
 }
 
+// Payload's own --theme-elevation-* ramp (the grayscale that drives every
+// native border/background/disabled-state in the admin — including the
+// .table/.list-controls borders defined further down this file) is built as
+// `--theme-elevation-N: var(--color-base-N)` in @payloadcms/ui/colors.scss.
+// admin-tailwind.css's daisyUI theme ALSO defines --color-base-100/200/300
+// (its own semantic surface tokens, e.g. for `bg-base-100` in our custom
+// components) — an unintentional name collision between two unrelated
+// systems. Both are Tailwind-CSS-layered (`payload-default` vs Tailwind's
+// `base`), and empirically (computed-style probe) daisyUI's `base` layer
+// wins, which was silently turning every --theme-elevation-* stop white
+// throughout the admin, making borders like `.table`'s invisible. Rather
+// than fight the layer-priority collision (or rename daisyUI's tokens, which
+// would mean touching every `bg-base-*`/`text-base-content` class used across
+// our custom admin components), this restores Payload's own elevation ramp
+// with literal values — bypassing the `var(--color-base-N)` indirection
+// entirely so it can't be re-broken by anything daisyUI does to
+// --color-base-*. Values copied verbatim from colors.scss's light/dark maps.
+:root {
+  --theme-elevation-0: rgb(255, 255, 255);
+  --theme-elevation-50: rgb(245, 245, 245);
+  --theme-elevation-100: rgb(235, 235, 235);
+  --theme-elevation-150: rgb(221, 221, 221);
+  --theme-elevation-200: rgb(208, 208, 208);
+  --theme-elevation-250: rgb(195, 195, 195);
+  --theme-elevation-300: rgb(181, 181, 181);
+  --theme-elevation-350: rgb(168, 168, 168);
+  --theme-elevation-400: rgb(154, 154, 154);
+  --theme-elevation-450: rgb(141, 141, 141);
+  --theme-elevation-500: rgb(128, 128, 128);
+  --theme-elevation-550: rgb(114, 114, 114);
+  --theme-elevation-600: rgb(101, 101, 101);
+  --theme-elevation-650: rgb(87, 87, 87);
+  --theme-elevation-700: rgb(74, 74, 74);
+  --theme-elevation-750: rgb(60, 60, 60);
+  --theme-elevation-800: rgb(47, 47, 47);
+  --theme-elevation-850: rgb(34, 34, 34);
+  --theme-elevation-900: rgb(20, 20, 20);
+  --theme-elevation-950: rgb(7, 7, 7);
+  --theme-elevation-1000: rgb(0, 0, 0);
+}
+
+html[data-theme='dark'] {
+  --theme-elevation-0: rgb(20, 20, 20);
+  --theme-elevation-50: rgb(34, 34, 34);
+  --theme-elevation-100: rgb(47, 47, 47);
+  --theme-elevation-150: rgb(60, 60, 60);
+  --theme-elevation-200: rgb(74, 74, 74);
+  --theme-elevation-250: rgb(87, 87, 87);
+  --theme-elevation-300: rgb(101, 101, 101);
+  --theme-elevation-350: rgb(114, 114, 114);
+  --theme-elevation-400: rgb(141, 141, 141);
+  --theme-elevation-450: rgb(154, 154, 154);
+  --theme-elevation-500: rgb(128, 128, 128);
+  --theme-elevation-550: rgb(168, 168, 168);
+  --theme-elevation-600: rgb(181, 181, 181);
+  --theme-elevation-650: rgb(195, 195, 195);
+  --theme-elevation-700: rgb(208, 208, 208);
+  --theme-elevation-750: rgb(221, 221, 221);
+  --theme-elevation-800: rgb(235, 235, 235);
+  --theme-elevation-850: rgb(245, 245, 245);
+  --theme-elevation-900: rgb(255, 255, 255);
+  --theme-elevation-950: rgb(255, 255, 255);
+  --theme-elevation-1000: rgb(255, 255, 255);
+  --theme-border-color: rgb(221, 221, 221);
+}
+
 // The --color-success ramp above covers checkboxes/pills/toasts, but
 // Payload's primary buttons (Publish/Save/Login/"Create New") and the active
 // sidebar-nav indicator are driven by the neutral --theme-elevation-* ramp,
@@ -224,3 +290,63 @@ div.nav__link[id^='nav-']::before {
 #nav-global-footer::before { mask-image: url(/admin-icons/layout-bottom.svg); -webkit-mask-image: url(/admin-icons/layout-bottom.svg); }
 #nav-global-site-settings::before { mask-image: url(/admin-icons/settings.svg); -webkit-mask-image: url(/admin-icons/settings.svg); }
 #nav-global-feature-flags::before { mask-image: url(/admin-icons/toggle-left.svg); -webkit-mask-image: url(/admin-icons/toggle-left.svg); }
+
+// ---------------------------------------------------------------------------
+// Native button icons — "Create New" (list view) and the primary Save/
+// Publish action (edit view). Same pure-CSS mask-image technique as the nav
+// icons above. Payload doesn't expose a per-collection class/id for either
+// of these (`.list-create-new-doc__create-new-button` and `#action-save` are
+// generic, reused by every collection's list/edit view) — no safe way to
+// scope this to just Products without replacing Payload's own button
+// component, so it applies admin-wide. A consistent +/check icon on every
+// collection's create/save action is a reasonable default regardless.
+// ---------------------------------------------------------------------------
+.list-create-new-doc__create-new-button .btn__label,
+#action-save .btn__label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    flex-shrink: 0;
+    width: 13px;
+    height: 13px;
+    background-color: currentColor;
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    -webkit-mask-size: contain;
+  }
+}
+
+.list-create-new-doc__create-new-button .btn__label::before {
+  mask-image: url(/admin-icons/plus.svg);
+  -webkit-mask-image: url(/admin-icons/plus.svg);
+}
+
+#action-save .btn__label::before {
+  mask-image: url(/admin-icons/check.svg);
+  -webkit-mask-image: url(/admin-icons/check.svg);
+}
+
+// ---------------------------------------------------------------------------
+// Fixed admin header — Payload's own `.app-header` (the bar with the logo,
+// step-nav breadcrumbs, and account controls) ships with `position: relative`
+// and scrolls away with the page content (@payloadcms/ui's AppHeader/
+// index.scss). Its sibling `.template-default__nav-toggler-wrapper` already
+// uses `position: sticky; top: 0` successfully in the same scroll context
+// (confirmed in the compiled admin CSS), so sticky is safe here too — no JS/
+// component changes needed. Needs its own opaque background since sticky
+// content otherwise shows through the transparent header as the page scrolls
+// underneath it.
+// ---------------------------------------------------------------------------
+.app-header {
+  position: sticky;
+  top: 0;
+  background: var(--theme-bg);
+  border-bottom: 1px solid var(--theme-elevation-100);
+}

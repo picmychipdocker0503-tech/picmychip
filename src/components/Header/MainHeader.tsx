@@ -11,7 +11,7 @@ import { Search } from '@/components/Search'
 import { NavIconBadge } from '@/components/ui/nav-icon-badge'
 import { useAuth } from '@/providers/Auth'
 import { useCompare } from '@/providers/Compare'
-import { useLocale } from '@/providers/Locale'
+import { useTranslations } from 'next-intl'
 import { useWishlist } from '@/providers/Wishlist'
 import { HeartIcon, LogInIcon, ScaleIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
@@ -31,7 +31,7 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
   const { ids } = useCompare()
   const { ids: wishlistIds } = useWishlist()
   const { user } = useAuth()
-  const { t } = useLocale()
+  const t = useTranslations('account')
 
   const iconButtonClass =
     'relative hidden size-10 items-center justify-center rounded-full text-muted-foreground transition-[background-color,color,transform] hover:bg-muted hover:text-foreground active:scale-95 md:inline-flex'

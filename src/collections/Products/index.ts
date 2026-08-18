@@ -80,6 +80,10 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     inventory: true,
     meta: true,
     sku: true,
+    gstPercent: true,
+    hsnCode: true,
+    zohoItemId: true,
+    description: true,
   },
   fields: [
     {
@@ -383,9 +387,19 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     {
       name: 'hsnCode',
       type: 'text',
+      required: true,
       admin: {
         position: 'sidebar',
-        description: 'HSN/SAC code for GST invoicing. Left blank, the Zoho invoice line item omits it.',
+        description: 'HSN/SAC code for GST invoicing — required on every product for a compliant Zoho invoice.',
+      },
+    },
+    {
+      name: 'zohoItemId',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'Zoho Books catalog item this product is linked to — set automatically on first sales-order sync.',
       },
     },
     {

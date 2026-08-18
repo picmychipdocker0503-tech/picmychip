@@ -2,6 +2,7 @@ import type { Service, ServicesShowcaseBlock as ServicesShowcaseBlockProps } fro
 
 import { getServiceIcon } from '@/lib/getServiceIcon'
 import { Button } from '@/components/ui/button'
+import { ArrowRightIcon } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
@@ -30,7 +31,10 @@ export const ServicesShowcaseBlock: React.FC<
                 <h3 className="text-lg font-semibold">{service.title}</h3>
                 {service.description && <p className="text-muted-foreground text-sm">{service.description}</p>}
                 <Button asChild size="sm">
-                  <Link href={`/services/${service.slug}`}>Order Now</Link>
+                  <Link href={`/services/${service.slug}`}>
+                    Order Now
+                    <ArrowRightIcon />
+                  </Link>
                 </Button>
               </div>
               <div className="from-orange/25 to-orange/10 flex size-20 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br">

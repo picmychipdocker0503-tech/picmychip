@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckIcon } from 'lucide-react'
+import { CheckIcon, SendIcon } from 'lucide-react'
 import React, { useState } from 'react'
 
 import { submitReturnRequest } from '@/app/(app)/returns/submitReturnRequest'
@@ -121,8 +121,15 @@ export const ReturnRequestForm: React.FC<{ defaultOrderId?: string }> = ({ defau
 
       {error && <p className="text-error text-sm">{error}</p>}
 
-      <button className="btn btn-primary self-start" disabled={state === 'submitting'} type="submit">
-        {state === 'submitting' ? 'Submitting...' : 'Submit return request'}
+      <button className="btn btn-primary gap-2 self-start" disabled={state === 'submitting'} type="submit">
+        {state === 'submitting' ? (
+          'Submitting...'
+        ) : (
+          <>
+            <SendIcon className="size-4" />
+            Submit return request
+          </>
+        )}
       </button>
     </form>
   )

@@ -9,6 +9,7 @@ import type {
 
 import { DonutChart } from '../charts/DonutChart'
 import { BarRow } from './BarRow'
+import { InventoryTable } from './InventoryTable'
 import { RevenueTrendChart } from './RevenueTrendChart'
 import { StatTile } from './StatTile'
 
@@ -69,32 +70,7 @@ export const ReportsDashboard: React.FC<Props> = ({ sales, inventory, topProduct
           <StatTile label="Out of stock" value={String(inventory.outOfStockCount)} warn={inventory.outOfStockCount > 0} />
           <StatTile label="Low stock" value={String(inventory.lowStockCount)} warn={inventory.lowStockCount > 0} />
         </div>
-        {inventory.lowStock.length > 0 && (
-          <div className="border-base-content/10 pmc-rounded-box overflow-x-auto border">
-            <table className="pmc-table pmc-table-zebra">
-              <thead>
-                <tr className="text-base-content/70">
-                  <th>Product</th>
-                  <th>Inventory</th>
-                  <th>Threshold</th>
-                </tr>
-              </thead>
-              <tbody>
-                {inventory.lowStock.map((product) => (
-                  <tr key={product.id}>
-                    <td>
-                      <a className="pmc-link pmc-link-hover" href={`/admin/collections/products/${product.id}`}>
-                        {product.title}
-                      </a>
-                    </td>
-                    <td>{product.inventory}</td>
-                    <td className="text-base-content/60">{product.lowStockThreshold}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {inventory.lowStock.length > 0 && <InventoryTable lowStock={inventory.lowStock} />}
       </SectionCard>
 
       <SectionCard title="Top Products & Categories" description="By units sold / revenue, all-time within the recent order window.">

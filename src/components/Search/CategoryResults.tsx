@@ -5,7 +5,7 @@ import type { Product } from '@/payload-types'
 import { Grid } from '@/components/Grid'
 import { DealProductCard } from '@/components/product/DealProductCard'
 import { useLoadMoreProducts } from '@/lib/useLoadMoreProducts'
-import { useLocale } from '@/providers/Locale'
+import { useTranslations } from 'next-intl'
 import { Loader2Icon } from 'lucide-react'
 import React from 'react'
 
@@ -24,7 +24,7 @@ export const CategoryResults: React.FC<Props> = ({
   hasNextPage = false,
   categoryId,
 }) => {
-  const { t } = useLocale()
+  const t = useTranslations('search')
   const {
     items,
     ratings: loadedRatings,

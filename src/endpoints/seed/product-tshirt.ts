@@ -31,6 +31,7 @@ export const productTshirtData: (
         'Top off your look with our classic Tshirt, crafted for style and comfort. Made with breathable, high-quality materials and an adjustable strap for the perfect fit.',
     },
     _status: 'published',
+    hsnCode: '6109',
     layout: [
       {
         blockType: 'mediaBlock',

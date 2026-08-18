@@ -4,6 +4,7 @@ import path from 'path'
 import { getPayload } from 'payload'
 import { fileURLToPath } from 'url'
 import config from '../src/payload.config'
+import { CATEGORY_HSN, FALLBACK_HSN } from './hsnCategoryMap'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -154,6 +155,10 @@ async function main() {
       })
 
       const categoryId = categoryIdByName.get(item.category)
+      // Best-effort by category, same mapping as scripts/backfill-hsn-codes.ts — worth a
+      // spot-check for newly imported categories not yet in that map (falls back to a generic
+      // catch-all code rather than leaving the required field empty).
+      const hsnCode = CATEGORY_HSN[item.category] ?? FALLBACK_HSN
 
       await payload.create({
         collection: 'products',
@@ -166,6 +171,7 @@ async function main() {
           gallery: [{ image: media.id }],
           categories: categoryId ? [categoryId] : [],
           specSchemaType: 'none',
+          hsnCode,
           // Manifest values are historically USD-denominated minor units — the store is now
           // INR-only, so new imports use the same x100 reinterpretation applied to the rest of
           // the catalog (see the 2026-08-10 INR backfill) rather than the old ~83x FX rate.

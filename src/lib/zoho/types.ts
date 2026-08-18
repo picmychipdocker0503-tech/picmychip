@@ -18,7 +18,7 @@ export type ZohoContact = {
   gst_treatment?: string
   billing_address?: ZohoAddress
   shipping_address?: ZohoAddress
-  contact_persons?: { email?: string; phone?: string }[]
+  contact_persons?: { first_name?: string; last_name?: string; email?: string; phone?: string }[]
 }
 
 export type ZohoLineItem = {
@@ -27,6 +27,16 @@ export type ZohoLineItem = {
   rate: number
   quantity: number
   discount?: number
+  hsn_or_sac?: string
+  tax_id?: string
+  item_id?: string
+}
+
+export type ZohoItem = {
+  item_id: string
+  name: string
+  sku?: string
+  rate: number
   hsn_or_sac?: string
   tax_id?: string
 }

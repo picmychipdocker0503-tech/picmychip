@@ -14,6 +14,8 @@ import { buildOrganizationJsonLd } from '@/utilities/jsonLd'
 import { Providers } from '@/providers'
 import { InitTheme } from '@/providers/Theme/InitTheme'
 import configPromise from '@payload-config'
+import { NextIntlClientProvider } from 'next-intl'
+import { getLocale, getMessages } from 'next-intl/server'
 import { getPayload } from 'payload'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
@@ -63,11 +65,13 @@ const twitterSite = TWITTER_SITE ? ensureStartsWith(TWITTER_SITE, 'https://') : 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const payload = await getPayload({ config: configPromise })
   const siteSettings = await payload.findGlobal({ slug: 'site-settings' })
+  const locale = await getLocale()
+  const messages = await getMessages()
 
   return (
     <html
       className={[GeistSans.variable, GeistMono.variable].filter(Boolean).join(' ')}
-      lang="en"
+      lang={locale}
       suppressHydrationWarning
     >
       <head>
@@ -88,24 +92,26 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
         </Script>
-        <Providers>
-          <LivePreviewListener />
-          <ServiceWorkerRegistration />
-          <JsonLd data={buildOrganizationJsonLd(siteSettings)} />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Providers>
+            <LivePreviewListener />
+            <ServiceWorkerRegistration />
+            <JsonLd data={buildOrganizationJsonLd(siteSettings)} />
 
-          <a className="skip-link" href="#main-content">
-            Skip to content
-          </a>
+            <a className="skip-link" href="#main-content">
+              Skip to content
+            </a>
 
-          <Header />
-          <main className="pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0" id="main-content">
-            {children}
-          </main>
-          <Footer />
-          <CompareBar />
-          <InstallPrompt />
-          <MobileTabBar />
-        </Providers>
+            <Header />
+            <main className="pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0" id="main-content">
+              {children}
+            </main>
+            <Footer />
+            <CompareBar />
+            <InstallPrompt />
+            <MobileTabBar />
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

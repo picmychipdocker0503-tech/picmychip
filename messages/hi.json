@@ -1,0 +1,36 @@
+{
+  "account": {
+    "createAccount": "खाता बनाएं",
+    "signIn": "साइन इन करें",
+    "account": "खाता",
+    "favorites": "पसंदीदा"
+  },
+  "cart": {
+    "addToCart": "कार्ट में डालें",
+    "added": "जोड़ा गया",
+    "buyNow": "अभी खरीदें",
+    "redirecting": "रीडायरेक्ट हो रहा है..."
+  },
+  "search": {
+    "searchPlaceholder": "उत्पाद खोजें...",
+    "showing": "दिखा रहे हैं",
+    "of": "में से",
+    "products": "उत्पाद",
+    "gridView": "ग्रिड दृश्य",
+    "listView": "सूची दृश्य",
+    "loadMore": "और लोड करें",
+    "sortBy": "क्रमबद्ध करें"
+  },
+  "product": {
+    "compare": "तुलना करें",
+    "comparing": "तुलना में",
+    "addToFavorites": "पसंदीदा में जोड़ें",
+    "removeFromFavorites": "पसंदीदा से हटाएं"
+  },
+  "footer": {
+    "newsletterHeading": "हमारे न्यूज़लेटर की सदस्यता लें",
+    "quickLinks": "त्वरित लिंक",
+    "securePayments": "PayU के माध्यम से सुरक्षित भुगतान",
+    "backToBlog": "ब्लॉग पर वापस जाएं"
+  }
+}

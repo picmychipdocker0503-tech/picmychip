@@ -1,6 +1,7 @@
 import type { Address } from '@/payload-types'
 
 import { incrementCouponRedemption, redeemGiftCard } from '@/lib/discounts'
+import { computeCheckoutTotal } from '@/lib/checkoutTax'
 import { getPostHogClient } from '@/lib/posthog-server'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
@@ -48,7 +49,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Cart is empty.' }, { status: 400 })
     }
 
-    const amount = cart.subtotal ?? 0
+    const baseSubtotal = cart.subtotal ?? 0
+
+    let amount = baseSubtotal
+    if (baseSubtotal > 0) {
+      const siteSettings = await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
+      const tax = siteSettings?.taxSettings
+      const defaultGstPercent = tax?.gstRatePercent ?? 18
+      const businessState = tax?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka'
+      const customerState = shippingAddress?.state || billingAddress?.state
+
+      const { finalAmount } = await computeCheckoutTotal({
+        payload,
+        items: cart.items,
+        baseSubtotal,
+        businessState,
+        customerState,
+        defaultGstPercent,
+      })
+      amount = Math.round(finalAmount)
+    }
+
     const paymentMethod: 'cod' | 'gift-card' = amount <= 0 ? 'gift-card' : 'cod'
 
     const items = cart.items.map((item) => ({

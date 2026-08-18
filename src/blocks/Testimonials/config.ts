@@ -20,6 +20,7 @@ export const Testimonials: Block = {
       options: [
         { label: 'Manual (curated)', value: 'manual' },
         { label: 'Verified Reviews (auto-pull)', value: 'reviews' },
+        { label: 'Community Feedback (auto-pull)', value: 'communityFeedback' },
       ],
     },
     {
@@ -82,7 +83,7 @@ export const Testimonials: Block = {
       type: 'number',
       defaultValue: 6,
       admin: {
-        condition: (_, siblingData) => siblingData.populateBy === 'reviews',
+        condition: (_, siblingData) => siblingData.populateBy === 'reviews' || siblingData.populateBy === 'communityFeedback',
       },
     },
   ],

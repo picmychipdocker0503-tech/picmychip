@@ -8,7 +8,7 @@ import { ProductGridItem } from '@/components/ProductGridItem'
 import { ProductMatchingImage } from '@/components/product/ProductMatchingImage'
 import { sorting } from '@/lib/constants'
 import { useLoadMoreProducts } from '@/lib/useLoadMoreProducts'
-import { useLocale } from '@/providers/Locale'
+import { useTranslations } from 'next-intl'
 import { createUrl } from '@/utilities/createUrl'
 import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import { LayoutGridIcon, ListIcon, Loader2Icon, ShieldCheck } from 'lucide-react'
@@ -27,7 +27,7 @@ export const ShopResults: React.FC<Props> = ({ products, totalDocs, ratings, has
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
-  const { t } = useLocale()
+  const t = useTranslations('search')
   const { currency } = useCurrency()
   const priceField = `priceIn${currency.code}` as keyof Product
   const [view, setView] = useState<'grid' | 'list'>('grid')

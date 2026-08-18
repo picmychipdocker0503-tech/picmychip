@@ -19,6 +19,12 @@ services:
     environment:
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-dev_meili_master_key_change_me}
       MEILI_ENV: development
+      MEILI_NO_ANALYTICS: 'true'
+    healthcheck:
+      test: ['CMD', 'curl', '-fsS', 'http://localhost:7700/health']
+      interval: 10s
+      timeout: 5s
+      retries: 12
     volumes:
       - meilisearch-data:/meili_data
 

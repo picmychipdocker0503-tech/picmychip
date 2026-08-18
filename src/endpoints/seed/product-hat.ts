@@ -25,6 +25,7 @@ export const productHatData: (args: ProductArgs) => RequiredDataFromCollectionSl
         'Top off your look with our classic hat, crafted for style and comfort. Made with breathable, high-quality materials and an adjustable strap for the perfect fit.',
     },
     _status: 'published',
+    hsnCode: '6505',
     layout: [],
     categories: categories,
     description: {

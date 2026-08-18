@@ -13,6 +13,7 @@ type Card = {
   name: string
   photo?: MediaType | null
   role?: string | null
+  companyName?: string | null
   rating: number
   quote: string
   product?: Product | null
@@ -51,6 +52,28 @@ export const TestimonialsBlock: React.FC<
         quote: review.comment!,
         product: typeof review.product === 'object' ? review.product : undefined,
       }))
+  } else if (populateBy === 'communityFeedback') {
+    const payload = await getPayload({ config: configPromise })
+
+    const { docs } = await payload.find({
+      collection: 'community-feedback',
+      depth: 1,
+      limit: limit || 6,
+      sort: '-createdAt',
+      where: {
+        featured: { equals: true },
+      },
+    })
+
+    cards = docs.map((entry) => ({
+      key: entry.id,
+      name: entry.name,
+      photo: typeof entry.image === 'object' ? entry.image : undefined,
+      role: entry.designation ?? undefined,
+      companyName: entry.companyName,
+      rating: 5,
+      quote: entry.feedback,
+    }))
   } else {
     cards = (testimonials ?? []).map((testimonial, index) => ({
       key: testimonial.id ?? index,
@@ -122,7 +145,11 @@ export const TestimonialsBlock: React.FC<
                 </div>
                 <div>
                   <div className="text-sm font-bold text-foreground">{card.name}</div>
-                  {card.role && <div className="text-xs text-muted-foreground">{card.role}</div>}
+                  {(card.role || card.companyName) && (
+                    <div className="text-xs text-muted-foreground">
+                      {[card.role, card.companyName].filter(Boolean).join(', ')}
+                    </div>
+                  )}
                 </div>
               </div>
 

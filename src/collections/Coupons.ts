@@ -18,6 +18,11 @@ export const Coupons: CollectionConfig = {
       edit: {
         beforeDocumentControls: ['@/components/admin/CouponUsageSummary#CouponUsageSummary'],
       },
+      views: {
+        list: {
+          Component: '@/components/admin/collections/CouponsListView#CouponsListView',
+        },
+      },
     },
     defaultColumns: ['code', 'type', 'value', 'active', 'redemptionCount'],
     useAsTitle: 'code',

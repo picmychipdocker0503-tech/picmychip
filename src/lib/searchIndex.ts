@@ -1,13 +1,17 @@
 import type { Brand, Category, Media, Product } from '@/payload-types'
 
 import { ALL_FACET_ATTRIBUTES, FACET_CONFIG } from '@/lib/facetConfig'
-import { getMeiliClient, PRODUCTS_INDEX } from '@/lib/meilisearch'
+import { getMeiliClient, PRODUCTS_INDEX, verifyMeiliConnection } from '@/lib/meilisearch'
+import { flattenToSearchText } from '@/lib/searchText'
 import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 
 export type ProductSearchDocument = {
   id: string
   title: string
   slug: string
+  sku: string | null
+  /** Flattened category-spec values: the closest thing this catalog has to configuration data. */
+  specsText: string
   description: string
   priceInINR: number | null
   compareAtPriceInINR: number | null
@@ -39,6 +43,8 @@ export const toSearchDocument = (product: Product): ProductSearchDocument => {
     id: String(product.id),
     title: product.title,
     slug: product.slug ?? '',
+    sku: product.sku ?? null,
+    specsText: flattenToSearchText(product.specs),
     description: richTextToPlainText(product.description),
     priceInINR: product.priceInINR ?? null,
     compareAtPriceInINR: product.compareAtPriceInINR ?? null,
@@ -60,33 +66,75 @@ const RANGE_ATTRIBUTES = Object.values(FACET_CONFIG).flatMap((facets) =>
   (facets ?? []).filter((facet) => facet.type === 'range').map((facet) => facet.attribute),
 )
 
-/**
- * Idempotent — safe to call on every boot and from the reindex endpoint.
- * Callers are responsible for catching errors (Meilisearch may be down).
- */
-export const configureProductsIndex = async (): Promise<void> => {
+const PRODUCT_FILTERABLE_ATTRIBUTES = [
+  'categoryIds',
+  'specSchemaType',
+  'stockStatus',
+  'priceInINR',
+  'brandName',
+  'isGiftCard',
+  ...ALL_FACET_ATTRIBUTES,
+]
+
+const PRODUCT_SORTABLE_ATTRIBUTES = ['priceInINR', ...RANGE_ATTRIBUTES]
+
+const PRODUCT_SEARCHABLE_ATTRIBUTES = [
+  'title',
+  'specsText',
+  'sku',
+  'brandName',
+  'categoryTitles',
+  'tags',
+  'description',
+]
+
+export type ProductsIndexStatus = {
+  host: string
+  healthStatus: string
+  indexUid: typeof PRODUCTS_INDEX
+  indexCreated: boolean
+  filterableAttributes: string[]
+  searchableAttributes: string[]
+}
+
+const ensureProductsIndex = async (): Promise<boolean> => {
   const client = getMeiliClient()
+  const indexes = await client.getRawIndexes({ limit: 1000 })
+  const exists = indexes.results.some((index) => index.uid === PRODUCTS_INDEX)
+
+  if (exists) {
+    return false
+  }
+
+  await client.createIndex(PRODUCTS_INDEX, { primaryKey: 'id' }).waitTask()
+  return true
+}
+
+/**
+ * Idempotent: safe to call on every boot and from the reindex endpoint.
+ * Callers are responsible for catching errors when Meilisearch is down.
+ */
+export const configureProductsIndex = async (): Promise<ProductsIndexStatus> => {
+  const connection = await verifyMeiliConnection()
+  const client = getMeiliClient()
+  const indexCreated = await ensureProductsIndex()
   const index = client.index<ProductSearchDocument>(PRODUCTS_INDEX)
 
-  await index.updateFilterableAttributes([
-    'categoryIds',
-    'specSchemaType',
-    'stockStatus',
-    'priceInINR',
-    'brandName',
-    'isGiftCard',
-    ...ALL_FACET_ATTRIBUTES,
-  ])
-  await index.updateSortableAttributes(['priceInINR', ...RANGE_ATTRIBUTES])
-  // Order matters — it's the tie-breaking attribute-rank signal, so a query
-  // that matches the title should always outrank one that only matches
-  // deep in the description.
-  await index.updateSearchableAttributes(['title', 'brandName', 'categoryTitles', 'tags', 'description'])
-  // Product titles here are largely manufacturer part numbers
-  // (e.g. "RC0805JR-070RL"), which read as one long token to a typo-tolerance
-  // algorithm tuned for prose. Loosening these thresholds lets a couple of
-  // mistyped characters in a part number still resolve correctly.
-  await index.updateTypoTolerance({
-    minWordSizeForTypos: { oneTypo: 3, twoTypos: 7 },
-  })
+  await index.updateFilterableAttributes(PRODUCT_FILTERABLE_ATTRIBUTES).waitTask()
+  await index.updateSortableAttributes(PRODUCT_SORTABLE_ATTRIBUTES).waitTask()
+  await index.updateSearchableAttributes(PRODUCT_SEARCHABLE_ATTRIBUTES).waitTask()
+  await index
+    .updateTypoTolerance({
+      minWordSizeForTypos: { oneTypo: 3, twoTypos: 7 },
+    })
+    .waitTask()
+
+  return {
+    host: connection.host,
+    healthStatus: connection.healthStatus,
+    indexUid: PRODUCTS_INDEX,
+    indexCreated,
+    filterableAttributes: PRODUCT_FILTERABLE_ATTRIBUTES,
+    searchableAttributes: PRODUCT_SEARCHABLE_ATTRIBUTES,
+  }
 }

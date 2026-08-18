@@ -11,7 +11,7 @@ import { useWishlist } from '@/providers/Wishlist'
 import { getClientSideURL } from '@/utilities/getURL'
 import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
-import { CheckIcon, HeartIcon, MinusIcon, PlusIcon } from 'lucide-react'
+import { CheckIcon, HeartIcon, MinusIcon, PlusIcon, ShoppingCartIcon } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -183,11 +183,12 @@ const QuickViewBody: React.FC<{ product: Product }> = ({ product }) => {
 
         <div className="mt-2 flex flex-wrap gap-3">
           <button
-            className="btn btn-ghost flex-1 border border-white/30 bg-white/10 text-foreground shadow-md backdrop-blur-md backdrop-saturate-150 hover:border-white/40 hover:bg-white/20"
+            className="btn btn-ghost flex-1 gap-2 border border-white/30 bg-white/10 text-foreground shadow-md backdrop-blur-md backdrop-saturate-150 hover:border-white/40 hover:bg-white/20"
             disabled={isOutOfStock || isLoading}
             onClick={handleAddToCart}
             type="button"
           >
+            {!isOutOfStock && (justAdded ? <CheckIcon className="size-4" /> : <ShoppingCartIcon className="size-4" />)}
             {isOutOfStock ? 'Out of Stock' : justAdded ? 'Added' : 'Add to Cart'}
           </button>
           <button

@@ -1,4 +1,4 @@
-import { HelpCircle, LifeBuoy, Sparkles } from 'lucide-react'
+import { HelpCircle, LifeBuoy, MessageCircleIcon, Sparkles } from 'lucide-react'
 import React from 'react'
 
 import { CMSLink } from '@/components/Link'
@@ -61,7 +61,9 @@ export const FAQBlock: React.FC<
                       label={contactCard.linkLabel || 'Contact Hardware Team'}
                       size="sm"
                       url={contactCard.linkUrl}
-                    />
+                    >
+                      <MessageCircleIcon className="size-4" />
+                    </CMSLink>
                   </div>
                 )}
               </div>

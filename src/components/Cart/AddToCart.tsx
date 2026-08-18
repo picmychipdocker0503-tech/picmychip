@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button'
 import type { Product, Variant } from '@/payload-types'
 
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
-import { useLocale } from '@/providers/Locale'
-import { CheckIcon, MinusIcon, PlusIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { CheckIcon, MinusIcon, PlusIcon, ShoppingCartIcon, ZapIcon } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import posthog from 'posthog-js'
 import React, { useCallback, useMemo, useState } from 'react'
@@ -16,7 +16,7 @@ type Props = {
 
 export function AddToCart({ product }: Props) {
   const { addItem, cart, isLoading } = useCart()
-  const { t } = useLocale()
+  const t = useTranslations('cart')
   const router = useRouter()
   const searchParams = useSearchParams()
   const [justAdded, setJustAdded] = useState(false)
@@ -190,7 +190,9 @@ export function AddToCart({ product }: Props) {
             <CheckIcon /> {t('added')}
           </>
         ) : (
-          t('addToCart')
+          <>
+            <ShoppingCartIcon /> {t('addToCart')}
+          </>
         )}
       </Button>
 
@@ -200,7 +202,13 @@ export function AddToCart({ product }: Props) {
         onClick={buyNow}
         type="button"
       >
-        {isBuyingNow ? t('redirecting') : t('buyNow')}
+        {isBuyingNow ? (
+          t('redirecting')
+        ) : (
+          <>
+            <ZapIcon /> {t('buyNow')}
+          </>
+        )}
       </Button>
     </div>
   )

@@ -8,7 +8,8 @@ import { cn } from '@/utilities/cn'
 import { CurrencySwitcher } from '@/components/CurrencySwitcher'
 import { getSocialIcon } from '@/utilities/getSocialIcon'
 import { useFeaturebase } from 'featurebase-js/react'
-import { MailIcon, MessageCircleIcon, PhoneIcon } from 'lucide-react'
+import { HelpCircleIcon, MailIcon, MessageCircleIcon, PhoneIcon, TruckIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -20,6 +21,7 @@ type Props = {
 }
 
 export function TopUtilityBar({ announcementBar, socialLinks, supportEmail, supportPhone }: Props) {
+  const t = useTranslations('topbar')
   const [showAdminBar, setShowAdminBar] = useState(false)
   const { show: showChat } = useFeaturebase()
 
@@ -66,17 +68,25 @@ export function TopUtilityBar({ announcementBar, socialLinks, supportEmail, supp
             type="button"
           >
             <MessageCircleIcon className="size-3.5" />
-            Chat
+            {t('chat')}
           </button>
 
           <CurrencySwitcher className="select select-ghost select-xs w-auto bg-transparent text-neutral-50" />
 
           <div className="flex items-center gap-5 border-l border-neutral-800 pl-5">
-            <Link className="text-neutral-400 transition-colors hover:text-white" href="/contact">
-              Help
+            <Link
+              className="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
+              href="/contact"
+            >
+              <HelpCircleIcon className="size-3.5" />
+              {t('help')}
             </Link>
-            <Link className="text-neutral-400 transition-colors hover:text-white" href="/find-order">
-              Track order
+            <Link
+              className="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
+              href="/find-order"
+            >
+              <TruckIcon className="size-3.5" />
+              {t('trackOrder')}
             </Link>
           </div>
 

@@ -5,7 +5,7 @@ import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { publicAccess } from '@/access/publicAccess'
 import { adminOrSelf } from '@/access/adminOrSelf'
 import { checkRole } from '@/access/utilities'
-import { accountActivationEmailHtml } from '@/lib/email'
+import { accountActivationEmailHtml, resetPasswordEmailHtml } from '@/lib/email'
 import { getServerSideURL } from '@/utilities/getURL'
 
 import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
@@ -27,9 +27,10 @@ export const Users: CollectionConfig = {
   },
   auth: {
     tokenExpiration: 1209600,
-    // Default verify email links to the admin UI, which storefront customers
-    // should never see — point it at the frontend instead. Until SMTP env
-    // vars are set this is logged, not sent, same as the other adapter emails.
+    // Default verify/forgot-password emails link to the admin UI, which
+    // storefront customers should never see (most aren't admins, so that
+    // link would be a dead end) — point both at the frontend instead. Until
+    // an email adapter is configured these are logged, not sent.
     verify: {
       generateEmailHTML: ({ token, user }) =>
         accountActivationEmailHtml({
@@ -37,6 +38,14 @@ export const Users: CollectionConfig = {
           name: user?.name,
         }),
       generateEmailSubject: () => 'Verify your Picmychip account',
+    },
+    forgotPassword: {
+      generateEmailHTML: (args) =>
+        resetPasswordEmailHtml({
+          resetUrl: `${getServerSideURL()}/reset-password?token=${args?.token}`,
+          name: args?.user?.name,
+        }),
+      generateEmailSubject: () => 'Reset your Picmychip password',
     },
   },
   fields: [

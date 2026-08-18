@@ -35,6 +35,8 @@ import * as migration_20260813_062510_add_zoho_shiprocket_integration from './20
 import * as migration_20260813_101501_revert_verification_token_rename from './20260813_101501_revert_verification_token_rename';
 import * as migration_20260814_104514_add_zoho_sales_order_tracking from './20260814_104514_add_zoho_sales_order_tracking';
 import * as migration_20260814_123027_add_address_gstin from './20260814_123027_add_address_gstin';
+import * as migration_20260818_061827_zoho_item_id from './20260818_061827_zoho_item_id';
+import * as migration_20260818_093126_add_community_feedback from './20260818_093126_add_community_feedback';
 
 export const migrations = [
   {
@@ -220,6 +222,16 @@ export const migrations = [
   {
     up: migration_20260814_123027_add_address_gstin.up,
     down: migration_20260814_123027_add_address_gstin.down,
-    name: '20260814_123027_add_address_gstin'
+    name: '20260814_123027_add_address_gstin',
+  },
+  {
+    up: migration_20260818_061827_zoho_item_id.up,
+    down: migration_20260818_061827_zoho_item_id.down,
+    name: '20260818_061827_zoho_item_id',
+  },
+  {
+    up: migration_20260818_093126_add_community_feedback.up,
+    down: migration_20260818_093126_add_community_feedback.down,
+    name: '20260818_093126_add_community_feedback',
   },
 ];

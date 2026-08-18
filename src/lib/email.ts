@@ -81,6 +81,22 @@ export function giftCardIssuedEmailHtml(giftCard: {
   )
 }
 
+export function resetPasswordEmailHtml(args: { resetUrl: string; name?: string | null }): string {
+  const greeting = args.name ? `Hi ${args.name},` : 'Hi,'
+  return wrapper(
+    'Reset your password',
+    `<p>${greeting}</p>
+     <p>We received a request to reset your Picmychip account password. Click below to choose a new one.</p>
+     <p>
+       <a href="${args.resetUrl}" style="display: inline-block; background: #111; color: #fff; padding: 10px 20px; border-radius: 6px; text-decoration: none;">
+         Reset password
+       </a>
+     </p>
+     <p style="font-size: 12px; color: #888;">Or paste this link into your browser: ${args.resetUrl}</p>
+     <p style="font-size: 12px; color: #888;">Didn't request this? You can safely ignore this email.</p>`,
+  )
+}
+
 export function accountActivationEmailHtml(args: { verificationUrl: string; name?: string | null }): string {
   const greeting = args.name ? `Hi ${args.name},` : 'Hi,'
   return wrapper(

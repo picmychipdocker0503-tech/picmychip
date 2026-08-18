@@ -1,5 +1,7 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
+import { en } from '@payloadcms/translations/languages/en'
+import { brevoAdapter } from '@/lib/email/brevoAdapter'
 
 import {
   BoldFeature,
@@ -18,6 +20,7 @@ import { fileURLToPath } from 'url'
 
 import { Brands } from '@/collections/Brands'
 import { Categories } from '@/collections/Categories'
+import { CommunityFeedback } from '@/collections/CommunityFeedback'
 import { Coupons } from '@/collections/Coupons'
 import { Datasheets } from '@/collections/Datasheets'
 import { GiftCards } from '@/collections/GiftCards'
@@ -42,6 +45,15 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
+  // Formalizes the admin panel's language config so adding a language pack
+  // later is a one-line change. Hindi isn't available here — unlike the
+  // storefront's next-intl setup, @payloadcms/translations doesn't ship a
+  // Hindi pack, and hand-authoring Payload's own translation-key schema is
+  // out of scope for now.
+  i18n: {
+    fallbackLanguage: 'en',
+    supportedLanguages: { en },
+  },
   admin: {
     meta: {
       titleSuffix: '- Picmychip Admin',
@@ -98,6 +110,7 @@ export default buildConfig({
     Brands,
     Reviews,
     Services,
+    CommunityFeedback,
     NewsletterSubscribers,
     Coupons,
     GiftCards,
@@ -148,29 +161,48 @@ export default buildConfig({
       ]
     },
   }),
-  // Only activates once SMTP env vars are set — order-confirmation, shipping-update,
-  // back-in-stock, and gift-card emails all no-op (logged, not thrown) until then.
-  ...(process.env.SMTP_HOST
+  // Only activates once an email provider is configured — order-confirmation,
+  // shipping-update, back-in-stock, gift-card, newsletter, and account
+  // (verify/forgot-password) emails all no-op (logged, not thrown) until
+  // then. Brevo takes priority over plain SMTP when both are set.
+  ...(process.env.BREVO_API_KEY
     ? {
-        email: nodemailerAdapter({
-          defaultFromAddress: process.env.EMAIL_FROM_ADDRESS || 'no-reply@Picmychip.com',
+        email: brevoAdapter({
+          apiKey: process.env.BREVO_API_KEY,
+          defaultFromAddress: process.env.EMAIL_FROM_ADDRESS || 'no-reply@picmychip.com',
           defaultFromName: process.env.EMAIL_FROM_NAME || 'Picmychip',
-          transportOptions: {
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT) || 587,
-            auth: {
-              user: process.env.SMTP_USER,
-              pass: process.env.SMTP_PASS,
-            },
-          },
         }),
       }
-    : {}),
+    : process.env.SMTP_HOST
+      ? {
+          email: nodemailerAdapter({
+            defaultFromAddress: process.env.EMAIL_FROM_ADDRESS || 'no-reply@Picmychip.com',
+            defaultFromName: process.env.EMAIL_FROM_NAME || 'Picmychip',
+            transportOptions: {
+              host: process.env.SMTP_HOST,
+              port: Number(process.env.SMTP_PORT) || 587,
+              auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+              },
+            },
+          }),
+        }
+      : {}),
   endpoints: [],
   globals: [Header, Footer, SiteSettings, FeatureFlags],
   onInit: async (payload) => {
     try {
-      await configureProductsIndex()
+      const status = await configureProductsIndex()
+      payload.logger.info({
+        message: 'Meilisearch connected',
+        url: status.host,
+        health: status.healthStatus,
+        index: status.indexUid,
+        indexStatus: status.indexCreated ? 'created' : 'available',
+        filterableAttributes: status.filterableAttributes,
+        searchableAttributes: status.searchableAttributes,
+      })
     } catch (error) {
       payload.logger.warn(`Meilisearch unreachable at boot, search will use the database fallback: ${error}`)
     }
