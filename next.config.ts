@@ -88,6 +88,16 @@ const nextConfig: NextConfig = {
         },
       ],
     },
+    {
+      // The service worker file itself must never be cached by the browser
+      // or an intermediary — that's the one thing that makes update
+      // detection work at all. A cached sw.js means the browser keeps
+      // running the OLD worker (and its old CACHE_NAME) indefinitely,
+      // regardless of how well versioned the cache-cleanup logic inside it
+      // is, since it never even sees the new file to run that logic from.
+      source: '/sw.js',
+      headers: [{ key: 'Cache-Control', value: 'no-cache, no-store, must-revalidate' }],
+    },
   ],
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {

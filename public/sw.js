@@ -1,4 +1,13 @@
-const CACHE_NAME = 'Picmychip-static-v1'
+// The version suffix below is substituted at build time
+// (scripts/stampServiceWorker.ts, run as part of `pnpm build`) with the
+// deployment's commit SHA, so every deploy gets a genuinely new cache name
+// — the activate handler further down then deletes every other
+// 'Picmychip-static-*' cache, guaranteeing a clean switchover instead of
+// accumulating unused entries across deploys. Left as the literal
+// placeholder for local dev, where the service worker is never registered
+// in the first place — see ServiceWorkerRegistration.tsx.
+const CACHE_PREFIX = 'Picmychip-static-'
+const CACHE_NAME = `${CACHE_PREFIX}__SW_VERSION__`
 const OFFLINE_URL = '/offline'
 const STATIC_CACHE_PATTERNS = [/\/_next\/static\//, /\.(?:png|jpg|jpeg|webp|svg|ico|woff2?)$/]
 
@@ -11,11 +20,18 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))),
-    ),
+    caches
+      .keys()
+      // Only ever touch this app's own caches (this prefix), never any
+      // other cache the origin might hold now or in the future — and never
+      // the currently-active one.
+      .then((keys) =>
+        Promise.all(
+          keys.filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME).map((key) => caches.delete(key)),
+        ),
+      )
+      .then(() => self.clients.claim()),
   )
-  self.clients.claim()
 })
 
 // Cache-first for static build assets and images (safe to serve stale, they're
