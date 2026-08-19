@@ -20,6 +20,7 @@ import { IllustratedCategoryGridBlock } from '@/blocks/IllustratedCategoryGrid/C
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
 import { ServicesShowcaseBlock } from '@/blocks/ServicesShowcase/Component'
 import { StatsStripBlock } from '@/blocks/StatsStrip/Component'
+import { TeamCultureBlock } from '@/blocks/TeamCulture/Component'
 import { TestimonialsBlock } from '@/blocks/Testimonials/Component'
 import { ThreeItemGridBlock } from '@/blocks/ThreeItemGrid/Component'
 import { TrendingProductsBlock } from '@/blocks/TrendingProducts/Component'
@@ -50,6 +51,7 @@ const blockComponents = {
   mediaBlock: MediaBlock,
   servicesShowcase: ServicesShowcaseBlock,
   statsStrip: StatsStripBlock,
+  teamCulture: TeamCultureBlock,
   testimonials: TestimonialsBlock,
   threeItemGrid: ThreeItemGridBlock,
   trendingProducts: TrendingProductsBlock,

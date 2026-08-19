@@ -1,7 +1,7 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { en } from '@payloadcms/translations/languages/en'
-import { brevoAdapter } from '@/lib/email/brevoAdapter'
+import { transactionalEmailPayloadAdapter } from '@/lib/email/payloadAdapter'
 
 import {
   BoldFeature,
@@ -21,6 +21,7 @@ import { fileURLToPath } from 'url'
 import { Brands } from '@/collections/Brands'
 import { Categories } from '@/collections/Categories'
 import { CommunityFeedback } from '@/collections/CommunityFeedback'
+import { EmailEvents } from '@/collections/EmailEvents'
 import { Coupons } from '@/collections/Coupons'
 import { Datasheets } from '@/collections/Datasheets'
 import { GiftCards } from '@/collections/GiftCards'
@@ -33,6 +34,7 @@ import { ReturnRequests } from '@/collections/ReturnRequests'
 import { Reviews } from '@/collections/Reviews'
 import { Services } from '@/collections/Services'
 import { StockAlerts } from '@/collections/StockAlerts'
+import { TeamTestimonials } from '@/collections/TeamTestimonials'
 import { Users } from '@/collections/Users'
 import { FeatureFlags } from '@/globals/FeatureFlags'
 import { Footer } from '@/globals/Footer'
@@ -111,11 +113,13 @@ export default buildConfig({
     Reviews,
     Services,
     CommunityFeedback,
+    TeamTestimonials,
     NewsletterSubscribers,
     Coupons,
     GiftCards,
     StockAlerts,
     ReturnRequests,
+    EmailEvents,
   ],
   db: postgresAdapter({
     pool: {
@@ -164,14 +168,14 @@ export default buildConfig({
   // Only activates once an email provider is configured — order-confirmation,
   // shipping-update, back-in-stock, gift-card, newsletter, and account
   // (verify/forgot-password) emails all no-op (logged, not thrown) until
-  // then. Brevo takes priority over plain SMTP when both are set.
+  // then. When BREVO_API_KEY is set, this is the transactional email
+  // service (src/lib/email/emailService.ts) — Brevo primary, ZeptoMail
+  // fallback, retries, idempotency — so even Payload's own internal
+  // verify/forgot-password sends benefit from the fallback, not just the
+  // app's own hooks (which call the service directly via src/lib/email.ts).
   ...(process.env.BREVO_API_KEY
     ? {
-        email: brevoAdapter({
-          apiKey: process.env.BREVO_API_KEY,
-          defaultFromAddress: process.env.EMAIL_FROM_ADDRESS || 'no-reply@picmychip.com',
-          defaultFromName: process.env.EMAIL_FROM_NAME || 'Picmychip',
-        }),
+        email: transactionalEmailPayloadAdapter(),
       }
     : process.env.SMTP_HOST
       ? {

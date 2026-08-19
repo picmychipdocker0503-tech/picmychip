@@ -37,6 +37,8 @@ import * as migration_20260814_104514_add_zoho_sales_order_tracking from './2026
 import * as migration_20260814_123027_add_address_gstin from './20260814_123027_add_address_gstin';
 import * as migration_20260818_061827_zoho_item_id from './20260818_061827_zoho_item_id';
 import * as migration_20260818_093126_add_community_feedback from './20260818_093126_add_community_feedback';
+import * as migration_20260818_121920_add_team_testimonials_and_culture_block from './20260818_121920_add_team_testimonials_and_culture_block';
+import * as migration_20260819_044939_add_email_events from './20260819_044939_add_email_events';
 
 export const migrations = [
   {
@@ -233,5 +235,15 @@ export const migrations = [
     up: migration_20260818_093126_add_community_feedback.up,
     down: migration_20260818_093126_add_community_feedback.down,
     name: '20260818_093126_add_community_feedback',
+  },
+  {
+    up: migration_20260818_121920_add_team_testimonials_and_culture_block.up,
+    down: migration_20260818_121920_add_team_testimonials_and_culture_block.down,
+    name: '20260818_121920_add_team_testimonials_and_culture_block',
+  },
+  {
+    up: migration_20260819_044939_add_email_events.up,
+    down: migration_20260819_044939_add_email_events.down,
+    name: '20260819_044939_add_email_events'
   },
 ];

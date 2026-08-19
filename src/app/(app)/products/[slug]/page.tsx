@@ -220,7 +220,7 @@ export default async function ProductPage({ params }: Args) {
               }
             >
               {gallery?.length ? (
-                <Gallery categorySlug={firstCategory?.slug} gallery={gallery} />
+                <Gallery categorySlug={firstCategory?.slug} gallery={gallery} product={product} />
               ) : (
                 <ProductImagePlaceholder categorySlug={firstCategory?.slug} />
               )}

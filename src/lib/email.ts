@@ -1,11 +1,23 @@
 import type { Payload } from 'payload';
+import { sendTransactionalEmail } from '@/lib/email/emailService'
 
+/**
+ * Sends through the Brevo→ZeptoMail transactional email service directly
+ * (not `payload.sendEmail()`) so callers can supply a meaningful
+ * `emailType`/`eventId` (e.g. "ORDER_CONFIRMATION_12345") for the
+ * idempotency/audit log in the `email-events` collection — Payload's own
+ * adapter interface has no way to carry that through. Never throws, same
+ * as before: callers don't need their own try/catch.
+ */
 export async function sendMail(
   payload: Payload,
-  args: { to: string; subject: string; html: string },
+  args: { to: string; subject: string; html: string; emailType: string; eventId: string },
 ): Promise<void> {
   try {
-    await payload.sendEmail(args)
+    const result = await sendTransactionalEmail(payload, args)
+    if (!result.success) {
+      payload.logger.error({ msg: 'Failed to send email', error: result.error, to: args.to, subject: args.subject })
+    }
   } catch (err) {
     payload.logger.error({ msg: 'Failed to send email', err, to: args.to, subject: args.subject })
   }

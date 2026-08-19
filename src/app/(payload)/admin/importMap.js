@@ -18,6 +18,11 @@ import { MetaImageComponent as MetaImageComponent_a8a977ebc872c5d5ea7ee689724c08
 import { MetaDescriptionComponent as MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { PreviewComponent as PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860 } from '@payloadcms/plugin-seo/client'
 import { SlugField as SlugField_2b8867833a34864a02ddf429b0728a40 } from '@payloadcms/next/client'
+import { CategoriesListView as CategoriesListView_475ae63aad65c29db29896fd04cc82e9 } from '@/components/admin/collections/CategoriesListView'
+import { DatasheetsListView as DatasheetsListView_bfa58f37c19d7b93079e65ab3b775d2f } from '@/components/admin/collections/DatasheetsListView'
+import { BrandsListView as BrandsListView_267dcf8a04026dee30d707f7299821c2 } from '@/components/admin/collections/BrandsListView'
+import { ReviewsListView as ReviewsListView_5f8ad56e53c8b21611f6fe4bcca6ec31 } from '@/components/admin/collections/ReviewsListView'
+import { CommunityFeedbackListView as CommunityFeedbackListView_36e6ecad8a94b67317b4f4b32bca1664 } from '@/components/admin/collections/CommunityFeedbackListView'
 import { GenerateCodeField as GenerateCodeField_c48ea289ef3b8d57fc7a93f5995721e5 } from '@/components/admin/GenerateCodeField'
 import { CouponStatusCell as CouponStatusCell_7ae11c32998a38ec721d67a651953200 } from '@/components/admin/cells/CouponStatusCell'
 import { CouponsListStats as CouponsListStats_edacfc9537004448552dee380112cb17 } from '@/components/admin/CouponsListStats'
@@ -72,6 +77,11 @@ export const importMap = {
   "@payloadcms/plugin-seo/client#MetaDescriptionComponent": MetaDescriptionComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/plugin-seo/client#PreviewComponent": PreviewComponent_a8a977ebc872c5d5ea7ee689724c0860,
   "@payloadcms/next/client#SlugField": SlugField_2b8867833a34864a02ddf429b0728a40,
+  "@/components/admin/collections/CategoriesListView#CategoriesListView": CategoriesListView_475ae63aad65c29db29896fd04cc82e9,
+  "@/components/admin/collections/DatasheetsListView#DatasheetsListView": DatasheetsListView_bfa58f37c19d7b93079e65ab3b775d2f,
+  "@/components/admin/collections/BrandsListView#BrandsListView": BrandsListView_267dcf8a04026dee30d707f7299821c2,
+  "@/components/admin/collections/ReviewsListView#ReviewsListView": ReviewsListView_5f8ad56e53c8b21611f6fe4bcca6ec31,
+  "@/components/admin/collections/CommunityFeedbackListView#CommunityFeedbackListView": CommunityFeedbackListView_36e6ecad8a94b67317b4f4b32bca1664,
   "@/components/admin/GenerateCodeField#GenerateCodeField": GenerateCodeField_c48ea289ef3b8d57fc7a93f5995721e5,
   "@/components/admin/cells/CouponStatusCell#CouponStatusCell": CouponStatusCell_7ae11c32998a38ec721d67a651953200,
   "@/components/admin/CouponsListStats#CouponsListStats": CouponsListStats_edacfc9537004448552dee380112cb17,

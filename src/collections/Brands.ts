@@ -16,6 +16,13 @@ export const Brands: CollectionConfig = {
     group: 'Catalog',
     defaultColumns: ['title', 'slug', 'updatedAt'],
     useAsTitle: 'title',
+    components: {
+      views: {
+        list: {
+          Component: '@/components/admin/collections/BrandsListView#BrandsListView',
+        },
+      },
+    },
   },
   fields: [
     {

@@ -17,11 +17,22 @@ import configPromise from '@payload-config'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import { getPayload } from 'payload'
-import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
+import { Inter } from 'next/font/google'
 import Script from 'next/script'
 import React from 'react'
 import './globals.css'
+
+// A thinner, more professional grotesk than the previous GeistSans — aliased
+// to the same `--font-geist-sans` CSS variable Tailwind's `font-sans` theme
+// token already points at (see globals.css), so nothing downstream needs to
+// change. Weights cover every Tailwind font-weight utility already in use
+// across the site (font-medium through font-black).
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-geist-sans',
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+})
 
 const GA_MEASUREMENT_ID = 'G-65M0W91R3Q'
 
@@ -70,7 +81,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
   return (
     <html
-      className={[GeistSans.variable, GeistMono.variable].filter(Boolean).join(' ')}
+      className={[inter.variable, GeistMono.variable].filter(Boolean).join(' ')}
       lang={locale}
       suppressHydrationWarning
     >

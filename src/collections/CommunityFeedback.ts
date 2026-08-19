@@ -18,6 +18,13 @@ export const CommunityFeedback: CollectionConfig = {
     group: 'Content',
     defaultColumns: ['name', 'companyName', 'designation', 'featured', 'updatedAt'],
     useAsTitle: 'name',
+    components: {
+      views: {
+        list: {
+          Component: '@/components/admin/collections/CommunityFeedbackListView#CommunityFeedbackListView',
+        },
+      },
+    },
   },
   fields: [
     {

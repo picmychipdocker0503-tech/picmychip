@@ -77,6 +77,8 @@ export const sendAbandonedCartEmails = async (payload: Payload): Promise<{ sent:
       to: email,
       subject: 'You left something in your cart',
       html: abandonedCartEmailHtml({ itemCount, siteUrl }),
+      emailType: 'ABANDONED_CART',
+      eventId: `ABANDONED_CART_${cart.id}`,
     })
 
     await payload.update({

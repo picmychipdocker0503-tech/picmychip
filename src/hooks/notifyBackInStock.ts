@@ -29,6 +29,8 @@ export const notifyBackInStock: CollectionAfterChangeHook = async ({
         to: alert.email,
         subject: `${doc.title} is back in stock`,
         html: backInStockEmailHtml(doc),
+        emailType: 'BACK_IN_STOCK',
+        eventId: `BACK_IN_STOCK_${alert.id}`,
       })
 
       await req.payload.update({

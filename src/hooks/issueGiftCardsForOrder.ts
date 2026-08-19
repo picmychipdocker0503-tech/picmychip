@@ -75,6 +75,8 @@ export const issueGiftCardsForOrder: CollectionAfterChangeHook = async ({ doc, o
           to: email,
           subject: 'Your gift card is ready',
           html: giftCardIssuedEmailHtml(giftCard),
+          emailType: 'GIFT_CARD_ISSUED',
+          eventId: `GIFT_CARD_ISSUED_${sourceOrderId}_${giftCard.code}`,
         })
       }
     } catch (err) {

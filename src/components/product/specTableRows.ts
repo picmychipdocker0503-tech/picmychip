@@ -33,15 +33,17 @@ const STOCK_LABELS: Record<string, string> = {
 
 /**
  * Baseline comparison rows built from fields every product has, regardless
- * of `specSchemaType` — brand, category, price, stock, datasheet
- * availability. `specSchemaType`-keyed rows (below) only exist for the demo
+ * of `specSchemaType` — brand, category, stock, datasheet availability.
+ * Deliberately excludes price — it's already shown in the product price
+ * section, and doesn't belong in a spec-comparison view either.
+ * `specSchemaType`-keyed rows (below) only exist for the demo
  * maker-store spec groups (drone motors, SBCs, etc.); the real imported
  * catalog (resistors, capacitors, connectors, ICs, ...) has none of those,
  * so without this the comparison table would render empty for every real
  * product.
  */
 export const getGeneralComparisonRows = (
-  product: Pick<Product, 'brand' | 'categories' | 'priceInINR' | 'stockStatus' | 'datasheets'>,
+  product: Pick<Product, 'brand' | 'categories' | 'stockStatus' | 'datasheets'>,
 ): SpecRow[] => {
   const rows: SpecRow[] = []
 
@@ -53,10 +55,6 @@ export const getGeneralComparisonRows = (
   )
   if (categories.length > 0) {
     rows.push({ label: 'Category', value: categories.map((category) => category.title).join(', ') })
-  }
-
-  if (typeof product.priceInINR === 'number') {
-    rows.push({ label: 'Price', value: `₹${product.priceInINR.toFixed(2)}` })
   }
 
   if (product.stockStatus) {

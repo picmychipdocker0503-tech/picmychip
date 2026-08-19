@@ -62,7 +62,7 @@ test.describe('Coupons TanStack list view', () => {
     await page.goto('http://localhost:3000/admin/collections/coupons')
     await page.fill('input[placeholder="Search by code…"]', 'E2E-COUPON-01')
     await page.waitForTimeout(500)
-    await expect(page).toHaveURL(/search=E2E-COUPON-01/)
+    await expect(page).toHaveURL(/dtSearch=E2E-COUPON-01/)
     const rows = page.locator('table.pmc-table tbody tr')
     await expect(rows).toHaveCount(1)
     await page.fill('input[placeholder="Search by code…"]', '')
@@ -73,9 +73,9 @@ test.describe('Coupons TanStack list view', () => {
     await page.goto('http://localhost:3000/admin/collections/coupons')
     // Numeric columns default to descending-first under TanStack's sortDescFirst heuristic.
     await page.getByRole('button', { name: 'Value' }).click()
-    await expect(page).toHaveURL(/sort=-value/)
+    await expect(page).toHaveURL(/dtSort=-value/)
     await page.getByRole('button', { name: 'Value' }).click()
-    await expect(page).toHaveURL(/sort=value/)
+    await expect(page).toHaveURL(/dtSort=value/)
   })
 
   test('pagination Next/Prev updates the page param', async () => {
@@ -83,19 +83,19 @@ test.describe('Coupons TanStack list view', () => {
     const nextBtn = page.getByRole('button', { name: 'Next', exact: true })
     await expect(nextBtn).toBeEnabled()
     await nextBtn.click()
-    await expect(page).toHaveURL(/page=2/)
+    await expect(page).toHaveURL(/dtPage=2/)
     await page.getByRole('button', { name: 'Prev', exact: true }).click()
-    await expect(page).not.toHaveURL(/page=2/)
+    await expect(page).not.toHaveURL(/dtPage=2/)
   })
 
   test('deep link into page 2 sorted by -createdAt loads that state directly', async () => {
-    await page.goto('http://localhost:3000/admin/collections/coupons?page=2&sort=-createdAt')
+    await page.goto('http://localhost:3000/admin/collections/coupons?dtPage=2&dtSort=-createdAt')
     await expect(page.locator('table.pmc-table')).toBeVisible()
     await expect(page.getByText('Page 2 of')).toBeVisible()
   })
 
   test('bulk select and delete removes rows', async () => {
-    await page.goto('http://localhost:3000/admin/collections/coupons?search=E2E-COUPON-0')
+    await page.goto('http://localhost:3000/admin/collections/coupons?dtSearch=E2E-COUPON-0')
     await page.waitForTimeout(500)
     const checkboxes = page.locator('table.pmc-table tbody input[type="checkbox"]')
     const countBefore = await checkboxes.count()

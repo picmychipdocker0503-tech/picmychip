@@ -45,6 +45,13 @@ export const Reviews: CollectionConfig = {
     group: 'Catalog',
     defaultColumns: ['product', 'rating', 'status', 'verifiedPurchase', 'createdAt'],
     useAsTitle: 'id',
+    components: {
+      views: {
+        list: {
+          Component: '@/components/admin/collections/ReviewsListView#ReviewsListView',
+        },
+      },
+    },
   },
   hooks: {
     beforeOperation: [rateLimitCreate('review-create', 5, 60_000)],

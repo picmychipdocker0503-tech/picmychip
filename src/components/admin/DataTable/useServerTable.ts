@@ -4,7 +4,6 @@ import type { ColumnDef, RowSelectionState, SortingState } from '@tanstack/react
 
 import { getClientSideURL } from '@/utilities/getURL'
 import { getCoreRowModel, useReactTable } from '@tanstack/react-table'
-import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { ListApiResponse, QueryState } from './types'
@@ -12,16 +11,48 @@ import type { ListApiResponse, QueryState } from './types'
 const DEFAULT_LIMIT = 20
 const SEARCH_DEBOUNCE_MS = 300
 
+// Prefixed so these never collide with Payload's own list-view query params
+// (`page`/`limit`/`sort`/`where`/`columns`) — kept even though state is no
+// longer read back from the URL (see below), since it also protects a plain
+// deep-link (`?dtSearch=...`) from ever being misread as Payload's own
+// preference keys.
+const PARAM = {
+  limit: 'dtLimit',
+  page: 'dtPage',
+  search: 'dtSearch',
+  sort: 'dtSort',
+} as const
+
 /** Recursively flattens a Payload `where` clause into REST bracket-notation query params. */
 export function appendWhereParams(params: URLSearchParams, value: unknown, prefix = 'where'): void {
   if (Array.isArray(value)) {
-    value.forEach((item) => appendWhereParams(params, item, `${prefix}[]`))
+    // Indexed, not `[]` — for arrays of primitives (e.g. `id: { in: [...] }`)
+    // both parse identically, but for arrays of objects (e.g. `or: [{...},
+    // {...}]`) an unindexed `[]` on every item is ambiguous to `qs` (the
+    // query-string parser powering Payload's REST API): consecutive `[]`
+    // occurrences whose nested keys differ get collapsed into a single
+    // merged object instead of separate array entries, silently turning an
+    // `or` into an implicit `and` across the two conditions.
+    value.forEach((item, index) => appendWhereParams(params, item, `${prefix}[${index}]`))
   } else if (value !== null && typeof value === 'object') {
     Object.entries(value as Record<string, unknown>).forEach(([key, v]) => {
       appendWhereParams(params, v, `${prefix}[${key}]`)
     })
   } else if (value !== undefined) {
     params.append(prefix, String(value))
+  }
+}
+
+const readQueryFromLocation = (): QueryState => {
+  if (typeof window === 'undefined') {
+    return { limit: DEFAULT_LIMIT, page: 1, search: '', sort: '' }
+  }
+  const params = new URLSearchParams(window.location.search)
+  return {
+    limit: Number(params.get(PARAM.limit) ?? String(DEFAULT_LIMIT)) || DEFAULT_LIMIT,
+    page: Number(params.get(PARAM.page) ?? '1') || 1,
+    search: params.get(PARAM.search) ?? '',
+    sort: params.get(PARAM.sort) ?? '',
   }
 }
 
@@ -34,6 +65,22 @@ type UseServerTableArgs<T> = {
   meta?: Record<string, unknown>
 }
 
+/**
+ * Drives a manual-pagination TanStack table against a Payload REST endpoint.
+ *
+ * State lives in React (not read back from `useSearchParams()`): this list
+ * view still renders inside Payload's own `ListQueryProvider` (confirmed via
+ * `@payloadcms/next`'s `renderListView`, which wraps `list.Component`
+ * overrides the same as `DefaultListView`), and `router.replace()` calls
+ * from deep inside that tree were observed to silently no-op — the browser
+ * URL never actually changed, even 800ms later (verified directly: a raw
+ * `history.replaceState()` call sticks immediately in the same tree, so
+ * next/navigation's router itself is what's inert here, not something
+ * external reverting it). Local state sidesteps that entirely; the URL is
+ * still kept in sync via `history.replaceState` (one-way, state -> URL) so
+ * deep links and shareable URLs keep working, with a `popstate` listener for
+ * back/forward support.
+ */
 export function useServerTable<T extends { id: number | string }>({
   buildWhere,
   collection,
@@ -42,13 +89,8 @@ export function useServerTable<T extends { id: number | string }>({
   initialData,
   meta,
 }: UseServerTableArgs<T>) {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-
-  const page = Number(searchParams.get('page') ?? '1') || 1
-  const limit = Number(searchParams.get('limit') ?? String(DEFAULT_LIMIT)) || DEFAULT_LIMIT
-  const sortParam = searchParams.get('sort') ?? ''
-  const search = searchParams.get('search') ?? ''
+  const [query, setQuery] = useState<QueryState>(() => readQueryFromLocation())
+  const { limit, page, search, sort: sortParam } = query
 
   const sorting = useMemo<SortingState>(() => {
     if (!sortParam) return []
@@ -61,73 +103,89 @@ export function useServerTable<T extends { id: number | string }>({
   const [searchInput, setSearchInputState] = useState(search)
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+  // Tracks the query state synchronously so `updateParams` never needs to run
+  // side effects (fetch, history mutation) from inside a `setState` updater
+  // function — React may invoke those more than once (e.g. Strict Mode's
+  // dev-only double-invocation), which was firing duplicate, differently-
+  // stale fetches and letting the wrong one win the race.
+  const queryRef = useRef(query)
+  queryRef.current = query
+  // Guards against a slower, now-stale fetch response overwriting a faster,
+  // newer one when requests are still issued in quick succession.
+  const requestIdRef = useRef(0)
 
-  useEffect(() => {
-    setSearchInputState(search)
-  }, [search])
+  const syncUrl = useCallback((next: QueryState) => {
+    const params = new URLSearchParams(window.location.search)
 
-  const updateParams = useCallback(
-    (next: Partial<QueryState>) => {
-      const params = new URLSearchParams(searchParams.toString())
-      const merged = { limit, page, search, sort: sortParam, ...next }
+    if (next.page > 1) params.set(PARAM.page, String(next.page))
+    else params.delete(PARAM.page)
 
-      if (merged.page > 1) params.set('page', String(merged.page))
-      else params.delete('page')
+    if (next.limit !== DEFAULT_LIMIT) params.set(PARAM.limit, String(next.limit))
+    else params.delete(PARAM.limit)
 
-      if (merged.limit !== DEFAULT_LIMIT) params.set('limit', String(merged.limit))
-      else params.delete('limit')
+    if (next.sort) params.set(PARAM.sort, next.sort)
+    else params.delete(PARAM.sort)
 
-      if (merged.sort) params.set('sort', merged.sort)
-      else params.delete('sort')
+    if (next.search) params.set(PARAM.search, next.search)
+    else params.delete(PARAM.search)
 
-      if (merged.search) params.set('search', merged.search)
-      else params.delete('search')
-
-      router.replace(`?${params.toString()}`, { scroll: false })
-    },
-    [router, searchParams, page, limit, sortParam, search],
-  )
+    const queryString = params.toString()
+    window.history.replaceState(null, '', queryString ? `?${queryString}` : window.location.pathname)
+  }, [])
 
   const fetchPage = useCallback(
-    async (query: QueryState) => {
+    async (next: QueryState) => {
+      const requestId = ++requestIdRef.current
       setIsLoading(true)
       try {
         const params = new URLSearchParams()
-        params.set('limit', String(query.limit))
-        params.set('page', String(query.page))
+        params.set('limit', String(next.limit))
+        params.set('page', String(next.page))
         params.set('depth', String(depth))
-        if (query.sort) params.set('sort', query.sort)
+        if (next.sort) params.set('sort', next.sort)
 
-        const where = buildWhere?.(query.search)
+        const where = buildWhere?.(next.search)
         if (where) appendWhereParams(params, where)
 
         const response = await fetch(`${getClientSideURL()}/api/${collection}?${params.toString()}`, {
           credentials: 'same-origin',
         })
         const json = (await response.json()) as ListApiResponse<T>
+        if (requestId !== requestIdRef.current) return // a newer request has since superseded this one
         setData(json)
         setRowSelection({})
       } finally {
-        setIsLoading(false)
+        if (requestId === requestIdRef.current) setIsLoading(false)
       }
     },
     [buildWhere, collection, depth],
   )
 
-  const isFirstRender = useRef(true)
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false
-      return
-    }
-    fetchPage({ limit, page, search, sort: sortParam })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, limit, sortParam, search])
-
-  const refetch = useCallback(
-    () => fetchPage({ limit, page, search, sort: sortParam }),
-    [fetchPage, limit, page, search, sortParam],
+  const updateParams = useCallback(
+    (next: Partial<QueryState>) => {
+      const merged = { ...queryRef.current, ...next }
+      queryRef.current = merged
+      setQuery(merged)
+      syncUrl(merged)
+      fetchPage(merged)
+    },
+    [fetchPage, syncUrl],
   )
+
+  useEffect(() => {
+    const onPopState = () => {
+      const next = readQueryFromLocation()
+      queryRef.current = next
+      setQuery(next)
+      setSearchInputState(next.search)
+      fetchPage(next)
+    }
+    window.addEventListener('popstate', onPopState)
+    return () => window.removeEventListener('popstate', onPopState)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const refetch = useCallback(() => fetchPage(query), [fetchPage, query])
 
   const handleSearchInputChange = useCallback(
     (value: string) => {

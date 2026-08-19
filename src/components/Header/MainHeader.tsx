@@ -52,7 +52,7 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
           {/* Logo */}
           <Link className="flex shrink-0 items-center" href="/">
             <Wordmark
-              className="text-xl font-semibold tracking-tight text-foreground"
+              className="font-semibold tracking-tight text-foreground"
               iconClassName="text-primary"
               iconSize={32}
             />

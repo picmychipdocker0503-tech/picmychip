@@ -45,6 +45,10 @@ export default async function CareersPage() {
         <p className="text-muted-foreground">
           We're building the sourcing platform makers rely on. Here's what we're hiring for right now.
         </p>
+        <Link className="text-primary mt-3 inline-flex items-center gap-1 text-sm font-medium hover:underline" href="/people-culture">
+          See what our team says about working here
+          <ArrowRightIcon className="size-3.5" />
+        </Link>
       </div>
 
       {jobs.length > 0 ? (

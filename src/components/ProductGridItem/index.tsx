@@ -5,7 +5,6 @@ import type { Product } from '@/payload-types'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
 import { ProductMatchingImage } from '@/components/product/ProductMatchingImage'
-import { useTilt3D } from '@/lib/useTilt3D'
 import { useCompare } from '@/providers/Compare'
 import { useQuickView } from '@/providers/QuickView'
 import { useWishlist } from '@/providers/Wishlist'
@@ -44,7 +43,6 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
   const { addItem, isLoading } = useCart()
   const { currency } = useCurrency()
   const [justAdded, setJustAdded] = useState(false)
-  const tilt = useTilt3D<HTMLDivElement>()
 
   const priceField = `priceIn${currency.code}` as keyof Product
   const compareAtPriceField = `compareAtPriceIn${currency.code}` as keyof Product
@@ -101,17 +99,8 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
     <Link className="relative inline-block h-full w-full group" href={`/products/${slug}`}>
       <div className="relative flex flex-col justify-between h-full rounded-3xl border border-border/80 bg-card/75 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/60 hover:bg-card hover:shadow-xl hover:shadow-primary/10 overflow-hidden">
 
-        {/* Top Media Container: Strictly square and uniform dimensions.
-            3D tilt follows the cursor via useTilt3D — scoped to just this
-            image area (not the whole card) so the price/actions below it
-            stay flat and legible. */}
-        <div
-          className="relative w-full aspect-square overflow-hidden border-b border-border/60 bg-muted/15 transition-transform duration-150 ease-out will-change-transform"
-          onMouseEnter={tilt.onMouseEnter}
-          onMouseLeave={tilt.onMouseLeave}
-          onMouseMove={tilt.onMouseMove}
-          ref={tilt.ref}
-        >
+        {/* Top Media Container: Strictly square and uniform dimensions. */}
+        <div className="relative w-full aspect-square overflow-hidden border-b border-border/60 bg-muted/15">
           <ProductMatchingImage
             category={firstCategory}
             className="w-full h-full"
@@ -119,12 +108,6 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
             priority={priority}
             slug={slug}
             title={title}
-          />
-
-          {/* Cursor-tracked glare highlight, part of the 3D tilt effect. */}
-          <div
-            className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-150"
-            ref={tilt.glareRef}
           />
 
           {/* Holographic Badges */}

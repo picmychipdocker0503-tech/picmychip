@@ -13,6 +13,13 @@ export const Datasheets: CollectionConfig = {
   admin: {
     group: 'Catalog',
     useAsTitle: 'title',
+    components: {
+      views: {
+        list: {
+          Component: '@/components/admin/collections/DatasheetsListView#DatasheetsListView',
+        },
+      },
+    },
   },
   access: {
     create: adminOnly,

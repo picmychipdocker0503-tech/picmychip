@@ -28,6 +28,13 @@ export const Categories: CollectionConfig = {
   admin: {
     useAsTitle: 'title',
     group: 'Catalog',
+    components: {
+      views: {
+        list: {
+          Component: '@/components/admin/collections/CategoriesListView#CategoriesListView',
+        },
+      },
+    },
   },
   fields: [
     {

@@ -5,7 +5,6 @@ import type { Product } from '@/payload-types'
 import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
-import { useTilt3D } from '@/lib/useTilt3D'
 import { useQuickView } from '@/providers/QuickView'
 import { useWishlist } from '@/providers/Wishlist'
 import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
@@ -35,7 +34,6 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
   const { toggle: toggleWishlist, isSaved } = useWishlist()
   const { addItem, isLoading } = useCart()
   const [justAdded, setJustAdded] = useState(false)
-  const tilt = useTilt3D<HTMLDivElement>()
 
   const priceField = `priceIn${currency.code}` as keyof Product
   const compareAtPriceField = `compareAtPriceIn${currency.code}` as keyof Product
@@ -127,13 +125,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
           )}
         </div>
 
-        <div
-          className="relative aspect-square w-full max-w-40 transition-transform duration-150 ease-out will-change-transform"
-          onMouseEnter={tilt.onMouseEnter}
-          onMouseLeave={tilt.onMouseLeave}
-          onMouseMove={tilt.onMouseMove}
-          ref={tilt.ref}
-        >
+        <div className="relative aspect-square w-full max-w-40">
           {image ? (
             <Media
               className="relative h-full w-full"
@@ -146,14 +138,6 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
             <div className="bg-background/50 flex h-full w-full items-center justify-center rounded-lg text-xs text-muted-foreground">
               No image
             </div>
-          )}
-
-          {/* Cursor-tracked glare highlight, part of the 3D tilt effect. */}
-          {image && (
-            <div
-              className="pointer-events-none absolute inset-0 z-10 rounded-lg opacity-0 transition-opacity duration-150"
-              ref={tilt.glareRef}
-            />
           )}
         </div>
       </Link>

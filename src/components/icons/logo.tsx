@@ -7,7 +7,10 @@ import { cn } from '@/utilities/cn'
 // a webfont — Comic Neue is the freely-licensed redesign built for this.
 // Bold (700) keeps the "MY" badge legible at the small sizes it's used at —
 // the Light weight it used to ship with all but disappeared below ~28px.
-const comicNeue = Comic_Neue({ subsets: ['latin'], weight: ['700'] })
+// Exported so Wordmark (and anything else rendering the "Pic"/"chip" text
+// around this mark) can reuse the exact same font-family instead of loading
+// Comic Neue a second time under a different Next font-optimization handle.
+export const comicNeue = Comic_Neue({ subsets: ['latin'], weight: ['700'] })
 
 type Props = React.ComponentProps<'svg'> & {
   /**

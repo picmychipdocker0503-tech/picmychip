@@ -83,11 +83,13 @@ export interface Config {
     reviews: Review;
     services: Service;
     'community-feedback': CommunityFeedback;
+    'team-testimonials': TeamTestimonial;
     'newsletter-subscribers': NewsletterSubscriber;
     coupons: Coupon;
     'gift-cards': GiftCard;
     'stock-alerts': StockAlert;
     'return-requests': ReturnRequest;
+    'email-events': EmailEvent;
     forms: Form;
     'form-submissions': FormSubmission;
     addresses: Address;
@@ -128,11 +130,13 @@ export interface Config {
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
     'community-feedback': CommunityFeedbackSelect<false> | CommunityFeedbackSelect<true>;
+    'team-testimonials': TeamTestimonialsSelect<false> | TeamTestimonialsSelect<true>;
     'newsletter-subscribers': NewsletterSubscribersSelect<false> | NewsletterSubscribersSelect<true>;
     coupons: CouponsSelect<false> | CouponsSelect<true>;
     'gift-cards': GiftCardsSelect<false> | GiftCardsSelect<true>;
     'stock-alerts': StockAlertsSelect<false> | StockAlertsSelect<true>;
     'return-requests': ReturnRequestsSelect<false> | ReturnRequestsSelect<true>;
+    'email-events': EmailEventsSelect<false> | EmailEventsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
@@ -867,6 +871,7 @@ export interface Page {
     | ServicesShowcaseBlock
     | TrustBadgesStripBlock
     | TestimonialsBlock
+    | TeamCultureBlock
     | FeaturedCollectionBlock
     | ContentFeedBlock
   )[];
@@ -1629,6 +1634,32 @@ export interface TestimonialsBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TeamCultureBlock".
+ */
+export interface TeamCultureBlock {
+  heading?: string | null;
+  /**
+   * One or two sentences under the heading.
+   */
+  intro?: string | null;
+  populateBy?: ('collection' | 'manual') | null;
+  testimonials?:
+    | {
+        name: string;
+        photo?: (number | null) | Media;
+        designation?: string | null;
+        department?: string | null;
+        quote: string;
+        id?: string | null;
+      }[]
+    | null;
+  limit?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'teamCulture';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FeaturedCollectionBlock".
  */
 export interface FeaturedCollectionBlock {
@@ -2056,6 +2087,36 @@ export interface CommunityFeedback {
   createdAt: string;
 }
 /**
+ * What the team thinks about working here — real quotes from real employees, shown on the "People & Culture" page. Only add quotes you have permission to publish.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "team-testimonials".
+ */
+export interface TeamTestimonial {
+  id: number;
+  name: string;
+  /**
+   * e.g. "Firmware Engineer", "Warehouse Lead".
+   */
+  designation?: string | null;
+  /**
+   * e.g. "Engineering", "Operations", "Customer Support".
+   */
+  department?: string | null;
+  photo?: (number | null) | Media;
+  /**
+   * What they would say about working at Picmychip, in their own words.
+   */
+  quote: string;
+  yearsAtCompany?: number | null;
+  /**
+   * Only featured quotes are shown on the People & Culture page.
+   */
+  featured?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "newsletter-subscribers".
  */
@@ -2179,6 +2240,36 @@ export interface ReturnRequest {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-events".
+ */
+export interface EmailEvent {
+  id: number;
+  /**
+   * Deterministic per logical email event, e.g. "ORDER_CONFIRMATION_12345" — the idempotency key.
+   */
+  emailEventId: string;
+  emailType: string;
+  recipient: string;
+  status: 'sent' | 'failed' | 'unknown';
+  /**
+   * Set once the primary provider (Brevo) is actually attempted.
+   */
+  primaryProvider?: string | null;
+  /**
+   * Set only if the fallback provider (ZeptoMail) was attempted.
+   */
+  fallbackProvider?: string | null;
+  providerMessageId?: string | null;
+  attemptCount?: number | null;
+  /**
+   * Truncated provider error text — never headers, tokens, or API keys.
+   */
+  errorMessage?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "form-submissions".
  */
 export interface FormSubmission {
@@ -2279,6 +2370,10 @@ export interface PayloadLockedDocument {
         value: number | CommunityFeedback;
       } | null)
     | ({
+        relationTo: 'team-testimonials';
+        value: number | TeamTestimonial;
+      } | null)
+    | ({
         relationTo: 'newsletter-subscribers';
         value: number | NewsletterSubscriber;
       } | null)
@@ -2297,6 +2392,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'return-requests';
         value: number | ReturnRequest;
+      } | null)
+    | ({
+        relationTo: 'email-events';
+        value: number | EmailEvent;
       } | null)
     | ({
         relationTo: 'forms';
@@ -2464,6 +2563,7 @@ export interface PagesSelect<T extends boolean = true> {
         servicesShowcase?: T | ServicesShowcaseBlockSelect<T>;
         trustBadgesStrip?: T | TrustBadgesStripBlockSelect<T>;
         testimonials?: T | TestimonialsBlockSelect<T>;
+        teamCulture?: T | TeamCultureBlockSelect<T>;
         featuredCollection?: T | FeaturedCollectionBlockSelect<T>;
         contentFeed?: T | ContentFeedBlockSelect<T>;
       };
@@ -2828,6 +2928,28 @@ export interface TestimonialsBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TeamCultureBlock_select".
+ */
+export interface TeamCultureBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  populateBy?: T;
+  testimonials?:
+    | T
+    | {
+        name?: T;
+        photo?: T;
+        designation?: T;
+        department?: T;
+        quote?: T;
+        id?: T;
+      };
+  limit?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FeaturedCollectionBlock_select".
  */
 export interface FeaturedCollectionBlockSelect<T extends boolean = true> {
@@ -3072,6 +3194,21 @@ export interface CommunityFeedbackSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "team-testimonials_select".
+ */
+export interface TeamTestimonialsSelect<T extends boolean = true> {
+  name?: T;
+  designation?: T;
+  department?: T;
+  photo?: T;
+  quote?: T;
+  yearsAtCompany?: T;
+  featured?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "newsletter-subscribers_select".
  */
 export interface NewsletterSubscribersSelect<T extends boolean = true> {
@@ -3148,6 +3285,23 @@ export interface ReturnRequestsSelect<T extends boolean = true> {
   refundAmount?: T;
   refundStatus?: T;
   refundNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "email-events_select".
+ */
+export interface EmailEventsSelect<T extends boolean = true> {
+  emailEventId?: T;
+  emailType?: T;
+  recipient?: T;
+  status?: T;
+  primaryProvider?: T;
+  fallbackProvider?: T;
+  providerMessageId?: T;
+  attemptCount?: T;
+  errorMessage?: T;
   updatedAt?: T;
   createdAt?: T;
 }

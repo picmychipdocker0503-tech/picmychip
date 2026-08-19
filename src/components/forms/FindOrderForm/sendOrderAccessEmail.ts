@@ -3,6 +3,7 @@
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { getServerSideURL } from '@/utilities/getURL'
+import { sendTransactionalEmail } from '@/lib/email/emailService'
 
 type SendOrderAccessEmailArgs = {
   email: string
@@ -48,13 +49,19 @@ export async function sendOrderAccessEmail({
         <p>This link will give you access to view your order details.</p>
       `
 
-    console.log('[sendOrderAccessEmail] Email body:', emailBody)
-
-    await payload.sendEmail({
+    const result = await sendTransactionalEmail(payload, {
       to: email,
       subject: `Access your order #${order.id}`,
       html: emailBody,
+      emailType: 'ORDER_ACCESS_LINK',
+      // Not deduped across requests — a customer legitimately re-requesting
+      // this link should get a fresh email each time.
+      eventId: `ORDER_ACCESS_${order.id}_${Date.now()}`,
     })
+
+    if (!result.success) {
+      payload.logger.error({ msg: 'Failed to send order access email', error: result.error })
+    }
 
     return { success: true }
   } catch (err) {

@@ -18,6 +18,8 @@ export const sendOrderLifecycleEmails: CollectionAfterChangeHook = async ({
       to: email,
       subject: `Order confirmed — #${doc.id}`,
       html: orderConfirmationEmailHtml(doc),
+      emailType: 'ORDER_CONFIRMATION',
+      eventId: `ORDER_CONFIRMATION_${doc.id}`,
     })
     return doc
   }
@@ -30,6 +32,8 @@ export const sendOrderLifecycleEmails: CollectionAfterChangeHook = async ({
       to: email,
       subject: `Shipping update for order #${doc.id}`,
       html: shippingUpdateEmailHtml(doc),
+      emailType: 'SHIPPING_UPDATE',
+      eventId: `SHIPPING_UPDATE_${doc.id}_${doc.trackingNumber || 'completed'}`,
     })
   }
 

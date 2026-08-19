@@ -58,7 +58,7 @@ export async function Footer() {
             <div className="flex flex-col gap-1.5">
               <Link className="flex items-center" href="/">
                 <Wordmark
-                  className="text-foreground text-2xl font-semibold tracking-tight sm:text-3xl"
+                  className="text-foreground font-semibold tracking-tight"
                   iconClassName="text-primary"
                   iconSize={34}
                   name={SITE_NAME || 'Picmychip'}

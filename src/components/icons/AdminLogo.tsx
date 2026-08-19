@@ -1,6 +1,6 @@
 import React from 'react'
 
-import { LogoIcon } from './logo'
+import { comicNeue, LogoIcon } from './logo'
 
 const BRAND_GREEN = '#005d1e'
 
@@ -14,7 +14,16 @@ const BRAND_GREEN = '#005d1e'
  * the app's Tailwind build.
  */
 export const AdminLogo: React.FC = () => (
-  <div style={{ alignItems: 'center', display: 'inline-flex', fontSize: '1.5rem', fontWeight: 700, justifyContent: 'center' }}>
+  <div
+    style={{
+      alignItems: 'center',
+      display: 'inline-flex',
+      fontFamily: comicNeue.style.fontFamily,
+      fontSize: '18px',
+      justifyContent: 'center',
+      textTransform: 'uppercase',
+    }}
+  >
     Pic
     <LogoIcon size={32} style={{ color: BRAND_GREEN, margin: '0 0.15em' }} />
     chip

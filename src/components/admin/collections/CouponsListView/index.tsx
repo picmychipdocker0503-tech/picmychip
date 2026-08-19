@@ -21,10 +21,10 @@ export const CouponsListView: React.FC<ListViewServerProps> = async ({ BeforeLis
     redirect('/admin/login')
   }
 
-  const page = Number(toParam(searchParams?.page)) || 1
-  const limit = Number(toParam(searchParams?.limit)) || DEFAULT_LIMIT
-  const sort = toParam(searchParams?.sort) || undefined
-  const search = toParam(searchParams?.search)
+  const page = Number(toParam(searchParams?.dtPage)) || 1
+  const limit = Number(toParam(searchParams?.dtLimit)) || DEFAULT_LIMIT
+  const sort = toParam(searchParams?.dtSort) || undefined
+  const search = toParam(searchParams?.dtSearch)
 
   const payload = await getPayload({ config: configPromise })
 
