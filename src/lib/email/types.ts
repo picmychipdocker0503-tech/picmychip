@@ -1,9 +1,17 @@
+export type EmailAttachment = {
+  filename: string
+  /** Base64-encoded file content. */
+  content: string
+  contentType?: string
+}
+
 export type EmailSendArgs = {
   to: string
   subject: string
   html: string
   fromAddress?: string
   fromName?: string
+  attachments?: EmailAttachment[]
 }
 
 export type EmailSendResult = {
@@ -50,6 +58,7 @@ export type SendTransactionalEmailArgs = {
   to: string
   subject: string
   html: string
+  attachments?: EmailAttachment[]
 }
 
 export type SendTransactionalEmailResult =

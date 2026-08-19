@@ -95,62 +95,6 @@ export const homeStaticData: () => RequiredDataFromCollectionSlug<'pages'> = () 
         ],
       },
       {
-        blockType: 'customerInteraction',
-        eyebrow: 'ENGINEER & MAKER ASSISTANCE',
-        heading: 'Tell us what you are building. We will help you source it.',
-        intro:
-          'Get part suggestions, availability checks, bulk reel pricing, and build-to-order service help from our technical hardware team.',
-        channels: [
-          {
-            type: 'quote',
-            title: 'BOM & Volume Quote',
-            description: 'Upload your Bill of Materials for volume pricing and lead time estimates.',
-            responseTime: 'Within 2 hours',
-          },
-          {
-            type: 'technical',
-            title: 'Component Selection Help',
-            description: 'Ask for pin-compatible alternatives or cross-reference obsolete ICs.',
-            responseTime: 'Within 4 hours',
-          },
-          {
-            type: 'service',
-            title: 'Custom Cable & Kitting',
-            description: 'Order custom harness assemblies and pre-sorted maker lab kits.',
-            responseTime: 'Same day',
-          },
-        ],
-        steps: [
-          {
-            label: '1. Submit your specs',
-            detail: 'Share your schematic, BOM spreadsheet, or component parameter requirements.',
-          },
-          {
-            label: '2. Review verified quote',
-            detail: 'Receive spec-matched items with stock availability and volume tier discounts.',
-          },
-          {
-            label: '3. Rapid dispatch',
-            detail: 'Components packed in anti-static reels and dispatched straight to your workbench.',
-          },
-        ],
-        metrics: [
-          { value: '50,000+', label: 'Verified Components' },
-          { value: '< 2 Hours', label: 'Average Response Time' },
-          { value: '99.8%', label: 'Order Accuracy' },
-        ],
-        primaryLink: {
-          type: 'custom',
-          url: '/shop',
-          label: 'Explore Catalog',
-        },
-        secondaryLink: {
-          type: 'custom',
-          url: '/services',
-          label: 'Maker Services',
-        },
-      },
-      {
         blockType: 'archive',
         introContent: richText([heading('Featured In-Stock Components')]),
         populateBy: 'collection',

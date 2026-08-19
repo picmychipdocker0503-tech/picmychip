@@ -9,7 +9,6 @@ import { CategoryGridBlock } from '@/blocks/CategoryGrid/Component'
 import { ComparisonTableBlock } from '@/blocks/ComparisonTable/Component'
 import { ContentBlock } from '@/blocks/Content/Component'
 import { ContentFeedBlock } from '@/blocks/ContentFeed/Component'
-import { CustomerInteractionBlock } from '@/blocks/CustomerInteraction/Component'
 import { FAQBlock } from '@/blocks/FAQ/Component'
 import { FeaturedCollectionBlock } from '@/blocks/FeaturedCollection/Component'
 import { FeatureBentoBlock } from '@/blocks/FeatureBento/Component'
@@ -39,7 +38,6 @@ const blockComponents = {
   comparisonTable: ComparisonTableBlock,
   content: ContentBlock,
   contentFeed: ContentFeedBlock,
-  customerInteraction: CustomerInteractionBlock,
   cta: CallToActionBlock,
   faq: FAQBlock,
   featureBento: FeatureBentoBlock,

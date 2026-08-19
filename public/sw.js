@@ -7,7 +7,7 @@
 // placeholder for local dev, where the service worker is never registered
 // in the first place — see ServiceWorkerRegistration.tsx.
 const CACHE_PREFIX = 'Picmychip-static-'
-const CACHE_NAME = `${CACHE_PREFIX}__SW_VERSION__`
+const CACHE_NAME = `${CACHE_PREFIX}dev-1787139164179`
 const OFFLINE_URL = '/offline'
 const STATIC_CACHE_PATTERNS = [/\/_next\/static\//, /\.(?:png|jpg|jpeg|webp|svg|ico|woff2?)$/]
 

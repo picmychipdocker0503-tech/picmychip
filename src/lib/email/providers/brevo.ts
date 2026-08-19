@@ -38,6 +38,9 @@ export function createBrevoProvider(args: {
         to: toBrevoRecipients(message.to),
         subject: message.subject,
         htmlContent: message.html,
+        ...(message.attachments?.length
+          ? { attachment: message.attachments.map((a) => ({ content: a.content, name: a.filename })) }
+          : {}),
       }
 
       let response: Response

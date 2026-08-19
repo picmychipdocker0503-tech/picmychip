@@ -861,7 +861,6 @@ export interface Page {
     | FormBlock
     | FAQBlock
     | ComparisonTableBlock
-    | CustomerInteractionBlock
     | IllustratedCategoryGridBlock
     | HeroCarouselBlock
     | FlashDealBlock
@@ -1364,61 +1363,6 @@ export interface Form {
     | null;
   updatedAt: string;
   createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CustomerInteractionBlock".
- */
-export interface CustomerInteractionBlock {
-  eyebrow?: string | null;
-  heading: string;
-  intro?: string | null;
-  channels?:
-    | {
-        type: 'quote' | 'technical' | 'tracking' | 'service';
-        title: string;
-        description?: string | null;
-        responseTime?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  steps?:
-    | {
-        label: string;
-        detail?: string | null;
-        id?: string | null;
-      }[]
-    | null;
-  metrics?:
-    | {
-        value: string;
-        label: string;
-        id?: string | null;
-      }[]
-    | null;
-  primaryLink: {
-    type?: ('reference' | 'custom') | null;
-    newTab?: boolean | null;
-    reference?: {
-      relationTo: 'pages';
-      value: number | Page;
-    } | null;
-    url?: string | null;
-    label: string;
-  };
-  secondaryLink: {
-    type?: ('reference' | 'custom') | null;
-    newTab?: boolean | null;
-    reference?: {
-      relationTo: 'pages';
-      value: number | Page;
-    } | null;
-    url?: string | null;
-    label: string;
-  };
-  id?: string | null;
-  blockName?: string | null;
-  blockType: 'customerInteraction';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2553,7 +2497,6 @@ export interface PagesSelect<T extends boolean = true> {
         formBlock?: T | FormBlockSelect<T>;
         faq?: T | FAQBlockSelect<T>;
         comparisonTable?: T | ComparisonTableBlockSelect<T>;
-        customerInteraction?: T | CustomerInteractionBlockSelect<T>;
         illustratedCategoryGrid?: T | IllustratedCategoryGridBlockSelect<T>;
         heroCarousel?: T | HeroCarouselBlockSelect<T>;
         flashDeal?: T | FlashDealBlockSelect<T>;
@@ -2732,58 +2675,6 @@ export interface FAQBlockSelect<T extends boolean = true> {
 export interface ComparisonTableBlockSelect<T extends boolean = true> {
   heading?: T;
   products?: T;
-  id?: T;
-  blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "CustomerInteractionBlock_select".
- */
-export interface CustomerInteractionBlockSelect<T extends boolean = true> {
-  eyebrow?: T;
-  heading?: T;
-  intro?: T;
-  channels?:
-    | T
-    | {
-        type?: T;
-        title?: T;
-        description?: T;
-        responseTime?: T;
-        id?: T;
-      };
-  steps?:
-    | T
-    | {
-        label?: T;
-        detail?: T;
-        id?: T;
-      };
-  metrics?:
-    | T
-    | {
-        value?: T;
-        label?: T;
-        id?: T;
-      };
-  primaryLink?:
-    | T
-    | {
-        type?: T;
-        newTab?: T;
-        reference?: T;
-        url?: T;
-        label?: T;
-      };
-  secondaryLink?:
-    | T
-    | {
-        type?: T;
-        newTab?: T;
-        reference?: T;
-        url?: T;
-        label?: T;
-      };
   id?: T;
   blockName?: T;
 }

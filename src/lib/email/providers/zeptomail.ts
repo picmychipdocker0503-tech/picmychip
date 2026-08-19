@@ -52,6 +52,15 @@ export function createZeptoMailProvider(args: {
         to: toZeptoRecipients(message.to),
         subject: message.subject,
         htmlbody: message.html,
+        ...(message.attachments?.length
+          ? {
+              attachments: message.attachments.map((a) => ({
+                content: a.content,
+                mime_type: a.contentType || 'application/octet-stream',
+                name: a.filename,
+              })),
+            }
+          : {}),
       }
 
       let response: Response

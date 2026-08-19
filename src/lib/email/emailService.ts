@@ -183,7 +183,7 @@ export async function sendTransactionalEmail(
   payload: Payload,
   args: SendTransactionalEmailArgs,
 ): Promise<SendTransactionalEmailResult> {
-  const { eventId, emailType, to, subject, html } = args
+  const { eventId, emailType, to, subject, html, attachments } = args
 
   const existing = await findEmailEvent(payload, eventId).catch(() => undefined)
   if (existing?.status === 'sent') {
@@ -197,7 +197,7 @@ export async function sendTransactionalEmail(
   }
 
   const providers = getProviders()
-  const sendArgs: EmailSendArgs = { to, subject, html }
+  const sendArgs: EmailSendArgs = { to, subject, html, attachments }
   let attemptCount = 0
 
   const brevoOutcome = await sendWithRetry(providers.brevo, sendArgs, (attempt, status, err, messageId) => {

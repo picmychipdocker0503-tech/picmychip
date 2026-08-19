@@ -2,9 +2,8 @@ import 'dotenv/config'
 import { getPayload } from 'payload'
 import config from '../src/payload.config'
 
-// One-off: builds the "Start a Request" intake form + page that the homepage
-// Customer Interaction block's "Start a Request" button should lead to,
-// replacing the generic unbuilt /contact template form it pointed at before.
+// One-off: builds the "Start a Request" intake form + page, replacing the
+// generic unbuilt /contact template form previously used for this purpose.
 // See scripts/fix-hero-carousel-layout.ts for why `disableRevalidate` is
 // passed to `payload.update` here — revalidatePath() only works inside a
 // real Next.js request, not a standalone script.
@@ -152,26 +151,6 @@ const run = async () => {
       })
 
   payload.logger.info(`${existingPage ? 'Updated' : 'Created'} page /start-a-request (id ${page.id})`)
-
-  // Repoint the homepage Customer Interaction block's "Start a Request" button
-  const home = await payload.findByID({ collection: 'pages', id: 3, overrideAccess: true })
-  const blocks = (home.layout ?? []) as unknown as Array<Record<string, unknown>>
-  const newBlocks = blocks.map((block) => {
-    if (block.blockType !== 'customerInteraction') return block
-    const primaryLink = (block.primaryLink ?? {}) as Record<string, unknown>
-    if (primaryLink.url !== '/contact') return block
-    return { ...block, primaryLink: { ...primaryLink, url: '/start-a-request' } }
-  })
-
-  await payload.update({
-    collection: 'pages',
-    id: 3,
-    data: { layout: newBlocks } as any,
-    overrideAccess: true,
-    context: { disableRevalidate: true },
-  })
-
-  payload.logger.info('Repointed homepage "Start a Request" button to /start-a-request')
   process.exit(0)
 }
 

@@ -39,6 +39,7 @@ import * as migration_20260818_061827_zoho_item_id from './20260818_061827_zoho_
 import * as migration_20260818_093126_add_community_feedback from './20260818_093126_add_community_feedback';
 import * as migration_20260818_121920_add_team_testimonials_and_culture_block from './20260818_121920_add_team_testimonials_and_culture_block';
 import * as migration_20260819_044939_add_email_events from './20260819_044939_add_email_events';
+import * as migration_20260819_120731_remove_customer_interaction_block from './20260819_120731_remove_customer_interaction_block';
 
 export const migrations = [
   {
@@ -244,6 +245,11 @@ export const migrations = [
   {
     up: migration_20260819_044939_add_email_events.up,
     down: migration_20260819_044939_add_email_events.down,
-    name: '20260819_044939_add_email_events'
+    name: '20260819_044939_add_email_events',
+  },
+  {
+    up: migration_20260819_120731_remove_customer_interaction_block.up,
+    down: migration_20260819_120731_remove_customer_interaction_block.down,
+    name: '20260819_120731_remove_customer_interaction_block'
   },
 ];

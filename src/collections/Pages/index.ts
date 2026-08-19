@@ -5,7 +5,6 @@ import { BrandStrip } from '@/blocks/BrandStrip/config'
 import { Carousel } from '@/blocks/Carousel/config'
 import { CategoryGrid } from '@/blocks/CategoryGrid/config'
 import { ContentFeed } from '@/blocks/ContentFeed/config'
-import { CustomerInteraction } from '@/blocks/CustomerInteraction/config'
 import { FeaturedCollection } from '@/blocks/FeaturedCollection/config'
 import { ServicesShowcase } from '@/blocks/ServicesShowcase/config'
 import { ThreeItemGrid } from '@/blocks/ThreeItemGrid/config'
@@ -113,7 +112,6 @@ export const Pages: CollectionConfig = {
                 FormBlock,
                 FAQ,
                 ComparisonTable,
-                CustomerInteraction,
                 IllustratedCategoryGrid,
                 HeroCarousel,
                 FlashDeal,
