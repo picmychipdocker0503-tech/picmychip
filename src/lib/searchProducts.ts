@@ -82,6 +82,11 @@ const hitToProduct = (hit: ProductSearchDocument): Partial<Product> => ({
   slug: hit.slug,
   priceInINR: hit.priceInINR,
   compareAtPriceInINR: hit.compareAtPriceInINR,
+  onSale: hit.onSale,
+  salePriceInINR: hit.salePriceInINR,
+  saleEndDate: hit.saleEndDate,
+  isClearance: hit.isClearance,
+  clearanceReason: hit.clearanceReason,
   stockStatus: hit.stockStatus as Product['stockStatus'],
   categories: hit.categoryIds.map(
     (id, i) => ({ id: Number(id), title: hit.categoryTitles[i] }) as unknown as Category,
@@ -215,6 +220,11 @@ const loadCandidatePool = async (): Promise<Candidate[]> => {
       categories: true,
       priceInINR: true,
       compareAtPriceInINR: true,
+      onSale: true,
+      salePriceInINR: true,
+      saleEndDate: true,
+      isClearance: true,
+      clearanceReason: true,
       stockStatus: true,
       createdAt: true,
       sku: true,
@@ -251,25 +261,37 @@ const loadCandidatePool = async (): Promise<Candidate[]> => {
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
+/** No `g` flag, so `.test()` is stateless — safe to compile once per query word and reuse across every candidate. */
+const compileWordRegex = (word: string): RegExp => new RegExp(`\\b${escapeRegExp(word)}\\b`)
+
 /**
  * Per query word, credits the highest-weighted field it appears in (a whole-
  * word match scores full weight; a mid-token substring match scores partly),
  * plus a phrase bonus when the full query appears verbatim in the title.
+ *
+ * `wordRegexes`, when given, must align 1:1 with `queryWords` — callers
+ * scoring many candidates against the same query (searchViaDatabase) compile
+ * these once up front instead of re-compiling a RegExp per field per
+ * candidate. Omitted by `scoreCandidateForQuery`, which scores a single
+ * candidate and has nothing to amortize the compilation over.
  */
 export const scoreCandidate = (
   fields: CandidateFields,
   queryWords: string[],
   fullQueryLower: string,
+  wordRegexes?: RegExp[],
 ): { score: number; matchedWordCount: number } => {
   let score = 0
   let matchedWordCount = 0
 
-  for (const word of queryWords) {
+  for (let i = 0; i < queryWords.length; i++) {
+    const word = queryWords[i]
+    const wholeWordRegex = wordRegexes?.[i] ?? compileWordRegex(word)
     let bestFieldScore = 0
     for (const key of Object.keys(FIELD_WEIGHTS) as (keyof CandidateFields)[]) {
       const text = fields[key]
       if (!text || !text.includes(word)) continue
-      const wholeWord = new RegExp(`\\b${escapeRegExp(word)}\\b`).test(text)
+      const wholeWord = wholeWordRegex.test(text)
       const fieldScore = FIELD_WEIGHTS[key] * (wholeWord ? 1 : 0.6)
       if (fieldScore > bestFieldScore) bestFieldScore = fieldScore
     }
@@ -327,8 +349,9 @@ const searchViaDatabase = async (args: SearchProductsArgs): Promise<SearchProduc
     ranked = pool.map((c) => ({ product: c.product, score: 0, matchedWordCount: 0 }))
   } else {
     const fullQueryLower = normalizedQuery.toLowerCase()
+    const wordRegexes = queryWords.map(compileWordRegex)
     ranked = pool
-      .map((c) => ({ product: c.product, ...scoreCandidate(c.fields, queryWords, fullQueryLower) }))
+      .map((c) => ({ product: c.product, ...scoreCandidate(c.fields, queryWords, fullQueryLower, wordRegexes) }))
       .filter((c) => c.matchedWordCount > 0)
   }
 
@@ -381,6 +404,14 @@ const searchViaDatabase = async (args: SearchProductsArgs): Promise<SearchProduc
   }
 }
 
+// Circuit breaker: once Meilisearch fails once, skip straight to the
+// database fallback for a short window instead of re-paying the (now
+// timeout-bounded, but still real) network round-trip on every single
+// request during an outage. Self-heals — the next request after the window
+// elapses tries Meilisearch again and closes the breaker on success.
+const MEILI_BREAKER_MS = 15_000
+let meiliDownUntil = 0
+
 /**
  * Tries Meilisearch first; on ANY failure (unreachable, index missing, bad
  * filter, etc.) transparently falls back to the equivalent database query,
@@ -388,9 +419,16 @@ const searchViaDatabase = async (args: SearchProductsArgs): Promise<SearchProduc
  * around a listing query.
  */
 export const searchProducts = async (args: SearchProductsArgs): Promise<SearchProductsResult> => {
+  if (Date.now() < meiliDownUntil) {
+    return searchViaDatabase(args)
+  }
+
   try {
-    return await searchViaMeilisearch(args)
+    const result = await searchViaMeilisearch(args)
+    meiliDownUntil = 0
+    return result
   } catch {
+    meiliDownUntil = Date.now() + MEILI_BREAKER_MS
     return await searchViaDatabase(args)
   }
 }

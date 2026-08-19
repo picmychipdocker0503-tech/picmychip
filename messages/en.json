@@ -9,7 +9,35 @@
     "addToCart": "Add To Cart",
     "added": "Added",
     "buyNow": "Buy Now",
-    "redirecting": "Redirecting..."
+    "redirecting": "Redirecting...",
+    "title": "Your Cart",
+    "clearCart": "Clear Shopping Cart",
+    "empty": {
+      "title": "Your cart is empty",
+      "description": "Add some products to your cart to see them here.",
+      "browseProducts": "Browse products"
+    },
+    "haveCoupon": "Have a coupon code?",
+    "haveGiftCard": "Have a gift card?",
+    "couponLabel": "Coupon",
+    "giftCardLabel": "Gift card",
+    "appliedLabel": "applied",
+    "remove": "Remove",
+    "couponCodePlaceholder": "Enter coupon code",
+    "couponCodeLabel": "Coupon code",
+    "giftCardCodePlaceholder": "Enter gift card code",
+    "giftCardCodeLabel": "Gift card code",
+    "apply": "Apply",
+    "orderSummary": "Order Summary",
+    "product": "Product",
+    "subtotal": "Subtotal",
+    "total": "Total",
+    "proceedToCheckout": "Proceed to Checkout",
+    "genericError": "Something went wrong — please try again.",
+    "removeFromCart": "Remove from cart",
+    "decreaseQuantity": "Decrease quantity",
+    "increaseQuantity": "Increase quantity",
+    "noImage": "No image"
   },
   "search": {
     "searchPlaceholder": "Search for products...",
@@ -38,11 +66,76 @@
       "subscribing": "Subscribing…",
       "subscribeSuccess": "Subscribed! You're on the list.",
       "subscribeError": "Something went wrong — please try again."
-    }
+    },
+    "customerSupport": {
+      "askSpecialist": "Ask a specialist",
+      "hereToHelp": "We're here to help",
+      "startChat": "Start chat",
+      "emailUs": "Email us",
+      "getBackSoon": "We'll get back to you soon",
+      "callUs": "Call us",
+      "speakWithTeam": "Speak with our team"
+    },
+    "paymentMethodsLabel": "Accepted payment methods"
   },
   "topbar": {
     "chat": "Chat",
     "help": "Help",
     "trackOrder": "Track order"
+  },
+  "mobileMenu": {
+    "title": "My Store",
+    "myAccount": "My account",
+    "orders": "Orders",
+    "addresses": "Addresses",
+    "manageAccount": "Manage account",
+    "logOut": "Log out",
+    "logIn": "Log in",
+    "or": "or"
+  },
+  "checkout": {
+    "contact": {
+      "heading": "Contact",
+      "logIn": "Log in",
+      "or": "or",
+      "createAccount": "create an account",
+      "notYou": "Not you?",
+      "logOut": "Log out",
+      "guestEmailPrompt": "Enter your email to checkout as a guest.",
+      "emailAddress": "Email Address",
+      "continueAsGuest": "Continue as guest"
+    },
+    "address": {
+      "heading": "Address",
+      "billingAddress": "Billing address",
+      "shippingAddress": "Shipping address",
+      "shippingAddressDescription": "Please select a shipping address.",
+      "shippingSameAsBilling": "Shipping is the same as billing"
+    },
+    "giftCardCovered": "Your order is fully covered by your gift card — no further payment is needed.",
+    "placingOrder": "Placing order...",
+    "placeOrder": "Place order",
+    "paymentMethod": {
+      "heading": "Payment method",
+      "cardUpiNetbanking": "Card / UPI / NetBanking (PayU)",
+      "cashOnDelivery": "Cash on Delivery",
+      "cardUnavailable": "Card / UPI checkout is only available for INR orders — this cart is in {currency}. Choose Cash on Delivery to continue.",
+      "placeOrderCod": "Place order (Pay on delivery)",
+      "loading": "Loading...",
+      "goToPayment": "Go to payment"
+    },
+    "tryAgain": "Try again",
+    "yourCart": "Your cart",
+    "couponCodePlaceholder": "Coupon code",
+    "giftCardCodePlaceholder": "Gift card code",
+    "gst": "GST",
+    "couldNotPlaceOrder": "Could not place order.",
+    "couldNotPlaceOrderRetry": "Could not place order — please try again.",
+    "paymentInitError": "An error occurred while initiating payment.",
+    "outOfStockError": "One or more items in your cart are out of stock.",
+    "paymentFailed": "Your payment could not be completed. Please try again.",
+    "processingPayment": "Processing your payment...",
+    "cartEmpty": "Your cart is empty.",
+    "continueShopping": "Continue shopping?"
   }
 }

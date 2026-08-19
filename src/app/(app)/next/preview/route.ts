@@ -5,6 +5,7 @@ import { draftMode } from 'next/headers'
 import { redirect } from 'next/navigation'
 import { NextRequest } from 'next/server'
 
+import { isValidSecret } from '@/lib/verifySecret'
 import configPromise from '@payload-config'
 
 export type PreviewSearchParams = {
@@ -20,7 +21,7 @@ export async function GET(req: NextRequest): Promise<Response> {
   const path = searchParams.get('path')
   const previewSecret = searchParams.get('previewSecret')
 
-  if (previewSecret !== process.env.PREVIEW_SECRET) {
+  if (!isValidSecret(previewSecret, process.env.PREVIEW_SECRET)) {
     return new Response('You are not allowed to preview this page', { status: 403 })
   }
 

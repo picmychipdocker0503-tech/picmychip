@@ -1,3 +1,5 @@
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+import { isValidSecret } from '@/lib/verifySecret'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { NextRequest, NextResponse } from 'next/server'
@@ -17,17 +19,23 @@ type Body = {
  * from an admin edit.
  */
 export async function POST(request: NextRequest) {
-  const secret = request.headers.get('x-webhook-secret')
+  const ip = getClientIp(request.headers)
+  // Generous limit — this is a legitimate integration endpoint, not a public
+  // one — but still bounds how fast a leaked/guessed secret can be abused.
+  const { allowed } = checkRateLimit(`inventory-webhook:${ip}`, 60, 60_000)
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests.' }, { status: 429 })
+  }
 
-  if (!process.env.INVENTORY_WEBHOOK_SECRET || secret !== process.env.INVENTORY_WEBHOOK_SECRET) {
+  if (!isValidSecret(request.headers.get('x-webhook-secret'), process.env.INVENTORY_WEBHOOK_SECRET)) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
   }
 
   const body = (await request.json()) as Body
   const { sku, productId, inventory } = body
 
-  if (typeof inventory !== 'number' || (!sku && !productId)) {
-    return NextResponse.json({ error: 'Provide inventory and either sku or productId.' }, { status: 400 })
+  if (typeof inventory !== 'number' || inventory < 0 || (!sku && !productId)) {
+    return NextResponse.json({ error: 'Provide a non-negative inventory and either sku or productId.' }, { status: 400 })
   }
 
   const payload = await getPayload({ config: configPromise })
@@ -38,7 +46,7 @@ export async function POST(request: NextRequest) {
     if (!id && sku) {
       const { docs } = await payload.find({
         collection: 'products',
-        where: { slug: { equals: sku } },
+        where: { sku: { equals: sku } },
         limit: 1,
         depth: 0,
         overrideAccess: true,

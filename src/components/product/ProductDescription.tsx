@@ -50,6 +50,7 @@ export function ProductDescription({
     lowestAmount = 0,
     highestAmount = 0
   const priceField = `priceIn${currency.code}` as keyof Product
+  const salePriceField = `salePriceIn${currency.code}` as keyof Product
   const hasVariants = product.enableVariants && Boolean(product.variants?.docs?.length)
 
   if (hasVariants) {
@@ -83,6 +84,15 @@ export function ProductDescription({
     amount = product[priceField]
   }
 
+  // Sale/clearance pricing is product-level only (no per-variant override
+  // yet), so it's only shown for the single-price case, not a variant range.
+  const salePrice = product[salePriceField] as number | null | undefined
+  const saleExpired = Boolean(product.saleEndDate && new Date(product.saleEndDate).getTime() < Date.now())
+  const isOnSale = !hasVariants && Boolean(product.onSale) && !saleExpired && typeof salePrice === 'number'
+  const isClearance = Boolean(product.isClearance)
+  const displayAmount = isOnSale ? salePrice! : amount
+  const discountPercent = isOnSale && amount > 0 ? Math.round((1 - salePrice! / amount) * 100) : 0
+
   return (
     <div className="flex flex-col gap-6">
       {categoryName && categorySlug && (
@@ -97,11 +107,42 @@ export function ProductDescription({
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
         <h1 className="text-foreground text-2xl font-bold tracking-tight sm:text-3xl">{product.title}</h1>
-        <div className="text-primary shrink-0 text-2xl font-bold tracking-tight">
-          {hasVariants ? (
-            <Price highestAmount={highestAmount} lowestAmount={lowestAmount} />
-          ) : (
-            <Price amount={amount} />
+        <div className="flex shrink-0 flex-col items-end gap-1.5">
+          {(isClearance || isOnSale) && (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase',
+                isClearance ? 'bg-amber-600 text-white' : 'bg-primary text-primary-foreground',
+              )}
+            >
+              <TagIcon className="size-3" />
+              {isClearance ? 'Clearance' : discountPercent > 0 ? `${discountPercent}% Off` : 'Sale'}
+            </span>
+          )}
+
+          <div className="flex items-baseline gap-2">
+            {isOnSale && (
+              <span className="text-muted-foreground text-base line-through">
+                <Price amount={amount} as="span" />
+              </span>
+            )}
+            <div className="text-primary text-2xl font-bold tracking-tight">
+              {hasVariants ? (
+                <Price highestAmount={highestAmount} lowestAmount={lowestAmount} />
+              ) : (
+                <Price amount={displayAmount} />
+              )}
+            </div>
+          </div>
+
+          {isOnSale && amount > displayAmount && (
+            <span className="text-success text-xs font-semibold">
+              You save <Price amount={amount - displayAmount} as="span" />
+            </span>
+          )}
+
+          {isClearance && product.clearanceReason && (
+            <span className="text-muted-foreground max-w-[16rem] text-right text-xs">{product.clearanceReason}</span>
           )}
         </div>
       </div>

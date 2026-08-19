@@ -40,6 +40,7 @@ import { PriceInput as PriceInput_b91672ccd6e8b071c11142ab941fedfb } from '@payl
 import { ProductTitleCell as ProductTitleCell_8a7e9b1ab9d828f2ebd540cf92e5fed2 } from '@/components/admin/cells/ProductTitleCell'
 import { HorizontalRuleFeatureClient as HorizontalRuleFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ProductStockCell as ProductStockCell_535a2924fcd2b7bd635f6789d83e85e6 } from '@/components/admin/cells/ProductStockCell'
+import { ProductSaleStatusCell as ProductSaleStatusCell_e8b32eb1839249ca6598d508b09cea9d } from '@/components/admin/cells/ProductSaleStatusCell'
 import { ProductsListStats as ProductsListStats_5041a785c28cb29a60e7ee9a4c152cd2 } from '@/components/admin/ProductsListStats'
 import { OrderStatusCell as OrderStatusCell_c7fbb2765e40d52640efed9a5e7f1067 } from '@/components/admin/cells/OrderStatusCell'
 import { OrdersListStats as OrdersListStats_d9c67b3ea6cb26cb4feefadb513fba4a } from '@/components/admin/OrdersListStats'
@@ -99,6 +100,7 @@ export const importMap = {
   "@/components/admin/cells/ProductTitleCell#ProductTitleCell": ProductTitleCell_8a7e9b1ab9d828f2ebd540cf92e5fed2,
   "@payloadcms/richtext-lexical/client#HorizontalRuleFeatureClient": HorizontalRuleFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/admin/cells/ProductStockCell#ProductStockCell": ProductStockCell_535a2924fcd2b7bd635f6789d83e85e6,
+  "@/components/admin/cells/ProductSaleStatusCell#ProductSaleStatusCell": ProductSaleStatusCell_e8b32eb1839249ca6598d508b09cea9d,
   "@/components/admin/ProductsListStats#ProductsListStats": ProductsListStats_5041a785c28cb29a60e7ee9a4c152cd2,
   "@/components/admin/cells/OrderStatusCell#OrderStatusCell": OrderStatusCell_c7fbb2765e40d52640efed9a5e7f1067,
   "@/components/admin/OrdersListStats#OrdersListStats": OrdersListStats_d9c67b3ea6cb26cb4feefadb513fba4a,

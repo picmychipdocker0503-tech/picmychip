@@ -9,6 +9,7 @@ import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import { getClientSideURL } from '@/utilities/getURL'
 import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import { MinusIcon, PlusIcon, ShoppingCartIcon, Trash2Icon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import posthog from 'posthog-js'
 import Link from 'next/link'
 import React, { useState } from 'react'
@@ -25,6 +26,7 @@ export default function CartPage() {
   const { cart, clearCart, isLoading, refreshCart } = useCart()
   const { currency } = useCurrency()
   const flags = useFeatureFlags()
+  const t = useTranslations('cart')
 
   const priceField = `priceIn${currency.code}` as const
 
@@ -77,8 +79,8 @@ export default function CartPage() {
       }
       await refreshCart()
     } catch {
-      if (args.couponCode) setCouponError('Something went wrong — please try again.')
-      if (args.giftCardCode) setGiftCardError('Something went wrong — please try again.')
+      if (args.couponCode) setCouponError(t('genericError'))
+      if (args.giftCardCode) setGiftCardError(t('genericError'))
     } finally {
       setIsApplyingDiscount(false)
     }
@@ -90,12 +92,10 @@ export default function CartPage() {
         <div className="bg-muted flex size-16 items-center justify-center rounded-full">
           <ShoppingCartIcon className="text-muted-foreground size-7" />
         </div>
-        <h1 className="text-2xl font-bold">Your cart is empty</h1>
-        <p className="text-muted-foreground max-w-sm">
-          Add some products to your cart to see them here.
-        </p>
+        <h1 className="text-2xl font-bold">{t('empty.title')}</h1>
+        <p className="text-muted-foreground max-w-sm">{t('empty.description')}</p>
         <Link className="btn btn-primary" href="/shop">
-          Browse products
+          {t('empty.browseProducts')}
         </Link>
       </div>
     )
@@ -104,13 +104,13 @@ export default function CartPage() {
   return (
     <div className="container flex flex-col gap-6 py-16">
       <div className="flex items-end justify-between gap-4">
-        <h1 className="text-2xl font-bold md:text-3xl">Your Cart</h1>
+        <h1 className="text-2xl font-bold md:text-3xl">{t('title')}</h1>
         <button
           className="text-primary text-sm font-medium hover:underline"
           onClick={() => clearCart()}
           type="button"
         >
-          Clear Shopping Cart
+          {t('clearCart')}
         </button>
       </div>
 
@@ -123,11 +123,12 @@ export default function CartPage() {
       <div className="grid gap-6 pb-24 lg:grid-cols-3 lg:pb-0">
         <div className="bg-card border-border flex flex-col gap-5 rounded-2xl border p-6 shadow-sm lg:col-span-2">
           <div>
-            <p className="text-muted-foreground mb-3 font-medium">Have a coupon code?</p>
+            <p className="text-muted-foreground mb-3 font-medium">{t('haveCoupon')}</p>
             {cart?.appliedCouponCode ? (
               <div className="flex items-center justify-between text-sm">
                 <span>
-                  Coupon <span className="font-medium">{cart.appliedCouponCode}</span> applied
+                  {t('couponLabel')} <span className="font-medium">{cart.appliedCouponCode}</span>{' '}
+                  {t('appliedLabel')}
                   {typeof cart.couponDiscountAmount === 'number' && cart.couponDiscountAmount > 0 && (
                     <>
                       {' '}
@@ -141,7 +142,7 @@ export default function CartPage() {
                   onClick={() => applyDiscount({ remove: 'coupon' })}
                   type="button"
                 >
-                  Remove
+                  {t('remove')}
                 </button>
               </div>
             ) : (
@@ -153,14 +154,14 @@ export default function CartPage() {
                 }}
               >
                 <input
-                  aria-label="Coupon code"
+                  aria-label={t('couponCodeLabel')}
                   className="border-border bg-background focus:border-primary flex-1 rounded-lg border px-4 py-2.5 text-sm outline-none"
                   onChange={(e) => setCouponInput(e.target.value)}
-                  placeholder="Enter coupon code"
+                  placeholder={t('couponCodePlaceholder')}
                   value={couponInput}
                 />
                 <button className="btn btn-primary" disabled={!couponInput || isApplyingDiscount} type="submit">
-                  Apply
+                  {t('apply')}
                 </button>
               </form>
             )}
@@ -169,11 +170,12 @@ export default function CartPage() {
 
           {flags.giftCards && (
           <div>
-            <p className="text-muted-foreground mb-3 font-medium">Have a gift card?</p>
+            <p className="text-muted-foreground mb-3 font-medium">{t('haveGiftCard')}</p>
             {cart?.appliedGiftCardCode ? (
               <div className="flex items-center justify-between text-sm">
                 <span>
-                  Gift card <span className="font-medium">{cart.appliedGiftCardCode}</span> applied
+                  {t('giftCardLabel')} <span className="font-medium">{cart.appliedGiftCardCode}</span>{' '}
+                  {t('appliedLabel')}
                   {typeof cart.giftCardAmountApplied === 'number' && cart.giftCardAmountApplied > 0 && (
                     <>
                       {' '}
@@ -187,7 +189,7 @@ export default function CartPage() {
                   onClick={() => applyDiscount({ remove: 'gift-card' })}
                   type="button"
                 >
-                  Remove
+                  {t('remove')}
                 </button>
               </div>
             ) : (
@@ -199,10 +201,10 @@ export default function CartPage() {
                 }}
               >
                 <input
-                  aria-label="Gift card code"
+                  aria-label={t('giftCardCodeLabel')}
                   className="border-border bg-background focus:border-primary flex-1 rounded-lg border px-4 py-2.5 text-sm outline-none"
                   onChange={(e) => setGiftCardInput(e.target.value)}
-                  placeholder="Enter gift card code"
+                  placeholder={t('giftCardCodePlaceholder')}
                   value={giftCardInput}
                 />
                 <button
@@ -210,7 +212,7 @@ export default function CartPage() {
                   disabled={!giftCardInput || isApplyingDiscount}
                   type="submit"
                 >
-                  Apply
+                  {t('apply')}
                 </button>
               </form>
             )}
@@ -220,11 +222,11 @@ export default function CartPage() {
         </div>
 
         <div className="bg-card border-border rounded-2xl border p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-bold">Order Summary</h2>
+          <h2 className="mb-4 text-lg font-bold">{t('orderSummary')}</h2>
 
           <div className="border-border flex items-center justify-between border-b pb-3 text-sm font-medium">
-            <span>Product</span>
-            <span>Subtotal</span>
+            <span>{t('product')}</span>
+            <span>{t('subtotal')}</span>
           </div>
 
           <ul className="divide-border divide-y">
@@ -257,7 +259,7 @@ export default function CartPage() {
               summary card; reverts to normal inline flow from lg up. */}
           <div className="border-border bg-card fixed inset-x-0 bottom-0 z-40 border-t p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] shadow-lg lg:static lg:inset-auto lg:z-auto lg:mt-2 lg:border-t lg:p-0 lg:pt-4 lg:pb-0 lg:shadow-none">
             <div className="flex items-center justify-between">
-              <span className="text-lg font-bold">Total</span>
+              <span className="text-lg font-bold">{t('total')}</span>
               <span className="text-lg font-bold">
                 <Price amount={cart?.subtotal ?? 0} />
               </span>
@@ -268,7 +270,7 @@ export default function CartPage() {
               href="/checkout"
               aria-disabled={isLoading}
             >
-              Proceed to Checkout
+              {t('proceedToCheckout')}
             </Link>
 
             <SecureCheckoutBadge className="mt-4 hidden lg:flex" />
@@ -284,6 +286,7 @@ const CartRow: React.FC<{ item: CartItem; priceField: `priceIn${string}` }> = ({
   priceField,
 }) => {
   const { decrementItem, incrementItem, removeItem, isLoading } = useCart()
+  const t = useTranslations('cart')
 
   const product = item.product
   const variant = item.variant
@@ -334,7 +337,7 @@ const CartRow: React.FC<{ item: CartItem; priceField: `priceIn${string}` }> = ({
           <Media className="relative h-full w-full" fill imgClassName="object-cover" resource={image} />
         ) : (
           <div className="text-muted-foreground flex h-full w-full items-center justify-center text-xs">
-            No image
+            {t('noImage')}
           </div>
         )}
       </Link>
@@ -356,7 +359,7 @@ const CartRow: React.FC<{ item: CartItem; priceField: `priceIn${string}` }> = ({
           </Link>
 
           <button
-            aria-label="Remove from cart"
+            aria-label={t('removeFromCart')}
             className="border-border text-muted-foreground hover:border-error hover:text-error inline-flex size-9 shrink-0 items-center justify-center rounded-lg border transition-colors"
             disabled={isLoading || !item.id}
             onClick={() => item.id && removeItem(item.id)}
@@ -374,7 +377,7 @@ const CartRow: React.FC<{ item: CartItem; priceField: `priceIn${string}` }> = ({
           <div className="flex items-center gap-3">
             <div className="border-border flex w-fit items-center rounded-lg border">
               <button
-                aria-label="Decrease quantity"
+                aria-label={t('decreaseQuantity')}
                 className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"
                 disabled={isLoading || !item.id}
                 onClick={() => item.id && decrementItem(item.id)}
@@ -384,7 +387,7 @@ const CartRow: React.FC<{ item: CartItem; priceField: `priceIn${string}` }> = ({
               </button>
               <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
               <button
-                aria-label="Increase quantity"
+                aria-label={t('increaseQuantity')}
                 className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"
                 disabled={isLoading || !item.id || atMaxInventory}
                 onClick={() => item.id && incrementItem(item.id)}

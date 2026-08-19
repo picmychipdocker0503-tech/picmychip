@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/providers/Auth'
+import { useTranslations } from 'next-intl'
 import posthog from 'posthog-js'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -38,6 +39,8 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
   const { user } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
+  const t = useTranslations('checkout')
+  const tCart = useTranslations('cart')
   const { cart, clearCart, refreshCart } = useCart()
   const flags = useFeatureFlags()
   const [error, setError] = useState<null | string>(null)
@@ -126,13 +129,13 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
         if (args.giftCardCode) setGiftCardInput('')
         await refreshCart()
       } catch {
-        if (args.couponCode) setCouponError('Something went wrong — please try again.')
-        if (args.giftCardCode) setGiftCardError('Something went wrong — please try again.')
+        if (args.couponCode) setCouponError(tCart('genericError'))
+        if (args.giftCardCode) setGiftCardError(tCart('genericError'))
       } finally {
         setIsApplyingDiscount(false)
       }
     },
-    [cart?.id, refreshCart],
+    [cart?.id, refreshCart, tCart],
   )
 
   const placeDirectOrder = useCallback(async () => {
@@ -157,7 +160,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.error || 'Could not place order.')
+        setError(data.error || t('couldNotPlaceOrder'))
         setIsPlacingOrder(false)
         setProcessingPayment(false)
         return
@@ -166,11 +169,21 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
       clearCart()
       router.push(`/orders/${data.orderID}${email ? `?email=${email}&accessToken=${data.accessToken}` : ''}`)
     } catch {
-      setError('Could not place order — please try again.')
+      setError(t('couldNotPlaceOrderRetry'))
       setIsPlacingOrder(false)
       setProcessingPayment(false)
     }
-  }, [cart?.id, email, user?.email, billingAddress, billingAddressSameAsShipping, shippingAddress, clearCart, router])
+  }, [
+    cart?.id,
+    email,
+    user?.email,
+    billingAddress,
+    billingAddressSameAsShipping,
+    shippingAddress,
+    clearCart,
+    router,
+    t,
+  ])
 
   const canGoToPayment = Boolean(
     (email || user) && billingAddress && (billingAddressSameAsShipping || shippingAddress),
@@ -206,9 +219,9 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
   // (src/payments/payu/endpoints/callback.ts) couldn't confirm the order.
   useEffect(() => {
     if (searchParams.get('error') === 'payment_failed') {
-      setError('Your payment could not be completed. Please try again.')
+      setError(t('paymentFailed'))
     }
-  }, [searchParams])
+  }, [searchParams, t])
 
   const payWithPayu = useCallback(async () => {
     setIsInitiatingPayment(true)
@@ -229,23 +242,23 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
       }
     } catch (error) {
       const errorData = error instanceof Error ? JSON.parse(error.message) : {}
-      let errorMessage = 'An error occurred while initiating payment.'
+      let errorMessage = t('paymentInitError')
 
       if (errorData?.cause?.code === 'OutOfStock') {
-        errorMessage = 'One or more items in your cart are out of stock.'
+        errorMessage = t('outOfStockError')
       }
 
       setError(errorMessage)
       toast.error(errorMessage)
       setIsInitiatingPayment(false)
     }
-  }, [billingAddress, billingAddressSameAsShipping, businessDetails, email, initiatePayment, shippingAddress])
+  }, [billingAddress, billingAddressSameAsShipping, businessDetails, email, initiatePayment, shippingAddress, t])
 
   if (cartIsEmpty && isProcessingPayment) {
     return (
       <div className="py-12 w-full items-center justify-center">
         <div className="prose dark:prose-invert text-center max-w-none self-center mb-8">
-          <p>Processing your payment...</p>
+          <p>{t('processingPayment')}</p>
         </div>
         <LoadingSpinner />
       </div>
@@ -255,8 +268,8 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
   if (cartIsEmpty) {
     return (
       <div className="prose dark:prose-invert py-12 w-full items-center">
-        <p>Your cart is empty.</p>
-        <Link href="/search">Continue shopping?</Link>
+        <p>{t('cartEmpty')}</p>
+        <Link href="/search">{t('continueShopping')}</Link>
       </div>
     )
   }
@@ -264,16 +277,16 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
   return (
     <div className="flex flex-col items-stretch justify-stretch my-8 md:flex-row grow gap-10 md:gap-6 lg:gap-8">
       <div className="basis-full lg:basis-2/3 flex flex-col gap-8 justify-stretch">
-        <h2 className="font-medium text-3xl">Contact</h2>
+        <h2 className="font-medium text-3xl">{t('contact.heading')}</h2>
         {!user && (
           <div className=" bg-accent dark:bg-black rounded-lg p-4 w-full flex items-center">
             <div className="prose dark:prose-invert">
               <Button asChild className="no-underline text-inherit" variant="outline">
-                <Link href="/login">Log in</Link>
+                <Link href="/login">{t('contact.logIn')}</Link>
               </Button>
               <p className="mt-0">
-                <span className="mx-2">or</span>
-                <Link href="/create-account">create an account</Link>
+                <span className="mx-2">{t('contact.or')}</span>
+                <Link href="/create-account">{t('contact.createAccount')}</Link>
               </p>
             </div>
           </div>
@@ -283,9 +296,9 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
             <div>
               <p>{user.email}</p>{' '}
               <p>
-                Not you?{' '}
+                {t('contact.notYou')}{' '}
                 <Link className="underline" href="/logout">
-                  Log out
+                  {t('contact.logOut')}
                 </Link>
               </p>
             </div>
@@ -293,10 +306,10 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
         ) : (
           <div className="bg-accent dark:bg-black rounded-lg p-4 ">
             <div>
-              <p className="mb-4">Enter your email to checkout as a guest.</p>
+              <p className="mb-4">{t('contact.guestEmailPrompt')}</p>
 
               <FormItem className="mb-6">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email">{t('contact.emailAddress')}</Label>
                 <Input
                   disabled={!emailEditable}
                   id="email"
@@ -315,13 +328,13 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                 }}
                 variant="default"
               >
-                Continue as guest
+                {t('contact.continueAsGuest')}
               </Button>
             </div>
           </div>
         )}
 
-        <h2 className="font-medium text-3xl">Address</h2>
+        <h2 className="font-medium text-3xl">{t('address.heading')}</h2>
 
         {billingAddress ? (
           <div>
@@ -335,14 +348,14 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                     setBillingAddress(undefined)
                   }}
                 >
-                  Remove
+                  {tCart('remove')}
                 </Button>
               }
               address={billingAddress}
             />
           </div>
         ) : user ? (
-          <CheckoutAddresses heading="Billing address" setAddress={setBillingAddress} />
+          <CheckoutAddresses heading={t('address.billingAddress')} setAddress={setBillingAddress} />
         ) : (
           <CreateAddressModal
             disabled={!email || Boolean(emailEditable)}
@@ -362,7 +375,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
               setBillingAddressSameAsShipping(state as boolean)
             }}
           />
-          <Label htmlFor="shippingTheSameAsBilling">Shipping is the same as billing</Label>
+          <Label htmlFor="shippingTheSameAsBilling">{t('address.shippingSameAsBilling')}</Label>
         </div>
 
         {!billingAddressSameAsShipping && (
@@ -379,7 +392,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                         setShippingAddress(undefined)
                       }}
                     >
-                      Remove
+                      {tCart('remove')}
                     </Button>
                   }
                   address={shippingAddress}
@@ -387,8 +400,8 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
               </div>
             ) : user ? (
               <CheckoutAddresses
-                heading="Shipping address"
-                description="Please select a shipping address."
+                heading={t('address.shippingAddress')}
+                description={t('address.shippingAddressDescription')}
                 setAddress={setShippingAddress}
               />
             ) : (
@@ -411,7 +424,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
         {fullyCoveredByGiftCard && (
           <div className="flex flex-col gap-4">
             <div className="bg-success/5 border-success/30 text-success rounded-lg border p-4 text-sm">
-              Your order is fully covered by your gift card — no further payment is needed.
+              {t('giftCardCovered')}
             </div>
             <Button
               className="self-start"
@@ -426,7 +439,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                 void placeDirectOrder()
               }}
             >
-              {isPlacingOrder ? 'Placing order...' : 'Place order'}
+              {isPlacingOrder ? t('placingOrder') : t('placeOrder')}
             </Button>
 
             <SecureCheckoutBadge />
@@ -435,7 +448,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
 
         {!fullyCoveredByGiftCard && (
           <div className="flex flex-col gap-4">
-            <h2 className="font-medium text-3xl">Payment method</h2>
+            <h2 className="font-medium text-3xl">{t('paymentMethod.heading')}</h2>
             <div className="flex flex-col gap-2 sm:flex-row">
               <label
                 className={`flex flex-1 items-center gap-3 rounded-lg border p-4 ${!cardPaymentAvailable ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-border'}`}
@@ -446,7 +459,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                   onChange={() => setPaymentMethod('card')}
                   type="radio"
                 />
-                <span>Card / UPI / NetBanking (PayU)</span>
+                <span>{t('paymentMethod.cardUpiNetbanking')}</span>
               </label>
               <label
                 className={`flex flex-1 cursor-pointer items-center gap-3 rounded-lg border p-4 ${paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-border'}`}
@@ -456,14 +469,13 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                   onChange={() => setPaymentMethod('cod')}
                   type="radio"
                 />
-                <span>Cash on Delivery</span>
+                <span>{t('paymentMethod.cashOnDelivery')}</span>
               </label>
             </div>
 
             {!cardPaymentAvailable && (
               <p className="text-muted-foreground text-sm">
-                Card / UPI checkout is only available for INR orders — this cart is in{' '}
-                {cart?.currency}. Choose Cash on Delivery to continue.
+                {t('paymentMethod.cardUnavailable', { currency: cart?.currency ?? '' })}
               </p>
             )}
 
@@ -486,11 +498,11 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
             >
               {paymentMethod === 'cod'
                 ? isPlacingOrder
-                  ? 'Placing order...'
-                  : 'Place order (Pay on delivery)'
+                  ? t('placingOrder')
+                  : t('paymentMethod.placeOrderCod')
                 : isInitiatingPayment
-                  ? 'Loading...'
-                  : 'Go to payment'}
+                  ? t('paymentMethod.loading')
+                  : t('paymentMethod.goToPayment')}
             </Button>
 
             <SecureCheckoutBadge />
@@ -508,7 +520,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
               }}
               variant="default"
             >
-              Try again
+              {t('tryAgain')}
             </Button>
           </div>
         )}
@@ -517,7 +529,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
 
       {!cartIsEmpty && (
         <div className="basis-full lg:basis-1/3 lg:pl-8 p-8 border-none bg-primary/5 flex flex-col gap-8 rounded-lg">
-          <h2 className="text-3xl font-medium">Your cart</h2>
+          <h2 className="text-3xl font-medium">{t('yourCart')}</h2>
           {cart?.items?.map((item, index) => {
             if (typeof item.product === 'object' && item.product) {
               const {
@@ -598,7 +610,8 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
             {cart.appliedCouponCode ? (
               <div className="flex items-center justify-between text-sm">
                 <span>
-                  Coupon <span className="font-medium">{cart.appliedCouponCode}</span> applied
+                  {tCart('couponLabel')} <span className="font-medium">{cart.appliedCouponCode}</span>{' '}
+                  {tCart('appliedLabel')}
                   {typeof cart.couponDiscountAmount === 'number' && cart.couponDiscountAmount > 0 && (
                     <>
                       {' '}
@@ -612,17 +625,17 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                   onClick={() => applyDiscount({ remove: 'coupon' })}
                   type="button"
                 >
-                  Remove
+                  {tCart('remove')}
                 </button>
               </div>
             ) : (
               <div className="flex flex-col gap-1">
                 <div className="flex gap-2">
                   <input
-                    aria-label="Coupon code"
+                    aria-label={tCart('couponCodeLabel')}
                     className="border-border bg-background flex-1 rounded-md border px-3 py-2 text-sm outline-none"
                     onChange={(e) => setCouponInput(e.target.value)}
-                    placeholder="Coupon code"
+                    placeholder={t('couponCodePlaceholder')}
                     value={couponInput}
                   />
                   <Button
@@ -631,7 +644,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                     type="button"
                     variant="outline"
                   >
-                    Apply
+                    {tCart('apply')}
                   </Button>
                 </div>
                 {couponError && <p className="text-error text-xs">{couponError}</p>}
@@ -641,7 +654,8 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
             {flags.giftCards && (cart.appliedGiftCardCode ? (
               <div className="flex items-center justify-between text-sm">
                 <span>
-                  Gift card <span className="font-medium">{cart.appliedGiftCardCode}</span> applied
+                  {tCart('giftCardLabel')} <span className="font-medium">{cart.appliedGiftCardCode}</span>{' '}
+                  {tCart('appliedLabel')}
                   {typeof cart.giftCardAmountApplied === 'number' && cart.giftCardAmountApplied > 0 && (
                     <>
                       {' '}
@@ -655,17 +669,17 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                   onClick={() => applyDiscount({ remove: 'gift-card' })}
                   type="button"
                 >
-                  Remove
+                  {tCart('remove')}
                 </button>
               </div>
             ) : (
               <div className="flex flex-col gap-1">
                 <div className="flex gap-2">
                   <input
-                    aria-label="Gift card code"
+                    aria-label={tCart('giftCardCodeLabel')}
                     className="border-border bg-background flex-1 rounded-md border px-3 py-2 text-sm outline-none"
                     onChange={(e) => setGiftCardInput(e.target.value)}
-                    placeholder="Gift card code"
+                    placeholder={t('giftCardCodePlaceholder')}
                     value={giftCardInput}
                   />
                   <Button
@@ -674,7 +688,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                     type="button"
                     variant="outline"
                   >
-                    Apply
+                    {tCart('apply')}
                   </Button>
                 </div>
                 {giftCardError && <p className="text-error text-xs">{giftCardError}</p>}
@@ -686,15 +700,17 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
           {taxBreakdown ? (
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center text-sm">
-                <span>Subtotal</span>
+                <span>{tCart('subtotal')}</span>
                 <Price amount={subtotalAfterDiscounts} />
               </div>
               <div className="flex justify-between items-center text-sm text-muted-foreground">
-                <span>GST ({taxBreakdown.gstRatePercent.toFixed(0)}%)</span>
+                <span>
+                  {t('gst')} ({taxBreakdown.gstRatePercent.toFixed(0)}%)
+                </span>
                 <Price amount={taxBreakdown.totalTax} />
               </div>
               <div className="flex justify-between items-center gap-2">
-                <span className="uppercase">Total</span>
+                <span className="uppercase">{tCart('total')}</span>
                 <Price
                   className="text-3xl font-medium"
                   amount={subtotalAfterDiscounts + taxBreakdown.totalTax}
@@ -703,7 +719,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
             </div>
           ) : (
             <div className="flex justify-between items-center gap-2">
-              <span className="uppercase">Total</span>{' '}
+              <span className="uppercase">{tCart('total')}</span>{' '}
               <Price className="text-3xl font-medium" amount={cart.subtotal || 0} />
             </div>
           )}

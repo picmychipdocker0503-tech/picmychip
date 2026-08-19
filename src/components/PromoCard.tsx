@@ -1,10 +1,16 @@
+'use client'
+
 import type { Media as MediaType } from '@/payload-types'
 
 import { Media } from '@/components/Media'
 import { cn } from '@/utilities/cn'
-import { ArrowRight } from 'lucide-react'
+import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
+import { ArrowRight, ZapIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import React from 'react'
+import React, { useState } from 'react'
+import { toast } from 'sonner'
 
 type Props = {
   eyebrow: string
@@ -16,6 +22,10 @@ type Props = {
   tone?: 'dark' | 'light'
   headingSize?: 'lg' | 'sm'
   className?: string
+  /** When set, the CTA becomes an instant "Buy Now" (add to cart + go to checkout) instead of a plain link button. */
+  productId?: number
+  variantId?: number
+  disabled?: boolean
 }
 
 /**
@@ -34,7 +44,31 @@ export const PromoCard: React.FC<Props> = ({
   tone = 'light',
   headingSize = 'sm',
   className,
+  productId,
+  variantId,
+  disabled,
 }) => {
+  const { addItem } = useCart()
+  const router = useRouter()
+  const t = useTranslations('cart')
+  const [isBuyingNow, setIsBuyingNow] = useState(false)
+
+  const handleBuyNow = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!productId) return
+
+    setIsBuyingNow(true)
+    addItem({ product: productId, variant: variantId })
+      .then(() => {
+        router.push('/checkout')
+      })
+      .catch(() => {
+        setIsBuyingNow(false)
+        toast.error('Could not start checkout — please try again.')
+      })
+  }
+
   const wrapperClassName = cn(
     'group relative flex flex-col items-stretch gap-4 overflow-hidden rounded-3xl px-7 py-7 transition-transform duration-300 sm:flex-row sm:items-center sm:px-10',
     tone === 'dark' ? 'bg-neutral-950 text-white hover:-translate-y-0.5' : 'bg-muted text-foreground hover:-translate-y-0.5',
@@ -65,11 +99,30 @@ export const PromoCard: React.FC<Props> = ({
             {description}
           </p>
         )}
-        {href && (
-          <span className="bg-primary text-primary-foreground mt-6 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-transform group-hover:scale-105">
-            {buttonLabel}
-            <ArrowRight className="size-3.5" />
-          </span>
+        {productId ? (
+          <button
+            aria-label="Buy now"
+            className="bg-primary text-primary-foreground relative z-20 mt-6 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-transform group-hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
+            disabled={disabled || isBuyingNow}
+            onClick={handleBuyNow}
+            type="button"
+          >
+            {isBuyingNow ? (
+              t('redirecting')
+            ) : (
+              <>
+                <ZapIcon className="size-3.5" />
+                {t('buyNow')}
+              </>
+            )}
+          </button>
+        ) : (
+          href && (
+            <span className="bg-primary text-primary-foreground mt-6 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-transform group-hover:scale-105">
+              {buttonLabel}
+              <ArrowRight className="size-3.5" />
+            </span>
+          )
         )}
       </div>
 

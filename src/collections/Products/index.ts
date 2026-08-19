@@ -6,6 +6,7 @@ import { generatePreviewPath } from '@/utilities/generatePreviewPath'
 import { CollectionOverride } from '@payloadcms/plugin-ecommerce/types'
 import { priceTiers } from '@/fields/priceTiers'
 import { productSpecsGroup, SPEC_SCHEMA_OPTIONS } from '@/fields/productSpecs'
+import { deriveSalePricing } from '@/hooks/deriveSalePricing'
 import { deriveStockStatus } from '@/hooks/deriveStockStatus'
 import { notifyBackInStock } from '@/hooks/notifyBackInStock'
 import { removeProductFromSearchIndex } from '@/hooks/removeProductFromSearchIndex'
@@ -31,7 +32,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   ...defaultCollection,
   hooks: {
     ...defaultCollection?.hooks,
-    beforeChange: [...(defaultCollection?.hooks?.beforeChange ?? []), deriveStockStatus],
+    beforeChange: [...(defaultCollection?.hooks?.beforeChange ?? []), deriveStockStatus, deriveSalePricing],
     afterChange: [
       ...(defaultCollection?.hooks?.afterChange ?? []),
       syncProductToSearchIndex,
@@ -50,7 +51,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       ...defaultCollection?.admin?.components,
       beforeList: ['@/components/admin/ProductsListStats#ProductsListStats'],
     },
-    defaultColumns: ['title', 'stockStatus', 'categories', 'priceInINR', '_status'],
+    defaultColumns: ['title', 'stockStatus', 'categories', 'priceInINR', 'onSale', '_status'],
     group: 'Catalog',
     livePreview: {
       url: ({ data, req }) =>
@@ -323,6 +324,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       name: 'featured',
       type: 'checkbox',
       defaultValue: false,
+      index: true,
       admin: {
         position: 'sidebar',
         description: 'Surface this product in curated spots like the mega-menu and homepage.',
@@ -347,6 +349,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
         { label: 'Out of Stock', value: 'out-of-stock' },
         { label: 'Backorder', value: 'backorder' },
       ],
+      index: true,
       admin: {
         position: 'sidebar',
         description:
@@ -378,6 +381,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     {
       name: 'sku',
       type: 'text',
+      index: true,
       admin: {
         position: 'sidebar',
         description:
@@ -422,9 +426,84 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       },
     },
     {
+      name: 'onSale',
+      type: 'checkbox',
+      defaultValue: false,
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description:
+          'Enable a storefront sale — Sale Price (₹) below is calculated automatically from Price + Discount Type/Value.',
+        components: {
+          Cell: '@/components/admin/cells/ProductSaleStatusCell#ProductSaleStatusCell',
+        },
+      },
+    },
+    {
+      name: 'saleType',
+      type: 'select',
+      options: [
+        { label: 'Percentage Off', value: 'percentage' },
+        { label: 'Fixed Amount Off', value: 'fixed' },
+      ],
+      admin: {
+        position: 'sidebar',
+        condition: (data) => Boolean(data?.onSale),
+      },
+    },
+    {
+      name: 'discountValue',
+      type: 'number',
+      admin: {
+        position: 'sidebar',
+        condition: (data) => Boolean(data?.onSale),
+        description: 'Percentage (0–90) or ₹ amount off, depending on Discount Type above.',
+      },
+    },
+    {
+      name: 'salePriceInINR',
+      type: 'number',
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        condition: (data) => Boolean(data?.onSale),
+        description: 'Auto-calculated from Price + Discount Value on save.',
+      },
+    },
+    {
+      name: 'saleEndDate',
+      type: 'date',
+      admin: {
+        position: 'sidebar',
+        condition: (data) => Boolean(data?.onSale),
+        date: { pickerAppearance: 'dayAndTime' },
+        description: 'Sale auto-disables the next time this product is saved after this date.',
+      },
+    },
+    {
+      name: 'isClearance',
+      type: 'checkbox',
+      defaultValue: false,
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Clearance stock — shown with a distinct badge on the storefront; not intended to be restocked.',
+      },
+    },
+    {
+      name: 'clearanceReason',
+      type: 'text',
+      admin: {
+        position: 'sidebar',
+        condition: (data) => Boolean(data?.isClearance),
+        description: 'Optional customer-facing reason shown on the product page (e.g. "Discontinued model").',
+      },
+    },
+    {
       name: 'isGiftCard',
       type: 'checkbox',
       defaultValue: false,
+      index: true,
       admin: {
         position: 'sidebar',
         description:

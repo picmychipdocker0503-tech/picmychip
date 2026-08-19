@@ -5,12 +5,13 @@ import type { Product } from '@/payload-types'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
 import { ProductMatchingImage } from '@/components/product/ProductMatchingImage'
+import { useTilt3D } from '@/lib/useTilt3D'
 import { useCompare } from '@/providers/Compare'
 import { useQuickView } from '@/providers/QuickView'
 import { useWishlist } from '@/providers/Wishlist'
 import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import clsx from 'clsx'
-import { CheckIcon, HeartIcon, ScaleIcon, SearchIcon, ShoppingCartIcon, ShieldCheck } from 'lucide-react'
+import { CheckIcon, HeartIcon, ScaleIcon, SearchIcon, ShoppingCartIcon, ShieldCheck, TagIcon } from 'lucide-react'
 import Link from 'next/link'
 import React, { useState } from 'react'
 import { toast } from 'sonner'
@@ -43,9 +44,11 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
   const { addItem, isLoading } = useCart()
   const { currency } = useCurrency()
   const [justAdded, setJustAdded] = useState(false)
+  const tilt = useTilt3D<HTMLDivElement>()
 
   const priceField = `priceIn${currency.code}` as keyof Product
   const compareAtPriceField = `compareAtPriceIn${currency.code}` as keyof Product
+  const salePriceField = `salePriceIn${currency.code}` as keyof Product
 
   const stockBadge =
     stockStatus && stockStatus in STOCK_BADGE
@@ -56,18 +59,37 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
 
   let price = product[priceField] as number | null | undefined
   const compareAtPrice = product[compareAtPriceField] as number | null | undefined
-
-  const hasDiscount = typeof compareAtPrice === 'number' && typeof price === 'number' && compareAtPrice > price
-  const discountPercent = hasDiscount ? Math.round((1 - price! / compareAtPrice!) * 100) : 0
+  const salePrice = product[salePriceField] as number | null | undefined
 
   const variants = product.variants?.docs
+  const hasVariants = Boolean(variants && variants.length > 0)
 
-  if (variants && variants.length > 0) {
-    const variant = variants[0]
+  if (hasVariants) {
+    const variant = variants![0]
     if (variant && typeof variant === 'object' && typeof variant[priceField as keyof typeof variant] === 'number') {
       price = variant[priceField as keyof typeof variant] as number
     }
   }
+
+  // Sale/clearance pricing is product-level only (no per-variant override
+  // yet), so it's only shown when the card isn't already displaying a
+  // variant-specific price.
+  const saleExpired = Boolean(product.saleEndDate && new Date(product.saleEndDate).getTime() < Date.now())
+  const isOnSale = !hasVariants && Boolean(product.onSale) && !saleExpired && typeof salePrice === 'number'
+  const isClearance = Boolean(product.isClearance)
+
+  const hasDiscount =
+    (isOnSale && typeof price === 'number' && salePrice! < price) ||
+    (!hasVariants && typeof compareAtPrice === 'number' && typeof price === 'number' && compareAtPrice > price)
+
+  const displayPrice = isOnSale ? salePrice! : price
+  const strikethroughPrice = isOnSale ? price : hasDiscount ? compareAtPrice : undefined
+  const discountPercent =
+    isOnSale && typeof price === 'number' && price > 0
+      ? Math.round((1 - salePrice! / price) * 100)
+      : hasDiscount && typeof compareAtPrice === 'number' && typeof price === 'number' && compareAtPrice > 0
+        ? Math.round((1 - price / compareAtPrice) * 100)
+        : 0
 
   const image =
     gallery?.[0]?.image && typeof gallery[0]?.image !== 'string' ? gallery[0]?.image : false
@@ -97,10 +119,16 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
 
   return (
     <Link className="relative inline-block h-full w-full group" href={`/products/${slug}`}>
-      <div className="relative flex flex-col justify-between h-full rounded-3xl border border-border/80 bg-card/75 backdrop-blur-xl transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/60 hover:bg-card hover:shadow-xl hover:shadow-primary/10 overflow-hidden">
+      <div className="relative flex flex-col justify-between h-full rounded-3xl border border-border/80 bg-card/75 backdrop-blur-xl transition-all duration-300 hover:border-primary/60 hover:bg-card hover:shadow-xl hover:shadow-primary/10 overflow-hidden">
 
-        {/* Top Media Container: Strictly square and uniform dimensions. */}
-        <div className="relative w-full aspect-square overflow-hidden border-b border-border/60 bg-muted/15">
+        {/* Top Media Container: Strictly square and uniform dimensions. 3D tilt lives here, on the image, not the whole card. */}
+        <div
+          className="relative w-full aspect-square overflow-hidden border-b border-border/60 bg-muted/15 transition-transform duration-150 ease-out will-change-transform"
+          onMouseEnter={tilt.onMouseEnter}
+          onMouseLeave={tilt.onMouseLeave}
+          onMouseMove={tilt.onMouseMove}
+          ref={tilt.ref}
+        >
           <ProductMatchingImage
             category={firstCategory}
             className="w-full h-full"
@@ -110,15 +138,28 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
             title={title}
           />
 
+          {/* Cursor-tracked glare highlight, part of the 3D tilt effect. */}
+          <div
+            className="pointer-events-none absolute inset-0 z-10 opacity-0 transition-opacity duration-150"
+            ref={tilt.glareRef}
+          />
+
           {/* Holographic Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
-            {stockBadge ? (
+            {stockBadge && (
               <span className="inline-flex items-center rounded-lg bg-neutral-950/85 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-amber-400 border border-amber-500/30 shadow-sm">
                 {stockBadge.label}
               </span>
+            )}
+
+            {isClearance ? (
+              <span className="inline-flex items-center gap-1 rounded-lg bg-amber-600/90 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-white shadow-sm">
+                <TagIcon className="size-2.5" />
+                CLEARANCE
+              </span>
             ) : hasDiscount ? (
               <span className="inline-flex items-center rounded-lg bg-primary/90 backdrop-blur-md px-2.5 py-1 text-[10px] font-bold text-primary-foreground shadow-sm">
-                {discountPercent}% OFF
+                {discountPercent > 0 ? `${discountPercent}% OFF` : 'SALE'}
               </span>
             ) : null}
 
@@ -128,9 +169,10 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
             </span>
           </div>
 
-          {/* Quick Action Overlay Icons */}
+          {/* Quick Action Overlay Icons — visible by default on mobile (no
+              hover state to reveal them via touch), hover-gated on md+. */}
           {productId && (
-            <div className="absolute top-3 right-3 flex flex-col gap-1.5 opacity-0 transition-opacity duration-200 group-hover:opacity-100 focus-within:opacity-100 z-10">
+            <div className="absolute top-3 right-3 flex flex-col gap-1.5 opacity-100 transition-opacity duration-200 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 z-10">
               <button
                 aria-label="Quick view"
                 className="bg-card/90 flex size-8 items-center justify-center rounded-xl border border-border/80 backdrop-blur-md shadow-sm transition-all duration-200 hover:bg-primary hover:text-primary-foreground text-foreground cursor-pointer"
@@ -197,15 +239,15 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
               </div>
             ) : null}
 
-            {typeof price === 'number' && (
+            {typeof displayPrice === 'number' && (
               <div className="flex items-baseline gap-2">
-                {hasDiscount && (
+                {hasDiscount && typeof strikethroughPrice === 'number' && (
                   <span className="text-muted-foreground text-xs line-through">
-                    <Price amount={compareAtPrice!} />
+                    <Price amount={strikethroughPrice} />
                   </span>
                 )}
                 <span className={clsx('text-base sm:text-lg font-extrabold tracking-tight', hasDiscount ? 'text-primary' : 'text-foreground')}>
-                  <Price amount={price} />
+                  <Price amount={displayPrice} />
                 </span>
               </div>
             )}

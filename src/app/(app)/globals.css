@@ -2465,3 +2465,4 @@ textarea,
 .skip-link {
   @apply bg-primary text-primary-foreground fixed top-2 left-2 z-[100] -translate-y-16 rounded-lg px-4 py-2 text-sm font-medium transition-transform focus:translate-y-0;
 }
+

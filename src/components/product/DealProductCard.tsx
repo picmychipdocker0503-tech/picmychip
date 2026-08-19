@@ -5,11 +5,12 @@ import type { Product } from '@/payload-types'
 import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
+import { useTilt3D } from '@/lib/useTilt3D'
 import { useQuickView } from '@/providers/QuickView'
 import { useWishlist } from '@/providers/Wishlist'
 import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import clsx from 'clsx'
-import { CheckIcon, HeartIcon, SearchIcon, ShoppingCartIcon } from 'lucide-react'
+import { CheckIcon, HeartIcon, SearchIcon, ShoppingCartIcon, TagIcon } from 'lucide-react'
 import Link from 'next/link'
 import React, { useState } from 'react'
 import { toast } from 'sonner'
@@ -34,13 +35,31 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
   const { toggle: toggleWishlist, isSaved } = useWishlist()
   const { addItem, isLoading } = useCart()
   const [justAdded, setJustAdded] = useState(false)
+  const tilt = useTilt3D<HTMLDivElement>()
 
   const priceField = `priceIn${currency.code}` as keyof Product
   const compareAtPriceField = `compareAtPriceIn${currency.code}` as keyof Product
+  const salePriceField = `salePriceIn${currency.code}` as keyof Product
 
+  // Read-only display logic — the underlying price/compareAtPrice/salePrice
+  // fields and their values are never touched here, only how they're shown.
   const price = product[priceField] as number | null | undefined
   const compareAtPrice = product[compareAtPriceField] as number | null | undefined
-  const hasDiscount = typeof compareAtPrice === 'number' && typeof price === 'number' && compareAtPrice > price
+  const salePrice = product[salePriceField] as number | null | undefined
+
+  const saleExpired = Boolean(product.saleEndDate && new Date(product.saleEndDate).getTime() < Date.now())
+  const isOnSale = Boolean(product.onSale) && !saleExpired && typeof salePrice === 'number'
+  const isClearance = Boolean(product.isClearance)
+
+  const hasDiscount =
+    (isOnSale && typeof price === 'number' && salePrice! < price) ||
+    (typeof compareAtPrice === 'number' && typeof price === 'number' && compareAtPrice > price)
+
+  const displayPrice = isOnSale ? salePrice! : price
+  const strikethroughPrice = isOnSale ? price : hasDiscount ? compareAtPrice : undefined
+  const discountPercent =
+    isOnSale && typeof price === 'number' && price > 0 ? Math.round((1 - salePrice! / price) * 100) : 0
+
   const stockInfo = STOCK_LABEL[product.stockStatus ?? 'in-stock'] ?? STOCK_LABEL['in-stock']
   const isOutOfStock = product.stockStatus === 'out-of-stock'
 
@@ -62,7 +81,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
   }
 
   return (
-    <div className="card-hover group bg-card border-border relative flex h-full flex-col items-center gap-4 rounded-2xl border p-6 text-center">
+    <div className="group bg-card border-border relative flex h-full flex-col items-center gap-4 rounded-2xl border p-6 text-center transition-colors duration-250 hover:border-primary">
       <div className="absolute top-1/2 right-3 z-10 flex -translate-y-1/2 flex-col gap-2 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
         <button
           aria-label="Quick view"
@@ -113,24 +132,41 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
         ) : null}
 
         <div className="flex items-baseline justify-center gap-2">
-          {typeof price === 'number' && (
+          {typeof displayPrice === 'number' && (
             <span className="text-foreground text-lg font-bold">
-              <Price amount={price} as="span" />
+              <Price amount={displayPrice} as="span" />
             </span>
           )}
-          {hasDiscount && (
+          {hasDiscount && typeof strikethroughPrice === 'number' && (
             <span className="text-muted-foreground text-sm line-through">
-              <Price amount={compareAtPrice!} as="span" />
+              <Price amount={strikethroughPrice} as="span" />
             </span>
           )}
         </div>
 
-        <div className="relative aspect-square w-full max-w-40">
+        <div
+          className="relative aspect-square w-full max-w-40 transition-transform duration-150 ease-out will-change-transform"
+          onMouseEnter={tilt.onMouseEnter}
+          onMouseLeave={tilt.onMouseLeave}
+          onMouseMove={tilt.onMouseMove}
+          ref={tilt.ref}
+        >
+          {isClearance ? (
+            <span className="absolute top-0 left-0 z-20 inline-flex items-center gap-1 rounded-lg bg-amber-600/90 px-2 py-1 text-[10px] font-bold text-white shadow-sm backdrop-blur-md">
+              <TagIcon className="size-2.5" />
+              CLEARANCE
+            </span>
+          ) : hasDiscount ? (
+            <span className="bg-primary/90 text-primary-foreground absolute top-0 left-0 z-20 inline-flex items-center rounded-lg px-2 py-1 text-[10px] font-bold shadow-sm backdrop-blur-md">
+              {discountPercent > 0 ? `${discountPercent}% OFF` : 'SALE'}
+            </span>
+          ) : null}
+
           {image ? (
             <Media
               className="relative h-full w-full"
               fill
-              imgClassName="object-contain transition-transform duration-300 group-hover:scale-105"
+              imgClassName="object-contain"
               priority={priority}
               resource={image}
             />
@@ -139,6 +175,12 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
               No image
             </div>
           )}
+
+          {/* Cursor-tracked glare highlight, part of the 3D tilt effect. */}
+          <div
+            className="pointer-events-none absolute inset-0 z-10 rounded-lg opacity-0 transition-opacity duration-150"
+            ref={tilt.glareRef}
+          />
         </div>
       </Link>
 

@@ -691,6 +691,31 @@ export interface Product {
    */
   compareAtPriceInINR?: number | null;
   /**
+   * Enable a storefront sale — Sale Price (₹) below is calculated automatically from Price + Discount Type/Value.
+   */
+  onSale?: boolean | null;
+  saleType?: ('percentage' | 'fixed') | null;
+  /**
+   * Percentage (0–90) or ₹ amount off, depending on Discount Type above.
+   */
+  discountValue?: number | null;
+  /**
+   * Auto-calculated from Price + Discount Value on save.
+   */
+  salePriceInINR?: number | null;
+  /**
+   * Sale auto-disables the next time this product is saved after this date.
+   */
+  saleEndDate?: string | null;
+  /**
+   * Clearance stock — shown with a distinct badge on the storefront; not intended to be restocked.
+   */
+  isClearance?: boolean | null;
+  /**
+   * Optional customer-facing reason shown on the product page (e.g. "Discontinued model").
+   */
+  clearanceReason?: string | null;
+  /**
    * Flags this as a purchasable gift card — a GiftCard document (with a redeemable code) is minted per unit automatically when an order containing it is placed. Use variants for denominations.
    */
   isGiftCard?: boolean | null;
@@ -3666,6 +3691,13 @@ export interface ProductsSelect<T extends boolean = true> {
   zohoItemId?: T;
   gstPercent?: T;
   compareAtPriceInINR?: T;
+  onSale?: T;
+  saleType?: T;
+  discountValue?: T;
+  salePriceInINR?: T;
+  saleEndDate?: T;
+  isClearance?: T;
+  clearanceReason?: T;
   isGiftCard?: T;
   leadTimeDays?: T;
   generateSlug?: T;

@@ -1,3 +1,5 @@
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
+import { isValidSecret } from '@/lib/verifySecret'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { NextRequest, NextResponse } from 'next/server'
@@ -15,9 +17,15 @@ type Body = {
  * in sync without polling — matches the /api/inventory-webhook pattern.
  */
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers)
+  const { allowed } = checkRateLimit(`shiprocket-webhook:${ip}`, 60, 60_000)
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests.' }, { status: 429 })
+  }
+
   const secret = request.headers.get('x-api-key')
 
-  if (!process.env.SHIPROCKET_WEBHOOK_SECRET || secret !== process.env.SHIPROCKET_WEBHOOK_SECRET) {
+  if (!isValidSecret(secret, process.env.SHIPROCKET_WEBHOOK_SECRET)) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
   }
 

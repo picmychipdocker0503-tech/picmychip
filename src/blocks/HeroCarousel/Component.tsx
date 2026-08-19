@@ -76,15 +76,22 @@ export const HeroCarouselBlock: React.FC<
                   | { title?: string | null }
                   | undefined
 
+              const variants = product.variants?.docs
+              const firstVariant = variants && variants.length > 0 ? variants[0] : undefined
+              const variantId = firstVariant && typeof firstVariant === 'object' ? firstVariant.id : undefined
+
               return (
                 <PromoCard
                   className="min-h-[180px] flex-1"
+                  disabled={product.stockStatus === 'out-of-stock'}
                   eyebrow={category?.title || 'Featured'}
                   heading={product.title}
                   href={product.slug ? `/products/${product.slug}` : null}
                   image={typeof image === 'object' ? image : undefined}
                   key={product.id}
+                  productId={product.id}
                   tone="light"
+                  variantId={variantId}
                 />
               )
             })}

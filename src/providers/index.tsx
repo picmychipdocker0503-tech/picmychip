@@ -10,18 +10,33 @@ import { QuickViewModal } from '@/components/product/QuickViewModal'
 import { EcommerceProvider } from '@payloadcms/plugin-ecommerce/client/react'
 import { payuAdapterClient } from '@/payments/payu/client'
 import { FeaturebaseProvider } from 'featurebase-js/react'
-import React from 'react'
+import React, { useState } from 'react'
 
 import { HeaderThemeProvider } from './HeaderTheme'
 import { ThemeProvider } from './Theme'
 import { SonnerProvider } from '@/providers/Sonner'
 import { currenciesConfig } from '@/lib/currencies'
 
+// Matches the `md` breakpoint MobileTabBar hides itself above — mobile
+// already has a dedicated "Chat" tab in that bottom nav, so Featurebase's
+// own floating launcher bubble is redundant clutter there (it visibly
+// overlapped the bottom nav). Desktop has no such bottom nav, so it keeps
+// the floating launcher. Read once via a lazy initializer rather than a
+// resize listener — this only needs to match the device class at load, and
+// evaluating it doesn't affect any server-rendered markup (it's forwarded
+// into an imperative SDK boot() call, not used in JSX), so there's no
+// hydration-mismatch risk despite differing between the server and client
+// passes.
+const isMobileViewport = () =>
+  typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+
 export const Providers: React.FC<{
   children: React.ReactNode
 }> = ({ children }) => {
+  const [hideDefaultLauncher] = useState(isMobileViewport)
+
   return (
-    <FeaturebaseProvider appId="6a630b8ebfd7b125f2342f3f">
+    <FeaturebaseProvider appId="6a630b8ebfd7b125f2342f3f" hideDefaultLauncher={hideDefaultLauncher}>
       <ThemeProvider>
         <AuthProvider>
           <HeaderThemeProvider>

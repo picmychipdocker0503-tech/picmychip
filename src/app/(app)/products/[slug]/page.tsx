@@ -2,8 +2,8 @@ import type { Category, Media, Product } from '@/payload-types'
 
 import { RenderBlocks } from '@/blocks/RenderBlocks'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb'
-import { GridTileImage } from '@/components/Grid/tile'
 import { getCategoryIcon } from '@/components/illustrations/categoryIcons'
+import { ProductGridItem } from '@/components/ProductGridItem'
 import { JsonLd } from '@/components/JsonLd'
 import { Datasheets } from '@/components/product/Datasheets'
 import { FrequentlyBoughtTogether } from '@/components/product/FrequentlyBoughtTogether'
@@ -26,7 +26,6 @@ import configPromise from '@payload-config'
 import { ImageOffIcon } from 'lucide-react'
 import { Metadata } from 'next'
 import { draftMode } from 'next/headers'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import React, { Suspense } from 'react'
@@ -297,18 +296,10 @@ function RelatedProducts({ heading, products }: { heading: string; products: Pro
       <ul className="flex w-full gap-4 overflow-x-auto pt-1">
         {products.map((product) => (
           <li
-            className="aspect-square w-full flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
+            className="w-[70%] flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
             key={product.id}
           >
-            <Link className="relative h-full w-full" href={`/products/${product.slug}`}>
-              <GridTileImage
-                label={{
-                  amount: product.priceInINR!,
-                  title: product.title,
-                }}
-                media={product.meta?.image as Media}
-              />
-            </Link>
+            <ProductGridItem product={product} />
           </li>
         ))}
       </ul>

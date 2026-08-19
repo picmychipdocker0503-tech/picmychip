@@ -1,4 +1,6 @@
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import { sendAbandonedCartEmails } from '@/lib/sendAbandonedCartEmails'
+import { isValidSecret } from '@/lib/verifySecret'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { NextRequest, NextResponse } from 'next/server'
@@ -10,9 +12,15 @@ import { NextRequest, NextResponse } from 'next/server'
  * no captured email until checkout, so there's nothing to send to until then.
  */
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request.headers)
+  const { allowed } = checkRateLimit(`abandoned-cart-emails:${ip}`, 10, 60_000)
+  if (!allowed) {
+    return NextResponse.json({ error: 'Too many requests.' }, { status: 429 })
+  }
+
   const secret = request.headers.get('x-webhook-secret')
 
-  if (!process.env.ABANDONED_CART_SECRET || secret !== process.env.ABANDONED_CART_SECRET) {
+  if (!isValidSecret(secret, process.env.ABANDONED_CART_SECRET)) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 })
   }
 

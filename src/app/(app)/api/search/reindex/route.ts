@@ -2,14 +2,22 @@ import { getPayload } from 'payload'
 import config from '@payload-config'
 
 import { getMeiliClient, PRODUCTS_INDEX } from '@/lib/meilisearch'
+import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import { configureProductsIndex, toSearchDocument } from '@/lib/searchIndex'
+import { isValidSecret } from '@/lib/verifySecret'
 
 const BATCH_SIZE = 200
 
 export async function POST(request: Request): Promise<Response> {
+  const ip = getClientIp(request.headers)
+  const { allowed } = checkRateLimit(`search-reindex:${ip}`, 10, 60_000)
+  if (!allowed) {
+    return new Response('Too many requests.', { status: 429 })
+  }
+
   const secret = request.headers.get('x-reindex-secret')
 
-  if (!process.env.REINDEX_SECRET || secret !== process.env.REINDEX_SECRET) {
+  if (!isValidSecret(secret, process.env.REINDEX_SECRET)) {
     return new Response('Action forbidden.', { status: 403 })
   }
 

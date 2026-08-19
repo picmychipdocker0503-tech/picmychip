@@ -42,7 +42,7 @@ export const ContentBlock: React.FC<
 
                 {richText && (
                   <RichText
-                    className="[&>h2]:text-2xl [&>h2]:font-black [&>h2]:tracking-tight [&>h2]:text-foreground [&>h3]:text-xl [&>h3]:font-black [&>h3]:tracking-tight [&>h3]:text-foreground [&>p]:mt-2.5 [&>p]:text-sm [&>p]:text-muted-foreground [&>p]:leading-relaxed"
+                    className="[&>h2]:text-2xl [&>h2]:font-black [&>h2]:tracking-tight [&>h2]:text-foreground [&>h3]:text-xl [&>h3]:font-black [&>h3]:tracking-tight [&>h3]:text-foreground [&>p]:mt-2.5 [&>p]:text-sm [&>p]:text-muted-foreground [&>p]:leading-relaxed [&>ul]:mt-2.5 [&>ol]:mt-2.5 [&_li]:text-sm [&_li]:text-muted-foreground [&_li]:leading-relaxed"
                     data={richText}
                     enableGutter={false}
                   />

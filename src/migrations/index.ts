@@ -39,6 +39,8 @@ import * as migration_20260818_061827_zoho_item_id from './20260818_061827_zoho_
 import * as migration_20260818_093126_add_community_feedback from './20260818_093126_add_community_feedback';
 import * as migration_20260818_121920_add_team_testimonials_and_culture_block from './20260818_121920_add_team_testimonials_and_culture_block';
 import * as migration_20260819_044939_add_email_events from './20260819_044939_add_email_events';
+import * as migration_20260819_072742_add_product_sale_pricing from './20260819_072742_add_product_sale_pricing';
+import * as migration_20260819_075443_add_product_perf_indexes from './20260819_075443_add_product_perf_indexes';
 import * as migration_20260819_120731_remove_customer_interaction_block from './20260819_120731_remove_customer_interaction_block';
 import * as migration_20260819_131219_add_rfq_bom_section from './20260819_131219_add_rfq_bom_section';
 import * as migration_20260819_140542_add_track_order_feature_flag from './20260819_140542_add_track_order_feature_flag';
@@ -250,6 +252,16 @@ export const migrations = [
     name: '20260819_044939_add_email_events',
   },
   {
+    up: migration_20260819_072742_add_product_sale_pricing.up,
+    down: migration_20260819_072742_add_product_sale_pricing.down,
+    name: '20260819_072742_add_product_sale_pricing',
+  },
+  {
+    up: migration_20260819_075443_add_product_perf_indexes.up,
+    down: migration_20260819_075443_add_product_perf_indexes.down,
+    name: '20260819_075443_add_product_perf_indexes',
+  },
+  {
     up: migration_20260819_120731_remove_customer_interaction_block.up,
     down: migration_20260819_120731_remove_customer_interaction_block.down,
     name: '20260819_120731_remove_customer_interaction_block',
@@ -262,6 +274,6 @@ export const migrations = [
   {
     up: migration_20260819_140542_add_track_order_feature_flag.up,
     down: migration_20260819_140542_add_track_order_feature_flag.down,
-    name: '20260819_140542_add_track_order_feature_flag'
+    name: '20260819_140542_add_track_order_feature_flag',
   },
 ];

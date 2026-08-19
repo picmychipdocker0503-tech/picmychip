@@ -15,6 +15,11 @@ export type ProductSearchDocument = {
   description: string
   priceInINR: number | null
   compareAtPriceInINR: number | null
+  onSale: boolean
+  salePriceInINR: number | null
+  saleEndDate: string | null
+  isClearance: boolean
+  clearanceReason: string | null
   stockStatus: string | null
   specSchemaType: string | null
   specs: Product['specs']
@@ -39,6 +44,11 @@ export const toSearchDocument = (product: Product): ProductSearchDocument => {
     | Media
     | undefined
 
+  // A sale that expired since the last save is still stored as onSale: true
+  // until the doc is next written (see deriveSalePricing) — search results
+  // must never surface a stale sale badge in the meantime.
+  const saleExpired = Boolean(product.saleEndDate && new Date(product.saleEndDate).getTime() < Date.now())
+
   return {
     id: String(product.id),
     title: product.title,
@@ -48,6 +58,11 @@ export const toSearchDocument = (product: Product): ProductSearchDocument => {
     description: richTextToPlainText(product.description),
     priceInINR: product.priceInINR ?? null,
     compareAtPriceInINR: product.compareAtPriceInINR ?? null,
+    onSale: Boolean(product.onSale) && !saleExpired,
+    salePriceInINR: product.salePriceInINR ?? null,
+    saleEndDate: product.saleEndDate ?? null,
+    isClearance: Boolean(product.isClearance),
+    clearanceReason: product.clearanceReason ?? null,
     stockStatus: product.stockStatus ?? null,
     specSchemaType: product.specSchemaType ?? null,
     specs: product.specs,
@@ -73,6 +88,8 @@ const PRODUCT_FILTERABLE_ATTRIBUTES = [
   'priceInINR',
   'brandName',
   'isGiftCard',
+  'onSale',
+  'isClearance',
   ...ALL_FACET_ATTRIBUTES,
 ]
 

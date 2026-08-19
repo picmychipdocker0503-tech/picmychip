@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/sheet'
 import { useAuth } from '@/providers/Auth'
 import { MenuIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
@@ -28,6 +29,8 @@ interface Props {
 
 export function MobileMenu({ menu, shopCategoryGroups }: Props) {
   const { user } = useAuth()
+  const t = useTranslations('mobileMenu')
+  const tAccount = useTranslations('account')
 
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -57,7 +60,7 @@ export function MobileMenu({ menu, shopCategoryGroups }: Props) {
 
       <SheetContent side="left" className="px-4">
         <SheetHeader className="px-0 pt-4 pb-0">
-          <SheetTitle>My Store</SheetTitle>
+          <SheetTitle>{t('title')}</SheetTitle>
 
           <SheetDescription />
         </SheetHeader>
@@ -142,35 +145,35 @@ export function MobileMenu({ menu, shopCategoryGroups }: Props) {
 
         {user ? (
           <div className="mt-4">
-            <h2 className="text-xl mb-4">My account</h2>
+            <h2 className="text-xl mb-4">{t('myAccount')}</h2>
             <hr className="my-2" />
             <ul className="flex flex-col gap-2">
               <li>
-                <Link href="/orders">Orders</Link>
+                <Link href="/orders">{t('orders')}</Link>
               </li>
               <li>
-                <Link href="/account/addresses">Addresses</Link>
+                <Link href="/account/addresses">{t('addresses')}</Link>
               </li>
               <li>
-                <Link href="/account">Manage account</Link>
+                <Link href="/account">{t('manageAccount')}</Link>
               </li>
               <li className="mt-6">
                 <Button asChild variant="outline">
-                  <Link href="/logout">Log out</Link>
+                  <Link href="/logout">{t('logOut')}</Link>
                 </Button>
               </li>
             </ul>
           </div>
         ) : (
           <div>
-            <h2 className="text-xl mb-4">My account</h2>
+            <h2 className="text-xl mb-4">{t('myAccount')}</h2>
             <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center">
               <Button asChild className="w-full sm:flex-1" variant="outline">
-                <Link href="/login">Log in</Link>
+                <Link href="/login">{t('logIn')}</Link>
               </Button>
-              <span className="text-center text-sm text-muted-foreground sm:text-base">or</span>
+              <span className="text-center text-sm text-muted-foreground sm:text-base">{t('or')}</span>
               <Button asChild className="w-full sm:flex-1">
-                <Link href="/create-account">Create an account</Link>
+                <Link href="/create-account">{tAccount('createAccount')}</Link>
               </Button>
             </div>
           </div>
