@@ -4,7 +4,12 @@ import config from '../src/payload.config'
 
 import { aboutPageData } from '../src/endpoints/seed/about-page'
 import { faqPageData } from '../src/endpoints/seed/faq-page'
-import { privacyPolicyPageData, termsPolicyPageData } from '../src/endpoints/seed/legal-pages'
+import {
+  cancellationRefundPolicyPageData,
+  privacyPolicyPageData,
+  shippingPolicyPageData,
+  termsPolicyPageData,
+} from '../src/endpoints/seed/legal-pages'
 
 /**
  * Additive-only script: creates/updates the About, FAQ, Privacy Policy, and
@@ -45,6 +50,8 @@ const run = async () => {
   await upsertPage(faqPageData())
   await upsertPage(privacyPolicyPageData())
   await upsertPage(termsPolicyPageData())
+  await upsertPage(shippingPolicyPageData())
+  await upsertPage(cancellationRefundPolicyPageData())
 
   // --- Header: replace the top-level nav with Shop / Guides / Pages▾ / Contact ---
   const shopItem = { link: { type: 'custom' as const, url: '/shop', label: 'Shop', newTab: false }, children: [] }
@@ -61,6 +68,7 @@ const run = async () => {
   await payload.updateGlobal({
     slug: 'header',
     data: { navItems: [shopItem, guidesItem, pagesDropdown, contactItem] },
+    context: { disableRevalidate: true },
   })
   payload.logger.info('Updated header nav to Shop / Guides / Pages▾ / Contact.')
 
@@ -74,7 +82,16 @@ const run = async () => {
       { link: { type: 'custom' as const, url: '/about', label: 'About Us', newTab: false } },
       { link: { type: 'custom' as const, url: '/faq', label: "FAQ's", newTab: false } },
       { link: { type: 'custom' as const, url: '/privacy-policy', label: 'Privacy Policy', newTab: false } },
-      { link: { type: 'custom' as const, url: '/terms', label: 'Terms & Refund Policy', newTab: false } },
+      { link: { type: 'custom' as const, url: '/terms', label: 'Terms & Conditions', newTab: false } },
+      { link: { type: 'custom' as const, url: '/shipping-policy', label: 'Shipping Policy', newTab: false } },
+      {
+        link: {
+          type: 'custom' as const,
+          url: '/cancellation-refund-policy',
+          label: 'Cancellation & Refund Policy',
+          newTab: false,
+        },
+      },
       { link: { type: 'custom' as const, url: '/contact', label: 'Contact', newTab: false } },
     ],
   }
@@ -83,7 +100,7 @@ const run = async () => {
     ? existingColumns.map((column) => (column.title === 'Quick Links' ? quickLinksColumn : column))
     : [...existingColumns, quickLinksColumn].slice(0, 5)
 
-  await payload.updateGlobal({ slug: 'footer', data: { columns: nextColumns } })
+  await payload.updateGlobal({ slug: 'footer', data: { columns: nextColumns }, context: { disableRevalidate: true } })
   payload.logger.info('Updated footer with "Quick Links" column.')
 
   payload.logger.info('Done.')

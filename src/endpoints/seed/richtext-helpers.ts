@@ -41,6 +41,18 @@ export const bulletList = (items: string[]) => ({
   version: 1,
 })
 
+export const numberedList = (items: string[]) => ({
+  type: 'list',
+  listType: 'number' as const,
+  tag: 'ol' as const,
+  start: 1,
+  children: items.map((item) => listItem(item)),
+  direction: 'ltr' as const,
+  format: '' as const,
+  indent: 0,
+  version: 1,
+})
+
 type RichTextNode = { type: string; version: number; [key: string]: unknown }
 
 export const richText = (nodes: RichTextNode[]) => ({
