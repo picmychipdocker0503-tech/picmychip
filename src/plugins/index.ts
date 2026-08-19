@@ -18,6 +18,7 @@ import { adminOnlyFieldAccess } from '@/access/adminOnlyFieldAccess'
 import { customerOnlyFieldAccess } from '@/access/customerOnlyFieldAccess'
 import { isAdmin } from '@/access/isAdmin'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
+import { isStrictDocumentOwner } from '@/access/isStrictDocumentOwner'
 import { applyCartDiscounts } from '@/hooks/applyCartDiscounts'
 import { applyOrderDiscountSideEffects } from '@/hooks/applyOrderDiscountSideEffects'
 import { computeGstTaxBreakdown } from '@/hooks/computeGstTaxBreakdown'
@@ -482,6 +483,22 @@ export const plugins: Plugin[] = [
     addresses: {
       addressesCollectionOverride: ({ defaultCollection }) => ({
         ...defaultCollection,
+        // The plugin's default read access is accessOR(isAdmin, isDocumentOwner),
+        // and isDocumentOwner itself also short-circuits true for admins — so
+        // any admin-role account browsing the storefront's own "My Addresses"
+        // page (which fetches /api/addresses with no where filter, trusting
+        // collection access to scope it) sees every customer's saved name,
+        // phone, and address. Read is tightened to strict per-customer
+        // ownership with no admin bypass; update/delete stay admin-inclusive
+        // for support use, and are evaluated per-document by ID rather than
+        // via a browsable list. Support staff needing a specific customer's
+        // address should use the shippingAddress snapshot on their Order —
+        // this collection is admin.hidden and was never meant to be browsed
+        // from /admin anyway.
+        access: {
+          ...defaultCollection.access,
+          read: isStrictDocumentOwner,
+        },
         fields: [
           ...defaultCollection.fields,
           {
