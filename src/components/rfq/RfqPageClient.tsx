@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { RfqForm } from './RfqForm'
 import { RfqHero } from './RfqHero'
 
@@ -29,6 +29,16 @@ export const RfqPageClient: React.FC = () => {
   }, [])
 
   const handleRemoveFile = useCallback(() => setFile(null), [])
+
+  // Header "BOM" quick-access link (/rfq?upload=1) — best-effort: most
+  // browsers allow a plain <input type="file"> click() from an effect right
+  // after navigation, but if one blocks it (no trusted user gesture), the
+  // visible "Upload BOM" button in the hero still works as a fallback.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('upload') === '1') {
+      fileInputRef.current?.click()
+    }
+  }, [])
 
   return (
     <>

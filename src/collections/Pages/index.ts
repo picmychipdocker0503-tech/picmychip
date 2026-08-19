@@ -6,6 +6,7 @@ import { Carousel } from '@/blocks/Carousel/config'
 import { CategoryGrid } from '@/blocks/CategoryGrid/config'
 import { ContentFeed } from '@/blocks/ContentFeed/config'
 import { FeaturedCollection } from '@/blocks/FeaturedCollection/config'
+import { RfqBomSection } from '@/blocks/RfqBomSection/config'
 import { ServicesShowcase } from '@/blocks/ServicesShowcase/config'
 import { ThreeItemGrid } from '@/blocks/ThreeItemGrid/config'
 import { generatePreviewPath } from '@/utilities/generatePreviewPath'
@@ -112,6 +113,7 @@ export const Pages: CollectionConfig = {
                 FormBlock,
                 FAQ,
                 ComparisonTable,
+                RfqBomSection,
                 IllustratedCategoryGrid,
                 HeroCarousel,
                 FlashDeal,

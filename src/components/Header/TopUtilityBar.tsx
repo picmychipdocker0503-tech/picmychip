@@ -7,6 +7,7 @@ import { AnnouncementTicker } from './AnnouncementTicker'
 import { cn } from '@/utilities/cn'
 import { CurrencySwitcher } from '@/components/CurrencySwitcher'
 import { getSocialIcon } from '@/utilities/getSocialIcon'
+import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import { useFeaturebase } from 'featurebase-js/react'
 import { HelpCircleIcon, MailIcon, MessageCircleIcon, PhoneIcon, TruckIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -24,6 +25,7 @@ export function TopUtilityBar({ announcementBar, socialLinks, supportEmail, supp
   const t = useTranslations('topbar')
   const [showAdminBar, setShowAdminBar] = useState(false)
   const { show: showChat } = useFeaturebase()
+  const flags = useFeatureFlags()
 
   return (
     <div className="hidden border-b border-neutral-800 bg-neutral-950 py-2.5 text-xs tracking-wide text-neutral-50 md:block">
@@ -81,13 +83,15 @@ export function TopUtilityBar({ announcementBar, socialLinks, supportEmail, supp
               <HelpCircleIcon className="size-3.5" />
               {t('help')}
             </Link>
-            <Link
-              className="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
-              href="/find-order"
-            >
-              <TruckIcon className="size-3.5" />
-              {t('trackOrder')}
-            </Link>
+            {flags.trackOrder && (
+              <Link
+                className="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
+                href="/find-order"
+              >
+                <TruckIcon className="size-3.5" />
+                {t('trackOrder')}
+              </Link>
+            )}
           </div>
 
           {socialLinks.length > 0 && (

@@ -40,6 +40,8 @@ import * as migration_20260818_093126_add_community_feedback from './20260818_09
 import * as migration_20260818_121920_add_team_testimonials_and_culture_block from './20260818_121920_add_team_testimonials_and_culture_block';
 import * as migration_20260819_044939_add_email_events from './20260819_044939_add_email_events';
 import * as migration_20260819_120731_remove_customer_interaction_block from './20260819_120731_remove_customer_interaction_block';
+import * as migration_20260819_131219_add_rfq_bom_section from './20260819_131219_add_rfq_bom_section';
+import * as migration_20260819_140542_add_track_order_feature_flag from './20260819_140542_add_track_order_feature_flag';
 
 export const migrations = [
   {
@@ -250,6 +252,16 @@ export const migrations = [
   {
     up: migration_20260819_120731_remove_customer_interaction_block.up,
     down: migration_20260819_120731_remove_customer_interaction_block.down,
-    name: '20260819_120731_remove_customer_interaction_block'
+    name: '20260819_120731_remove_customer_interaction_block',
+  },
+  {
+    up: migration_20260819_131219_add_rfq_bom_section.up,
+    down: migration_20260819_131219_add_rfq_bom_section.down,
+    name: '20260819_131219_add_rfq_bom_section',
+  },
+  {
+    up: migration_20260819_140542_add_track_order_feature_flag.up,
+    down: migration_20260819_140542_add_track_order_feature_flag.down,
+    name: '20260819_140542_add_track_order_feature_flag'
   },
 ];

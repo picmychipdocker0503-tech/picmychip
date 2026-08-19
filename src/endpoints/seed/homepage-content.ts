@@ -250,6 +250,27 @@ export const seedHomepageContent = async (payload: Payload) => {
             ]
           : []),
         {
+          blockType: 'rfqBomSection' as const,
+          badge: 'Instant Sourcing Hub',
+          heading: 'Automate component sourcing & bulk RFQ quoting',
+          subtitle:
+            'Upload a BOM or enter parts manually — we auto-match each line against live inventory, check stock in real time, and roll up target pricing across your full list.',
+          bomCard: {
+            badge: 'Instant Match',
+            title: 'Bulk BOM Upload',
+            description:
+              'Upload a spreadsheet (.xlsx, .xls, or .csv) with up to 200+ lines — MPN, quantity, and target price are auto-mapped.',
+          },
+          rfqCard: {
+            badge: 'Direct Entry',
+            title: 'Quick Multi-Line RFQ',
+            description:
+              'No file handy? Enter part number, manufacturer, quantity, and target lead time directly in a multi-row grid.',
+          },
+          primaryLink: { url: '/rfq?upload=1', label: 'Upload BOM (.xlsx / .csv)' },
+          secondaryLink: { url: '/rfq#rfq-form', label: 'Enter Manual RFQ Grid' },
+        },
+        {
           blockType: 'categoryGrid',
           heading: 'Shop by Category',
           categories: categoryIds.map((id) => ({ category: id })),
@@ -268,11 +289,6 @@ export const seedHomepageContent = async (payload: Payload) => {
             ]
           : []),
         { blockType: 'trendingProducts', heading: 'Featured Products', limit: 8 },
-        {
-          blockType: 'servicesShowcase',
-          heading: 'Build-to-Order Services',
-          services: services.map((s) => s.id),
-        },
         {
           blockType: 'testimonials',
           heading: 'What Our Customers Are Saying',

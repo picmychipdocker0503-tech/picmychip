@@ -53,5 +53,11 @@ export const FeatureFlags: GlobalConfig = {
       defaultValue: true,
       label: 'Enable live search suggestions',
     },
+    {
+      name: 'trackOrder',
+      type: 'checkbox',
+      defaultValue: true,
+      label: 'Show "Track order" link in the top utility bar',
+    },
   ],
 }

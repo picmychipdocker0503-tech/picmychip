@@ -17,6 +17,7 @@ import { FormBlock } from '@/blocks/Form/Component'
 import { HeroCarouselBlock } from '@/blocks/HeroCarousel/Component'
 import { IllustratedCategoryGridBlock } from '@/blocks/IllustratedCategoryGrid/Component'
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
+import { RfqBomSectionBlock } from '@/blocks/RfqBomSection/Component'
 import { ServicesShowcaseBlock } from '@/blocks/ServicesShowcase/Component'
 import { StatsStripBlock } from '@/blocks/StatsStrip/Component'
 import { TeamCultureBlock } from '@/blocks/TeamCulture/Component'
@@ -47,6 +48,7 @@ const blockComponents = {
   heroCarousel: HeroCarouselBlock,
   illustratedCategoryGrid: IllustratedCategoryGridBlock,
   mediaBlock: MediaBlock,
+  rfqBomSection: RfqBomSectionBlock,
   servicesShowcase: ServicesShowcaseBlock,
   statsStrip: StatsStripBlock,
   teamCulture: TeamCultureBlock,

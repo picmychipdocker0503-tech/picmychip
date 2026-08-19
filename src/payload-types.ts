@@ -861,6 +861,7 @@ export interface Page {
     | FormBlock
     | FAQBlock
     | ComparisonTableBlock
+    | RfqBomSectionBlock
     | IllustratedCategoryGridBlock
     | HeroCarouselBlock
     | FlashDealBlock
@@ -1363,6 +1364,36 @@ export interface Form {
     | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RfqBomSectionBlock".
+ */
+export interface RfqBomSectionBlock {
+  badge?: string | null;
+  heading: string;
+  subtitle?: string | null;
+  bomCard: {
+    badge?: string | null;
+    title: string;
+    description?: string | null;
+  };
+  rfqCard: {
+    badge?: string | null;
+    title: string;
+    description?: string | null;
+  };
+  primaryLink: {
+    url: string;
+    label: string;
+  };
+  secondaryLink: {
+    url: string;
+    label: string;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'rfqBomSection';
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2497,6 +2528,7 @@ export interface PagesSelect<T extends boolean = true> {
         formBlock?: T | FormBlockSelect<T>;
         faq?: T | FAQBlockSelect<T>;
         comparisonTable?: T | ComparisonTableBlockSelect<T>;
+        rfqBomSection?: T | RfqBomSectionBlockSelect<T>;
         illustratedCategoryGrid?: T | IllustratedCategoryGridBlockSelect<T>;
         heroCarousel?: T | HeroCarouselBlockSelect<T>;
         flashDeal?: T | FlashDealBlockSelect<T>;
@@ -2675,6 +2707,43 @@ export interface FAQBlockSelect<T extends boolean = true> {
 export interface ComparisonTableBlockSelect<T extends boolean = true> {
   heading?: T;
   products?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "RfqBomSectionBlock_select".
+ */
+export interface RfqBomSectionBlockSelect<T extends boolean = true> {
+  badge?: T;
+  heading?: T;
+  subtitle?: T;
+  bomCard?:
+    | T
+    | {
+        badge?: T;
+        title?: T;
+        description?: T;
+      };
+  rfqCard?:
+    | T
+    | {
+        badge?: T;
+        title?: T;
+        description?: T;
+      };
+  primaryLink?:
+    | T
+    | {
+        url?: T;
+        label?: T;
+      };
+  secondaryLink?:
+    | T
+    | {
+        url?: T;
+        label?: T;
+      };
   id?: T;
   blockName?: T;
 }
@@ -4067,6 +4136,7 @@ export interface FeatureFlag {
   backInStockAlerts?: boolean | null;
   recentlyViewed?: boolean | null;
   searchAutocomplete?: boolean | null;
+  trackOrder?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -4214,6 +4284,7 @@ export interface FeatureFlagsSelect<T extends boolean = true> {
   backInStockAlerts?: T;
   recentlyViewed?: T;
   searchAutocomplete?: T;
+  trackOrder?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

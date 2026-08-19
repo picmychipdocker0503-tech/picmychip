@@ -13,6 +13,7 @@ const DEFAULTS: FeatureFlag = {
   backInStockAlerts: true,
   recentlyViewed: true,
   searchAutocomplete: true,
+  trackOrder: true,
   updatedAt: '',
   createdAt: '',
 }
