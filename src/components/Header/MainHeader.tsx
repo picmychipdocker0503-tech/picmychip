@@ -7,6 +7,7 @@ import type { CategoryMenuGroup } from '@/utilities/categoryMenuGroups'
 import { Cart } from '@/components/Cart'
 import { OpenCartButton } from '@/components/Cart/OpenCart'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { Media } from '@/components/Media'
 import { Search } from '@/components/Search'
 import { NavIconBadge } from '@/components/ui/nav-icon-badge'
 import { useAuth } from '@/providers/Auth'
@@ -108,7 +109,19 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
             <LanguageSwitcher className="select select-ghost select-xs text-muted-foreground hover:text-primary w-auto" />
             <span className="bg-border h-3 w-px" />
             {user ? (
-              <Link className="hover:text-primary font-medium transition-colors" href="/account">
+              <Link
+                className="hover:text-primary group flex items-center gap-2 font-medium transition-colors"
+                href="/account"
+              >
+                <span className="border-border bg-primary/10 relative size-6 shrink-0 overflow-hidden rounded-full border group-hover:border-primary/40">
+                  {user.avatar && typeof user.avatar === 'object' ? (
+                    <Media fill htmlElement="span" imgClassName="object-cover" resource={user.avatar} />
+                  ) : (
+                    <span className="text-primary flex h-full w-full items-center justify-center text-[10px] font-bold">
+                      {(user.name || user.email || '?').charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </span>
                 Hi, {user.name || 'there'}
               </Link>
             ) : (

@@ -84,7 +84,7 @@ export const homeStaticData: () => RequiredDataFromCollectionSlug<'pages'> = () 
           },
           {
             icon: 'returns',
-            label: '30-Day Hassle-Free Returns',
+            label: '7-Day Hassle-Free Returns',
             description: 'Return or exchange unopened components directly from your account.',
           },
           {
@@ -185,7 +185,7 @@ export const homeStaticData: () => RequiredDataFromCollectionSlug<'pages'> = () 
             question: 'What is your return policy?',
             answer: richText([
               paragraph(
-                'Unopened components and dev boards can be returned within 30 days of delivery for a full refund or exchange.',
+                'Unopened components and dev boards can be returned within 7 days of delivery for a full refund or exchange.',
               ),
             ]),
           },

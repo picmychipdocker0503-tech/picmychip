@@ -5,7 +5,7 @@ import React from 'react'
 const BADGES = [
   { icon: LockIcon, label: 'Secure Payment', href: undefined },
   { icon: ShieldCheckIcon, label: 'Spec-Verified Parts', href: undefined },
-  { icon: RotateCcwIcon, label: '30-Day Returns', href: '/terms' },
+  { icon: RotateCcwIcon, label: '7-Day Returns', href: '/terms' },
 ]
 
 export const TrustBadges: React.FC = () => (

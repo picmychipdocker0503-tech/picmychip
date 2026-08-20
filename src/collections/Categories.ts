@@ -1,5 +1,7 @@
 import { slugField } from 'payload'
-import type { CollectionConfig } from 'payload'
+import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, CollectionConfig } from 'payload'
+
+import { revalidatePath } from 'next/cache'
 
 import { adminOnly } from '@/access/adminOnly'
 import { CallToAction } from '@/blocks/CallToAction/config'
@@ -16,6 +18,26 @@ import {
   OverviewField,
   PreviewField,
 } from '@payloadcms/plugin-seo/fields'
+
+// The header's mega-menu (and mobile menu) queries the category tree fresh
+// on every page via the shared layout, but Next's static/ISR page cache still
+// caches that render — unlike Pages/Globals, this collection had no
+// revalidation hook, so a category added, renamed, or deleted in the CMS
+// wouldn't show up (or drop out of) the storefront menu until the next full
+// deploy. Revalidating the layout busts that cache for every route at once.
+const revalidateCategoryNav: CollectionAfterChangeHook = ({ req: { payload, context } }) => {
+  if (!context.disableRevalidate) {
+    payload.logger.info('Revalidating layout after category change')
+    revalidatePath('/', 'layout')
+  }
+}
+
+const revalidateCategoryNavOnDelete: CollectionAfterDeleteHook = ({ req: { payload, context } }) => {
+  if (!context.disableRevalidate) {
+    payload.logger.info('Revalidating layout after category delete')
+    revalidatePath('/', 'layout')
+  }
+}
 
 export const Categories: CollectionConfig = {
   slug: 'categories',
@@ -36,11 +58,23 @@ export const Categories: CollectionConfig = {
       },
     },
   },
+  hooks: {
+    afterChange: [revalidateCategoryNav],
+    afterDelete: [revalidateCategoryNavOnDelete],
+  },
   fields: [
     {
       name: 'title',
       type: 'text',
       required: true,
+    },
+    {
+      name: 'description',
+      type: 'textarea',
+      admin: {
+        description:
+          'One or two sentences shown under the category heading on the storefront — also used for search engines\' category-page structured data. Keeps the page from being just an icon and a product grid.',
+      },
     },
     {
       name: 'parent',

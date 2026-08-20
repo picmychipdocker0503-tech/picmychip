@@ -80,6 +80,18 @@ export function abandonedCartEmailHtml(cart: {
   )
 }
 
+export function reviewRequestEmailHtml(order: {
+  id: string | number
+  siteUrl: string
+}): string {
+  return wrapper(
+    'How was your order?',
+    `<p>Your order #${order.id} shipped a little while ago — we'd love to hear what you thought of it.</p>
+     <p>A quick review helps other engineers and makers pick the right part.</p>
+     <p><a href="${order.siteUrl}/orders/${order.id}">Leave a review</a></p>`,
+  )
+}
+
 export function giftCardIssuedEmailHtml(giftCard: {
   code: string
   balance?: number | null

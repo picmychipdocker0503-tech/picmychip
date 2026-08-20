@@ -147,17 +147,26 @@ export const Search: React.FC<Props> = ({ className }) => {
   return (
     <div className={cn('relative w-full', className)} ref={containerRef}>
       <form
-        className="border-border bg-card focus-within:border-primary focus-within:ring-primary/20 relative flex w-full items-center rounded-full border py-1 pr-1 pl-4 transition-all focus-within:ring-2"
+        className="border-border bg-card focus-within:border-primary focus-within:ring-primary/15 relative flex w-full items-center rounded-full border py-1 pr-1 pl-4 transition-all duration-300 focus-within:scale-[1.01] focus-within:shadow-lg focus-within:shadow-primary/10 focus-within:ring-4"
         onSubmit={onSubmit}
         role="combobox"
         aria-expanded={showDropdown}
         aria-haspopup="listbox"
       >
-        {isLoading ? (
-          <Loader2Icon className="text-muted-foreground size-5 shrink-0 animate-spin" />
-        ) : (
-          <SearchIcon className="text-muted-foreground size-5 shrink-0" />
-        )}
+        <span className="relative flex size-5 shrink-0 items-center justify-center">
+          <SearchIcon
+            className={cn(
+              'text-muted-foreground absolute size-5 transition-all duration-300',
+              isLoading ? 'scale-50 rotate-90 opacity-0' : 'scale-100 rotate-0 opacity-100',
+            )}
+          />
+          <Loader2Icon
+            className={cn(
+              'text-primary absolute size-5 animate-spin transition-all duration-300',
+              isLoading ? 'scale-100 opacity-100' : 'scale-50 opacity-0',
+            )}
+          />
+        </span>
         <input
           aria-activedescendant={activeIndex >= 0 ? `search-suggestion-${activeIndex}` : undefined}
           aria-autocomplete="list"
@@ -176,21 +185,21 @@ export const Search: React.FC<Props> = ({ className }) => {
           value={query}
         />
         <button
-          className="bg-primary hover:bg-primary/90 text-primary-foreground inline-flex shrink-0 items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold whitespace-nowrap transition-colors"
+          className="group bg-primary hover:bg-primary/90 text-primary-foreground inline-flex shrink-0 items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold whitespace-nowrap transition-all active:scale-95"
           type="submit"
         >
-          <SearchIcon className="size-4" />
+          <SearchIcon className="size-4 transition-transform duration-300 group-hover:rotate-12" />
           Search
         </button>
       </form>
 
       {showDropdown && (suggestions.length > 0 || showNoResults) && (
         <div
-          className="border-border bg-card absolute z-50 mt-2 w-full overflow-hidden rounded-xl border shadow-lg"
+          className="border-border bg-card animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 absolute z-50 mt-2 w-full overflow-hidden rounded-xl border shadow-lg duration-200"
           role="listbox"
         >
           {showNoResults ? (
-            <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+            <div className="animate-in fade-in-0 zoom-in-95 flex flex-col items-center gap-2 px-4 py-8 text-center duration-200">
               <PackageSearchIcon className="text-muted-foreground/50 size-8" />
               <p className="text-foreground text-sm font-medium">No matches for &ldquo;{trimmedQuery}&rdquo;</p>
               <p className="text-muted-foreground text-xs">Try a shorter or more general term.</p>
@@ -203,7 +212,7 @@ export const Search: React.FC<Props> = ({ className }) => {
                 return (
                   <Link
                     className={cn(
-                      'flex items-center gap-3 px-4 py-2.5 transition-colors',
+                      'animate-in fade-in-0 slide-in-from-top-1 relative flex items-center gap-3 px-4 py-2.5 transition-colors',
                       index === activeIndex ? 'bg-muted' : 'hover:bg-muted',
                     )}
                     href={`/products/${suggestion.slug}`}
@@ -213,7 +222,14 @@ export const Search: React.FC<Props> = ({ className }) => {
                     onMouseEnter={() => setActiveIndex(index)}
                     role="option"
                     aria-selected={index === activeIndex}
+                    style={{ animationDelay: `${Math.min(index, 6) * 30}ms`, animationFillMode: 'backwards' }}
                   >
+                    <span
+                      className={cn(
+                        'bg-primary absolute inset-y-1 left-0 w-0.5 rounded-full transition-all duration-200',
+                        index === activeIndex ? 'scale-y-100 opacity-100' : 'scale-y-0 opacity-0',
+                      )}
+                    />
                     <div className="bg-muted relative size-10 shrink-0 overflow-hidden rounded-md">
                       {suggestion.imageUrl && (
                         <Image
@@ -252,12 +268,12 @@ export const Search: React.FC<Props> = ({ className }) => {
 
               {totalDocs > suggestions.length && (
                 <button
-                  className="border-border text-primary hover:bg-muted flex w-full items-center justify-center gap-1.5 border-t px-4 py-3 text-sm font-medium transition-colors"
+                  className="group border-border text-primary hover:bg-muted animate-in fade-in-0 flex w-full items-center justify-center gap-1.5 border-t px-4 py-3 text-sm font-medium transition-colors duration-200"
                   onClick={() => goToShop(query)}
                   type="button"
                 >
                   View all {totalDocs} results for &ldquo;{trimmedQuery}&rdquo;
-                  <ArrowRightIcon className="size-3.5" />
+                  <ArrowRightIcon className="size-3.5 transition-transform duration-200 group-hover:translate-x-1" />
                 </button>
               )}
             </>

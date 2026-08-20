@@ -35,7 +35,7 @@ export const FAQBlock: React.FC<
         )}
       </div>
 
-      <div className="mt-10 grid gap-4 sm:grid-cols-2">
+      <div className="mt-10 grid items-start gap-4 sm:grid-cols-2">
         {items.map((item, index) => (
           <div
             className="rounded-2xl border border-border/80 bg-card/60 backdrop-blur-xl shadow-sm"

@@ -1,4 +1,4 @@
-import { MigrateUpArgs, MigrateDownArgs, sql } from '@payloadcms/db-postgres'
+import { MigrateDownArgs, MigrateUpArgs, sql } from '@payloadcms/db-postgres'
 
 export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.execute(sql`
@@ -8,7 +8,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"_path" text NOT NULL,
   	"id" varchar PRIMARY KEY NOT NULL,
   	"badge" varchar DEFAULT 'Instant Sourcing Hub',
-  	"heading" varchar DEFAULT 'Automate component sourcing & bulk RFQ quoting',
+  	"heading" varchar DEFAULT 'Upload Your BOM. Sit Back. Get the Best Deal!',
   	"subtitle" varchar DEFAULT 'Upload a BOM or enter parts manually — we auto-match each line against live inventory, check stock in real time, and roll up target pricing across your full list.',
   	"bom_card_badge" varchar DEFAULT 'Instant Match',
   	"bom_card_title" varchar DEFAULT 'Bulk BOM Upload',
@@ -29,7 +29,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   	"_path" text NOT NULL,
   	"id" serial PRIMARY KEY NOT NULL,
   	"badge" varchar DEFAULT 'Instant Sourcing Hub',
-  	"heading" varchar DEFAULT 'Automate component sourcing & bulk RFQ quoting',
+  	"heading" varchar DEFAULT 'Upload Your BOM. Sit Back. Get the Best Deal!',
   	"subtitle" varchar DEFAULT 'Upload a BOM or enter parts manually — we auto-match each line against live inventory, check stock in real time, and roll up target pricing across your full list.',
   	"bom_card_badge" varchar DEFAULT 'Instant Match',
   	"bom_card_title" varchar DEFAULT 'Bulk BOM Upload',

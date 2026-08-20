@@ -12,7 +12,8 @@ import { parseFacetFilters } from '@/lib/facetParams'
 import { searchProducts } from '@/lib/searchProducts'
 import { generateMeta } from '@/utilities/generateMeta'
 import { getCategoryBreadcrumb } from '@/utilities/getCategoryBreadcrumb'
-import { buildBreadcrumbListJsonLd } from '@/utilities/jsonLd'
+import { getServerSideURL } from '@/utilities/getURL'
+import { buildBreadcrumbListJsonLd, buildCollectionPageJsonLd } from '@/utilities/jsonLd'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { notFound } from 'next/navigation'
@@ -94,16 +95,35 @@ export default async function CategoryPage({ params, searchParams }: Args) {
   const Illustration = getIllustration(category.specSchemaType)
 
   const breadcrumb = await getCategoryBreadcrumb(payload, category)
+  const categoryUrl = `${getServerSideURL()}/category/${category.slug}`
+
+  const collectionPageJsonLd = buildCollectionPageJsonLd({
+    name: category.title,
+    description: category.description,
+    url: categoryUrl,
+    items: products.docs.map((product) => ({
+      name: product.title || '',
+      url: `${getServerSideURL()}/products/${product.slug}`,
+      imageUrl:
+        product.gallery?.[0]?.image && typeof product.gallery[0].image === 'object'
+          ? product.gallery[0].image.url
+          : undefined,
+    })),
+  })
 
   return (
     <div className="pt-16 pb-24">
       <JsonLd data={buildBreadcrumbListJsonLd(breadcrumb)} />
+      <JsonLd data={collectionPageJsonLd} />
       <div className="container mb-14 flex flex-col items-center gap-3 text-center">
         <div className="bg-muted text-muted-foreground flex size-20 items-center justify-center rounded-full">
           <Illustration className="size-10" />
         </div>
         <span className="eyebrow">Category</span>
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{category.title}</h1>
+        {category.description && (
+          <p className="text-muted-foreground max-w-2xl text-sm sm:text-base">{category.description}</p>
+        )}
       </div>
 
       {category.layout?.length ? <RenderBlocks blocks={category.layout} /> : null}

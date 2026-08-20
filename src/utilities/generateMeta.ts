@@ -19,15 +19,23 @@ export const generateMeta = async (args: {
     'url' in doc.meta.image &&
     `${process.env.NEXT_PUBLIC_SERVER_URL}${doc.meta.image.url}`
 
+  // Categories have their own on-page `description` (rendered under the H1,
+  // a plain string) — reused as the meta description when an editor hasn't
+  // filled in a dedicated SEO one, so the page never ships with an empty
+  // snippet. Guarded by typeof since other doc types in this union have an
+  // unrelated `description` field that holds richText, not a string.
+  const categoryDescription = 'description' in doc && typeof doc.description === 'string' ? doc.description : undefined
+  const description = doc?.meta?.description || categoryDescription
+
   return {
     alternates: {
       canonical: `${getServerSideURL()}${canonicalPath}`,
     },
-    description: doc?.meta?.description,
+    description,
     openGraph: mergeOpenGraph({
-      ...(doc?.meta?.description
+      ...(description
         ? {
-            description: doc?.meta?.description,
+            description,
           }
         : {}),
       images: ogImage

@@ -24,6 +24,7 @@ type ContactFields = {
   firstName: string
   lastName: string
   company: string
+  gst: string
   phone: string
   message: string
 }
@@ -42,6 +43,7 @@ export const RfqForm: React.FC<Props> = ({ file, onRemoveFile }) => {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
+  const [ticketId, setTicketId] = useState<string | null>(null)
 
   const {
     control,
@@ -55,6 +57,7 @@ export const RfqForm: React.FC<Props> = ({ file, onRemoveFile }) => {
       firstName: '',
       lastName: '',
       company: '',
+      gst: '',
       phone: '',
       message: '',
       lineItems: [emptyRow],
@@ -74,6 +77,7 @@ export const RfqForm: React.FC<Props> = ({ file, onRemoveFile }) => {
         formData.set('firstName', data.firstName)
         formData.set('lastName', data.lastName)
         formData.set('company', data.company)
+        formData.set('gst', data.gst)
         formData.set('phone', data.phone)
         formData.set('message', data.message)
         formData.set('lineItems', JSON.stringify(data.lineItems))
@@ -83,6 +87,7 @@ export const RfqForm: React.FC<Props> = ({ file, onRemoveFile }) => {
 
         if (result.success) {
           setSuccess(true)
+          setTicketId(result.ticketId || null)
           reset()
           onRemoveFile()
         } else {
@@ -105,7 +110,19 @@ export const RfqForm: React.FC<Props> = ({ file, onRemoveFile }) => {
           <p className="text-muted-foreground mt-2 text-sm">
             {"We've logged your RFQ and will get back to you within 12 hours with pricing and availability."}
           </p>
-          <Button className="mt-6" onClick={() => setSuccess(false)} variant="outline">
+          {ticketId && (
+            <p className="border-border bg-muted/40 text-foreground mt-4 inline-block rounded-lg border px-4 py-2 text-sm font-medium">
+              Reference ID: <span className="font-mono">{ticketId}</span>
+            </p>
+          )}
+          <Button
+            className="mt-6"
+            onClick={() => {
+              setSuccess(false)
+              setTicketId(null)
+            }}
+            variant="outline"
+          >
             Submit another request
           </Button>
         </div>
@@ -204,7 +221,9 @@ export const RfqForm: React.FC<Props> = ({ file, onRemoveFile }) => {
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2">
           <FormItem>
-            <Label htmlFor={`${formId}-email`}>Email</Label>
+            <Label htmlFor={`${formId}-email`}>
+              Email <span className="text-destructive">*</span>
+            </Label>
             <Input
               id={`${formId}-email`}
               type="email"
@@ -217,19 +236,26 @@ export const RfqForm: React.FC<Props> = ({ file, onRemoveFile }) => {
             <Input id={`${formId}-phone`} type="tel" {...register('phone')} />
           </FormItem>
           <FormItem>
-            <Label htmlFor={`${formId}-firstName`}>First name</Label>
+            <Label htmlFor={`${formId}-firstName`}>
+              First name <span className="text-destructive">*</span>
+            </Label>
             <Input id={`${formId}-firstName`} {...register('firstName', { required: 'First name is required.' })} />
             {errors.firstName && <FormError message={errors.firstName.message} />}
           </FormItem>
           <FormItem>
-            <Label htmlFor={`${formId}-lastName`}>Last name</Label>
+            <Label htmlFor={`${formId}-lastName`}>
+              Last name <span className="text-destructive">*</span>
+            </Label>
             <Input id={`${formId}-lastName`} {...register('lastName', { required: 'Last name is required.' })} />
             {errors.lastName && <FormError message={errors.lastName.message} />}
           </FormItem>
-          <FormItem className="sm:col-span-2">
-            <Label htmlFor={`${formId}-company`}>Company name</Label>
-            <Input id={`${formId}-company`} {...register('company', { required: 'Company name is required.' })} />
-            {errors.company && <FormError message={errors.company.message} />}
+          <FormItem>
+            <Label htmlFor={`${formId}-company`}>Company name (optional)</Label>
+            <Input id={`${formId}-company`} {...register('company')} />
+          </FormItem>
+          <FormItem>
+            <Label htmlFor={`${formId}-gst`}>GSTIN (optional)</Label>
+            <Input id={`${formId}-gst`} {...register('gst')} placeholder="e.g. 22AAAAA0000A1Z5" />
           </FormItem>
           <FormItem className="sm:col-span-2">
             <Label htmlFor={`${formId}-message`}>Message (optional)</Label>

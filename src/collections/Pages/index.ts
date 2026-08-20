@@ -3,6 +3,7 @@ import type { CollectionConfig } from 'payload'
 import { Banner } from '@/blocks/Banner/config'
 import { BrandStrip } from '@/blocks/BrandStrip/config'
 import { Carousel } from '@/blocks/Carousel/config'
+import { ContactInfo } from '@/blocks/ContactInfo/config'
 import { CategoryGrid } from '@/blocks/CategoryGrid/config'
 import { ContentFeed } from '@/blocks/ContentFeed/config'
 import { FeaturedCollection } from '@/blocks/FeaturedCollection/config'
@@ -128,6 +129,7 @@ export const Pages: CollectionConfig = {
                 TeamGrid,
                 FeaturedCollection,
                 ContentFeed,
+                ContactInfo,
               ],
               required: true,
             },

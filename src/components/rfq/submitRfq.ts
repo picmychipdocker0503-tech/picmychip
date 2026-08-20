@@ -17,6 +17,7 @@ type LineItem = {
 type SubmitRfqResult = {
   success: boolean
   error?: string
+  ticketId?: string
 }
 
 const escapeHtml = (value: string): string =>
@@ -57,14 +58,15 @@ export async function submitRfq(formData: FormData): Promise<SubmitRfqResult> {
   const firstName = String(formData.get('firstName') || '').trim()
   const lastName = String(formData.get('lastName') || '').trim()
   const company = String(formData.get('company') || '').trim()
+  const gst = String(formData.get('gst') || '').trim()
   const phone = String(formData.get('phone') || '').trim()
   const message = String(formData.get('message') || '').trim()
   const lineItems = parseLineItems(String(formData.get('lineItems') || '[]'))
   const file = formData.get('file')
   const uploadedFile = file instanceof File && file.size > 0 ? file : null
 
-  if (!email || !firstName || !lastName || !company) {
-    return { success: false, error: 'Please fill in your name, company, and email.' }
+  if (!email || !firstName || !lastName) {
+    return { success: false, error: 'Please fill in your name and email.' }
   }
 
   if (lineItems.length === 0 && !uploadedFile) {
@@ -88,8 +90,13 @@ export async function submitRfq(formData: FormData): Promise<SubmitRfqResult> {
   }
 
   const submitterLabel = company || `${firstName} ${lastName}`
-  const timestamp = new Date().toISOString()
-  const subject = `New RFQ / BOM Submission - ${submitterLabel} - ${timestamp}`
+  const ticketId = `RFQ-${crypto.randomUUID().split('-')[0].toUpperCase()}`
+  const submittedAt = new Intl.DateTimeFormat('en-IN', {
+    timeZone: 'Asia/Kolkata',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(new Date())
+  const subject = `New RFQ / BOM Submission - ${submitterLabel} - ${ticketId}`
 
   const lineItemsTable = lineItems.length
     ? `<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;font-family:sans-serif;font-size:14px">
@@ -111,8 +118,11 @@ export async function submitRfq(formData: FormData): Promise<SubmitRfqResult> {
 
   const html = `
     <h2>New RFQ / BOM Submission</h2>
+    <p><b>Ticket ID:</b> ${escapeHtml(ticketId)}</p>
+    <p><b>Submitted:</b> ${escapeHtml(submittedAt)} IST</p>
     <p><b>Submitted by:</b> ${escapeHtml(firstName)} ${escapeHtml(lastName)} (${escapeHtml(email)})</p>
-    <p><b>Company:</b> ${escapeHtml(company)}</p>
+    ${company ? `<p><b>Company:</b> ${escapeHtml(company)}</p>` : ''}
+    ${gst ? `<p><b>GSTIN:</b> ${escapeHtml(gst)}</p>` : ''}
     ${phone ? `<p><b>Phone:</b> ${escapeHtml(phone)}</p>` : ''}
     ${lineItemsTable}
     ${uploadedFile ? `<p><b>Attached BOM file:</b> ${escapeHtml(uploadedFile.name)}</p>` : ''}
@@ -135,5 +145,5 @@ export async function submitRfq(formData: FormData): Promise<SubmitRfqResult> {
     return { success: false, error: 'Something went wrong sending your request. Please try again or email us directly.' }
   }
 
-  return { success: true }
+  return { success: true, ticketId }
 }

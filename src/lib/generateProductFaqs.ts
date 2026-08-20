@@ -118,7 +118,7 @@ export const generateProductFaqs = (product: Product): ProductFaqItem[] => {
   // 9. Returns — always relevant, always true site-wide policy.
   items.push({
     question: `Can I return the ${title} if it doesn't fit my project?`,
-    answer: `Yes — unopened components including the ${title} can be returned within 30 days of delivery for a full refund or exchange.`,
+    answer: `Yes — unopened components including the ${title} can be returned within 7 days of delivery for a full refund or exchange.`,
   })
 
   return items

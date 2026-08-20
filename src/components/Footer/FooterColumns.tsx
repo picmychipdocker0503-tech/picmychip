@@ -2,7 +2,7 @@ import type { Footer } from '@/payload-types'
 
 import { CMSLink } from '@/components/Link'
 import { getFooterColumnIcon } from '@/utilities/getFooterColumnIcon'
-import { getFooterLinkIcon } from '@/utilities/getFooterLinkIcon'
+import { getNavLinkIcon } from '@/utilities/getNavLinkIcon'
 import { ChevronRight } from 'lucide-react'
 import React from 'react'
 
@@ -38,7 +38,7 @@ export const FooterColumns: React.FC<Props> = ({ columns }) => {
             <ul className="flex flex-col gap-2.5">
               {(column.links ?? []).map((item, linkIndex) => {
                 const label = item.link?.label ?? ''
-                const LinkIcon = getFooterLinkIcon(label)
+                const LinkIcon = getNavLinkIcon(label)
 
                 return (
                   <li key={item.id ?? linkIndex}>

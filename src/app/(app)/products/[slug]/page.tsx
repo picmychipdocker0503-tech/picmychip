@@ -123,6 +123,8 @@ export default async function ProductPage({ params }: Args) {
     : product.inventory! > 0
 
   let price = product.priceInINR
+  let lowPrice: number | undefined
+  let highPrice: number | undefined
 
   if (product.enableVariants && product?.variants?.docs?.length) {
     price = product?.variants?.docs?.reduce((acc, variant) => {
@@ -131,6 +133,15 @@ export default async function ProductPage({ params }: Args) {
       }
       return acc
     }, price)
+
+    const variantPrices = product.variants.docs
+      .map((variant) => (typeof variant === 'object' ? variant.priceInINR : undefined))
+      .filter((value): value is number => typeof value === 'number')
+
+    if (variantPrices.length) {
+      lowPrice = Math.min(...variantPrices)
+      highPrice = Math.max(...variantPrices)
+    }
   }
 
   const productUrl = `${getServerSideURL()}/products/${product.slug}`
@@ -154,10 +165,14 @@ export default async function ProductPage({ params }: Args) {
     hasStock: Boolean(hasStock),
     imageUrl: metaImage?.url,
     price,
+    lowPrice,
+    highPrice,
     title: product.title,
     url: productUrl,
     averageRating,
     reviewCount,
+    brand: typeof product.brand === 'object' ? product.brand?.title : undefined,
+    sku: product.sku,
   })
 
   const firstCategory = product.categories?.find(

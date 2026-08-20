@@ -436,6 +436,10 @@ export interface Order {
     shipment?: string | null;
   };
   lastSyncAt?: string | null;
+  /**
+   * When the "how was your order?" review-request email was sent, if at all.
+   */
+  reviewRequestSentAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -900,6 +904,7 @@ export interface Page {
     | TeamGridBlock
     | FeaturedCollectionBlock
     | ContentFeedBlock
+    | ContactInfoBlock
   )[];
   meta?: {
     title?: string | null;
@@ -1014,6 +1019,10 @@ export interface ArchiveBlock {
 export interface Category {
   id: number;
   title: string;
+  /**
+   * One or two sentences shown under the category heading on the storefront — also used for search engines' category-page structured data. Keeps the page from being just an icon and a product grid.
+   */
+  description?: string | null;
   /**
    * Optional parent category, for sub-category hierarchies.
    */
@@ -1744,6 +1753,28 @@ export interface ContentFeedBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContactInfoBlock".
+ */
+export interface ContactInfoBlock {
+  heading?: string | null;
+  /**
+   * Used to look up the pin on the embedded Google Map when "Map search query" below is left empty.
+   */
+  address: string;
+  /**
+   * Overrides what's searched for on the map. Use this when the plain address matches several nearby businesses (e.g. a shared building) — include the business name, like "Picmychip, F-86, ...", to pin the exact listing.
+   */
+  mapQuery?: string | null;
+  /**
+   * One phone number per line.
+   */
+  phones: string;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'contactInfo';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "variants".
  */
 export interface Variant {
@@ -2145,7 +2176,14 @@ export interface TeamTestimonial {
    * e.g. "Engineering", "Operations", "Customer Support".
    */
   department?: string | null;
+  /**
+   * Only used when no user account is linked below — otherwise their account avatar is shown.
+   */
   photo?: (number | null) | Media;
+  /**
+   * Optional — link this person's real account to auto-pull their profile picture and show their email on the "Team" page. Leave blank to use the photo above only.
+   */
+  linkedUser?: (number | null) | User;
   /**
    * What they would say about working at Picmychip, in their own words. Optional — leave blank if you don't have a real quote from them yet; they'll still appear on the "Team" page, just not in the People & Culture quote cards, which only show people who have one.
    */
@@ -2627,6 +2665,7 @@ export interface PagesSelect<T extends boolean = true> {
         teamGrid?: T | TeamGridBlockSelect<T>;
         featuredCollection?: T | FeaturedCollectionBlockSelect<T>;
         contentFeed?: T | ContentFeedBlockSelect<T>;
+        contactInfo?: T | ContactInfoBlockSelect<T>;
       };
   meta?:
     | T
@@ -3055,10 +3094,23 @@ export interface ContentFeedBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContactInfoBlock_select".
+ */
+export interface ContactInfoBlockSelect<T extends boolean = true> {
+  heading?: T;
+  address?: T;
+  mapQuery?: T;
+  phones?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "categories_select".
  */
 export interface CategoriesSelect<T extends boolean = true> {
   title?: T;
+  description?: T;
   parent?: T;
   specSchemaType?: T;
   layout?:
@@ -3270,6 +3322,7 @@ export interface TeamTestimonialsSelect<T extends boolean = true> {
   designation?: T;
   department?: T;
   photo?: T;
+  linkedUser?: T;
   quote?: T;
   yearsAtCompany?: T;
   story?: T;
@@ -3933,6 +3986,7 @@ export interface OrdersSelect<T extends boolean = true> {
         shipment?: T;
       };
   lastSyncAt?: T;
+  reviewRequestSentAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

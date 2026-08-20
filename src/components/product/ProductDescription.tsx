@@ -21,6 +21,7 @@ import { BulkOrderContact } from '@/components/product/BulkOrderContact'
 import { DeliveryEstimate } from '@/components/product/DeliveryEstimate'
 import { StockIndicator } from '@/components/product/StockIndicator'
 import { TrustBadges } from '@/components/product/TrustBadges'
+import { useFeatureFlags } from '@/lib/useFeatureFlags'
 
 type Props = {
   product: Product
@@ -41,6 +42,7 @@ export function ProductDescription({
 }: Props) {
   const { currency } = useCurrency()
   const t = useTranslations('product')
+  const flags = useFeatureFlags()
   const { toggle, isComparing } = useCompare()
   const { toggle: toggleWishlist, isSaved } = useWishlist()
   const productId = String(product.id)
@@ -180,7 +182,7 @@ export function ProductDescription({
           <StockIndicator product={product} />
         </Suspense>
 
-        {product.stockStatus === 'out-of-stock' && !product.enableVariants && (
+        {flags.backInStockAlerts && product.stockStatus === 'out-of-stock' && !product.enableVariants && (
           <BackInStockForm productId={product.id} />
         )}
 

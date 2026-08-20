@@ -49,7 +49,7 @@ export const RfqHero: React.FC<Props> = ({ onUploadClick, onManualEntryClick }) 
           </div>
 
           <h1 className="text-foreground text-3xl leading-tight font-black tracking-tight sm:text-4xl lg:text-5xl">
-            Automate component sourcing &amp; bulk RFQ quoting
+            Upload Your BOM. Sit Back. Get the Best Deal!
           </h1>
 
           <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-sm leading-relaxed sm:text-base">

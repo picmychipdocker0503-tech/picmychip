@@ -33,7 +33,7 @@ const DEFAULT_BADGES: { icon: keyof typeof ICON_MAP; label: string; description:
   },
   {
     icon: 'returns',
-    label: '30-Day Easy Returns',
+    label: '7-Day Easy Returns',
     description: 'Wrong part or DOA? Start a return right from your order history.',
   },
   {

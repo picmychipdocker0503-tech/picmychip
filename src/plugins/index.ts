@@ -477,6 +477,15 @@ export const plugins: Plugin[] = [
             type: 'date',
             admin: { position: 'sidebar', readOnly: true },
           },
+          {
+            name: 'reviewRequestSentAt',
+            type: 'date',
+            admin: {
+              position: 'sidebar',
+              readOnly: true,
+              description: 'When the "how was your order?" review-request email was sent, if at all.',
+            },
+          },
         ],
       }),
     },

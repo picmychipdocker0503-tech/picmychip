@@ -4,6 +4,7 @@ import type { CategoryMenuGroup } from '@/utilities/categoryMenuGroups'
 import type { CategoryTreeNode } from '@/utilities/getCategoryTree'
 
 import { cn } from '@/utilities/cn'
+import { getNavLinkIcon } from '@/utilities/getNavLinkIcon'
 import { ChevronDownIcon, ChevronRightIcon } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
@@ -20,12 +21,14 @@ type Props = {
 
 export function ShopMegaMenu({ active, groups, label, url }: Props) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
+  const Icon = getNavLinkIcon(label)
 
   const allCategories = groups.flatMap((group) => group.categories)
 
   if (!allCategories.length) {
     return (
       <Link className={cn(linkClass, active && 'bg-primary/5 text-primary')} href={url}>
+        <Icon className="size-3.5" />
         {label}
       </Link>
     )
@@ -41,6 +44,7 @@ export function ShopMegaMenu({ active, groups, label, url }: Props) {
         role="button"
         tabIndex={0}
       >
+        <Icon className="size-3.5" />
         {label}
         <ChevronDownIcon className="size-3.5" />
       </Link>

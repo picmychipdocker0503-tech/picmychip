@@ -49,6 +49,11 @@ import * as migration_20260819_131219_add_rfq_bom_section from './20260819_13121
 import * as migration_20260819_140542_add_track_order_feature_flag from './20260819_140542_add_track_order_feature_flag';
 import * as migration_20260819_212037_add_trusted_by_brands_feature_flag from './20260819_212037_add_trusted_by_brands_feature_flag';
 import * as migration_20260820_043804_add_rewards_free_shipping_flags from './20260820_043804_add_rewards_free_shipping_flags';
+import * as migration_20260820_072924_add_contact_info_block from './20260820_072924_add_contact_info_block';
+import * as migration_20260820_074514_add_contact_info_map_query from './20260820_074514_add_contact_info_map_query';
+import * as migration_20260820_114334_add_team_testimonials_linked_user from './20260820_114334_add_team_testimonials_linked_user';
+import * as migration_20260820_130557_add_category_description from './20260820_130557_add_category_description';
+import * as migration_20260820_131235_add_order_review_request from './20260820_131235_add_order_review_request';
 
 export const migrations = [
   {
@@ -305,5 +310,30 @@ export const migrations = [
     up: migration_20260820_043804_add_rewards_free_shipping_flags.up,
     down: migration_20260820_043804_add_rewards_free_shipping_flags.down,
     name: '20260820_043804_add_rewards_free_shipping_flags',
+  },
+  {
+    up: migration_20260820_072924_add_contact_info_block.up,
+    down: migration_20260820_072924_add_contact_info_block.down,
+    name: '20260820_072924_add_contact_info_block',
+  },
+  {
+    up: migration_20260820_074514_add_contact_info_map_query.up,
+    down: migration_20260820_074514_add_contact_info_map_query.down,
+    name: '20260820_074514_add_contact_info_map_query',
+  },
+  {
+    up: migration_20260820_114334_add_team_testimonials_linked_user.up,
+    down: migration_20260820_114334_add_team_testimonials_linked_user.down,
+    name: '20260820_114334_add_team_testimonials_linked_user',
+  },
+  {
+    up: migration_20260820_130557_add_category_description.up,
+    down: migration_20260820_130557_add_category_description.down,
+    name: '20260820_130557_add_category_description',
+  },
+  {
+    up: migration_20260820_131235_add_order_review_request.up,
+    down: migration_20260820_131235_add_order_review_request.down,
+    name: '20260820_131235_add_order_review_request',
   },
 ];

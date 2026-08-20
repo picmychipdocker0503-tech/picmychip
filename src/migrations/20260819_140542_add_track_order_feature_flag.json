@@ -2081,7 +2081,7 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'Automate component sourcing & bulk RFQ quoting'"
+          "default": "'Upload Your BOM. Sit Back. Get the Best Deal!'"
         },
         "subtitle": {
           "name": "subtitle",

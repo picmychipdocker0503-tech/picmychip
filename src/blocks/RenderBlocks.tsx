@@ -7,6 +7,7 @@ import { CallToActionBlock } from '@/blocks/CallToAction/Component'
 import { CarouselBlock } from '@/blocks/Carousel/Component'
 import { CategoryGridBlock } from '@/blocks/CategoryGrid/Component'
 import { ComparisonTableBlock } from '@/blocks/ComparisonTable/Component'
+import { ContactInfoBlock } from '@/blocks/ContactInfo/Component'
 import { ContentBlock } from '@/blocks/Content/Component'
 import { ContentFeedBlock } from '@/blocks/ContentFeed/Component'
 import { FAQBlock } from '@/blocks/FAQ/Component'
@@ -38,6 +39,7 @@ const blockComponents = {
   carousel: CarouselBlock,
   categoryGrid: CategoryGridBlock,
   comparisonTable: ComparisonTableBlock,
+  contactInfo: ContactInfoBlock,
   content: ContentBlock,
   contentFeed: ContentFeedBlock,
   cta: CallToActionBlock,

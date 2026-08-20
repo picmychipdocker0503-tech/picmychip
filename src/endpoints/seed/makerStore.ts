@@ -665,7 +665,7 @@ export const seedMakerStore = async ({
               question: "What's your return policy?",
               answer: richText([
                 paragraph(
-                  'Unopened components can be returned within 30 days of delivery for a full refund.',
+                  'Unopened components can be returned within 7 days of delivery for a full refund.',
                 ),
               ]),
             },
@@ -711,7 +711,7 @@ export const seedMakerStore = async ({
               richText: richText([
                 heading('Warranty & Returns', 'h3'),
                 paragraph(
-                  'All components carry a 90-day defect warranty. Unopened items can be returned within 30 days of delivery.',
+                  'All components carry a 90-day defect warranty. Unopened items can be returned within 7 days of delivery.',
                 ),
               ]),
               enableLink: false,

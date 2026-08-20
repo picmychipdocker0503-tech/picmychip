@@ -18,6 +18,31 @@ export const buildOrganizationJsonLd = (siteSettings: SiteSetting | null) => {
   }
 }
 
+type CollectionPageJsonLdArgs = {
+  name: string
+  description?: string | null
+  url: string
+  items: { name: string; url: string; imageUrl?: string | null }[]
+}
+
+export const buildCollectionPageJsonLd = ({ name, description, url, items }: CollectionPageJsonLdArgs) => ({
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name,
+  description: description || undefined,
+  url,
+  mainEntity: {
+    '@type': 'ItemList',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: item.url,
+      name: item.name,
+      image: item.imageUrl || undefined,
+    })),
+  },
+})
+
 export const buildBreadcrumbListJsonLd = (items: { name: string; url: string }[]) => ({
   '@context': 'https://schema.org',
   '@type': 'BreadcrumbList',
@@ -94,32 +119,53 @@ type ProductJsonLdArgs = {
   hasStock: boolean
   imageUrl?: string | null
   price?: number | null
+  lowPrice?: number | null
+  highPrice?: number | null
   title: string
   url: string
   averageRating?: number
   reviewCount?: number
+  brand?: string | null
+  sku?: string | null
 }
+
+/** Offers valid for 90 days from generation — long enough that Google won't
+ * flag it as stale between rebuilds, short enough to force a periodic refresh
+ * rather than an offer with no real-world expiry. */
+const OFFER_VALID_DAYS = 90
 
 export const buildProductJsonLd = ({
   description,
   hasStock,
   imageUrl,
   price,
+  lowPrice,
+  highPrice,
   title,
   url,
   averageRating,
   reviewCount,
+  brand,
+  sku,
 }: ProductJsonLdArgs) => ({
   name: title,
   '@context': 'https://schema.org',
   '@type': 'Product',
   description,
   image: imageUrl,
+  brand: brand ? { '@type': 'Brand', name: brand } : undefined,
+  sku: sku || undefined,
   offers: {
     '@type': 'AggregateOffer',
     availability: hasStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
     price,
-    priceCurrency: 'inr',
+    ...(typeof lowPrice === 'number' && typeof highPrice === 'number' && lowPrice !== highPrice
+      ? { lowPrice, highPrice }
+      : {}),
+    priceCurrency: 'INR',
+    priceValidUntil: new Date(Date.now() + OFFER_VALID_DAYS * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10),
   },
   ...(reviewCount && reviewCount > 0
     ? {

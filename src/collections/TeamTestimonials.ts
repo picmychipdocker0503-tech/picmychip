@@ -51,6 +51,19 @@ export const TeamTestimonials: CollectionConfig = {
       name: 'photo',
       type: 'upload',
       relationTo: 'media',
+      admin: {
+        description: 'Only used when no user account is linked below — otherwise their account avatar is shown.',
+      },
+    },
+    {
+      name: 'linkedUser',
+      type: 'relationship',
+      relationTo: 'users',
+      label: 'Linked user account',
+      admin: {
+        description:
+          'Optional — link this person\'s real account to auto-pull their profile picture and show their email on the "Team" page. Leave blank to use the photo above only.',
+      },
     },
     {
       name: 'quote',

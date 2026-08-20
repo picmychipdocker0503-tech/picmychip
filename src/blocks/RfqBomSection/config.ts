@@ -17,7 +17,7 @@ export const RfqBomSection: Block = {
       name: 'heading',
       type: 'text',
       required: true,
-      defaultValue: 'Automate component sourcing & bulk RFQ quoting',
+      defaultValue: 'Upload Your BOM. Sit Back. Get the Best Deal!',
     },
     {
       name: 'subtitle',

@@ -252,7 +252,7 @@ export const seedHomepageContent = async (payload: Payload) => {
         {
           blockType: 'rfqBomSection' as const,
           badge: 'Instant Sourcing Hub',
-          heading: 'Automate component sourcing & bulk RFQ quoting',
+          heading: 'Upload Your BOM. Sit Back. Get the Best Deal!',
           subtitle:
             'Upload a BOM or enter parts manually — we auto-match each line against live inventory, check stock in real time, and roll up target pricing across your full list.',
           bomCard: {
@@ -363,7 +363,7 @@ export const seedHomepageContent = async (payload: Payload) => {
               question: "What's your return policy?",
               answer: richText([
                 paragraph(
-                  'Unopened components can be returned within 30 days of delivery for a full refund.',
+                  'Unopened components can be returned within 7 days of delivery for a full refund.',
                 ),
               ]),
             },

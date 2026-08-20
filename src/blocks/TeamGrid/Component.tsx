@@ -5,20 +5,25 @@ import type {
 import type { SerializedEditorState } from '@payloadcms/richtext-lexical/lexical'
 
 import { Media } from '@/components/Media'
-import { RichText } from '@/components/RichText'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
-import { Users } from 'lucide-react'
+import { Mail, Users } from 'lucide-react'
 import React from 'react'
 
 type Member = {
   key: string | number
   name: string
   photo?: MediaType | null
+  email?: string | null
   designation?: string | null
   department?: string | null
   yearsAtCompany?: number | null
   story?: SerializedEditorState | null
+}
+
+type Group = {
+  name: string
+  members: Member[]
 }
 
 export const TeamGridBlock: React.FC<
@@ -41,9 +46,11 @@ export const TeamGridBlock: React.FC<
   } else {
     const payload = await getPayload({ config: configPromise })
 
+    // depth: 2 — one level to populate `linkedUser`, a second to populate
+    // that user's own `avatar` relationship.
     const { docs } = await payload.find({
       collection: 'team-testimonials',
-      depth: 1,
+      depth: 2,
       limit: limit || 12,
       sort: '-createdAt',
       where: {
@@ -51,71 +58,106 @@ export const TeamGridBlock: React.FC<
       },
     })
 
-    members = docs.map((entry) => ({
-      key: entry.id,
-      name: entry.name,
-      photo: typeof entry.photo === 'object' ? entry.photo : undefined,
-      designation: entry.designation,
-      department: entry.department,
-      yearsAtCompany: entry.yearsAtCompany,
-      story: entry.story,
-    }))
+    members = docs.map((entry) => {
+      const linkedUser = typeof entry.linkedUser === 'object' ? entry.linkedUser : undefined
+
+      return {
+        key: entry.id,
+        name: entry.name,
+        // A linked account's own profile picture wins when present — the
+        // curated `photo` field is only a fallback for people without one.
+        photo:
+          (typeof linkedUser?.avatar === 'object' ? linkedUser.avatar : undefined) ??
+          (typeof entry.photo === 'object' ? entry.photo : undefined),
+        email: linkedUser?.email,
+        designation: entry.designation,
+        department: entry.department,
+        yearsAtCompany: entry.yearsAtCompany,
+        story: entry.story,
+      }
+    })
   }
 
   if (members.length === 0) return null
 
-  const headingText = heading || 'Meet the Team'
+  // Grouped by department, preserving each department's first-appearance
+  // order — members with no department fall into a single trailing "Team"
+  // bucket rather than being scattered or dropped.
+  const groups = members.reduce<Group[]>((acc, member) => {
+    const groupName = member.department?.trim() || 'Team'
+    let group = acc.find((g) => g.name === groupName)
+    if (!group) {
+      group = { name: groupName, members: [] }
+      acc.push(group)
+    }
+    group.members.push(member)
+    return acc
+  }, [])
 
   return (
     <section className="container my-20">
-      <div className="mx-auto mb-12 max-w-3xl text-center">
-        <span className="text-primary bg-primary/10 border-primary/20 mb-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold tracking-wider uppercase">
-          <Users className="size-3.5" />
-          Team
-        </span>
-        <h2 className="text-2xl font-black tracking-tight sm:text-3xl lg:text-4xl">
-          <span className="text-foreground">{headingText}</span>
-        </h2>
-        {intro && <p className="text-muted-foreground mt-2 text-sm sm:text-base">{intro}</p>}
-      </div>
+      {(heading || intro) && (
+        <div className="mb-14 max-w-2xl">
+          {heading && (
+            <>
+              <span className="text-primary bg-primary/10 border-primary/20 mb-3 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold tracking-wider uppercase">
+                <Users className="size-3.5" />
+                Team
+              </span>
+              <h2 className="text-2xl font-black tracking-tight text-foreground sm:text-3xl lg:text-4xl">
+                {heading}
+              </h2>
+            </>
+          )}
+          {intro && <p className="text-muted-foreground mt-3 text-sm leading-relaxed sm:text-base">{intro}</p>}
+        </div>
+      )}
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {members.map((member) => (
+      <div className="flex flex-col">
+        {groups.map((group) => (
           <div
-            className="border-border/80 bg-card/60 flex flex-col overflow-hidden rounded-3xl border p-7 shadow-sm backdrop-blur-xl transition-all duration-300 hover:border-primary/50 hover:bg-card hover:shadow-lg"
-            key={member.key}
+            className="border-border/80 grid grid-cols-1 gap-6 border-t py-10 first:border-t-0 first:pt-0 md:grid-cols-12 md:gap-8"
+            key={group.name}
           >
-            <div className="mb-5 flex items-center gap-4">
-              <div className="bg-primary/10 text-primary border-primary/20 flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-full border text-lg font-bold">
-                {member.photo?.url ? (
-                  <Media className="rounded-full" imgClassName="rounded-full object-cover" resource={member.photo} />
-                ) : (
-                  member.name.charAt(0).toUpperCase()
-                )}
-              </div>
-              <div>
-                <div className="text-foreground text-base font-bold">{member.name}</div>
-                {(member.designation || member.department) && (
-                  <div className="text-muted-foreground text-xs">
-                    {[member.designation, member.department].filter(Boolean).join(' · ')}
-                  </div>
-                )}
-                {typeof member.yearsAtCompany === 'number' && (
-                  <div className="text-muted-foreground text-xs">
-                    {member.yearsAtCompany} {member.yearsAtCompany === 1 ? 'year' : 'years'} at Picmychip
-                  </div>
-                )}
-              </div>
+            <div className="md:col-span-3">
+              <h3 className="text-foreground text-lg font-bold sm:text-xl">{group.name}</h3>
             </div>
 
-            {member.story ? (
-              <RichText
-                className="max-w-none [&>p]:text-muted-foreground [&>p]:mt-2 [&>p]:text-sm [&>p]:leading-relaxed first:[&>p]:mt-0"
-                data={member.story}
-                enableGutter={false}
-                enableProse={false}
-              />
-            ) : null}
+            <div className="grid grid-cols-2 gap-x-5 gap-y-8 sm:grid-cols-3 md:col-span-9">
+              {group.members.map((member) => (
+                <div className="group" key={member.key}>
+                  <div className="bg-muted relative aspect-[3/4] overflow-hidden rounded-2xl">
+                    {member.photo?.url ? (
+                      <Media
+                        className="h-full w-full"
+                        imgClassName="h-full w-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-[1.03]"
+                        resource={member.photo}
+                      />
+                    ) : (
+                      <div className="text-primary bg-primary/10 flex h-full w-full items-center justify-center text-3xl font-bold">
+                        {member.name.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-3">
+                    <div className="text-foreground text-sm font-bold sm:text-base">{member.name}</div>
+                    {member.designation && (
+                      <div className="text-muted-foreground mt-0.5 text-xs sm:text-sm">{member.designation}</div>
+                    )}
+                    {member.email && (
+                      <a
+                        className="text-muted-foreground hover:text-primary mt-1 flex items-center gap-1 text-xs transition-colors"
+                        href={`mailto:${member.email}`}
+                      >
+                        <Mail className="size-3 shrink-0" />
+                        <span className="truncate">{member.email}</span>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>

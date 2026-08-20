@@ -97,6 +97,10 @@ export default buildConfig({
           Component: '@/components/admin/AbandonedCheckoutsView#AbandonedCheckoutsView',
           path: '/abandoned-checkouts',
         },
+        reviewRequests: {
+          Component: '@/components/admin/ReviewRequestsView#ReviewRequestsView',
+          path: '/review-requests',
+        },
       },
     },
     user: Users.slug,

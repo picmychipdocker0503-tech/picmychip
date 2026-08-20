@@ -7,6 +7,7 @@ import { NewsletterForm } from '@/components/Footer/NewsletterForm'
 import { PaymentBadges } from '@/components/Footer/PaymentBadges'
 import { ShipToPills } from '@/components/Footer/ShipToPills'
 import { Wordmark } from '@/components/icons/Wordmark'
+import { Newsletter as NewsletterIllustration } from '@/components/illustrations'
 import { ThemeSelector } from '@/providers/Theme/ThemeSelector'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { getSocialIcon } from '@/utilities/getSocialIcon'
@@ -38,13 +39,19 @@ export async function Footer() {
       <div className="container pt-16">
         <div className="border-border bg-card relative overflow-hidden rounded-2xl border px-8 py-10 sm:px-12">
           <div className="bg-primary/20 pointer-events-none absolute top-1/2 right-0 size-64 -translate-y-1/2 translate-x-1/3 rounded-full blur-3xl" />
-          <div className="relative flex flex-col items-center justify-between gap-6 text-center md:flex-row md:text-left">
-            <div>
-              <span className="eyebrow">Newsletter</span>
-              <h2 className="text-foreground mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
-                {footer.newsletterHeading || "Don't Miss Out Latest Trends & Offers"}
-              </h2>
-              {footer.newsletterCopy && <p className="text-muted-foreground mt-2">{footer.newsletterCopy}</p>}
+          <div className="bg-orange/10 pointer-events-none absolute bottom-0 left-0 size-56 -translate-x-1/3 translate-y-1/3 rounded-full blur-3xl" />
+          <div className="relative flex flex-col items-center justify-between gap-8 text-center md:flex-row md:text-left">
+            <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center">
+              <div className="border-primary/20 bg-primary/10 text-primary hidden shrink-0 items-center justify-center rounded-2xl border p-4 sm:flex">
+                <NewsletterIllustration className="size-11" />
+              </div>
+              <div>
+                <span className="eyebrow">Newsletter</span>
+                <h2 className="text-foreground mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {footer.newsletterHeading || "Don't Miss Out Latest Trends & Offers"}
+                </h2>
+                {footer.newsletterCopy && <p className="text-muted-foreground mt-2">{footer.newsletterCopy}</p>}
+              </div>
             </div>
             <NewsletterForm />
           </div>

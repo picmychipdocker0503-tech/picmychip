@@ -54,6 +54,7 @@ import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc056
 import { BulkStockView as BulkStockView_8c4a371557f68e4bd543ca87b931cb36 } from '@/components/admin/BulkStockView'
 import { ReportsView as ReportsView_2700296603fedf8ecc35ba27dbf9f33f } from '@/components/admin/ReportsView'
 import { AbandonedCheckoutsView as AbandonedCheckoutsView_a723158a4ddaa05a932220cd55cf99c3 } from '@/components/admin/AbandonedCheckoutsView'
+import { ReviewRequestsView as ReviewRequestsView_15ae411048dd84dca6a3c027fbdc0c3b } from '@/components/admin/ReviewRequestsView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -114,5 +115,6 @@ export const importMap = {
   "@/components/admin/BulkStockView#BulkStockView": BulkStockView_8c4a371557f68e4bd543ca87b931cb36,
   "@/components/admin/ReportsView#ReportsView": ReportsView_2700296603fedf8ecc35ba27dbf9f33f,
   "@/components/admin/AbandonedCheckoutsView#AbandonedCheckoutsView": AbandonedCheckoutsView_a723158a4ddaa05a932220cd55cf99c3,
+  "@/components/admin/ReviewRequestsView#ReviewRequestsView": ReviewRequestsView_15ae411048dd84dca6a3c027fbdc0c3b,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }
