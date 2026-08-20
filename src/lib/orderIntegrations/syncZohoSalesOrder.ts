@@ -1,7 +1,7 @@
 import type { Payload } from 'payload'
 
 import { zohoIsConfigured } from '@/lib/zoho/auth'
-import { findOrCreateZohoCustomer } from '@/lib/zoho/customers'
+import { findOrCreateZohoCustomer, markZohoContactActive } from '@/lib/zoho/customers'
 import { findOrCreateZohoItem } from '@/lib/zoho/items'
 import { getZohoOrganizationState } from '@/lib/zoho/organization'
 import { resolveTaxId } from '@/lib/zoho/taxes'
@@ -217,6 +217,11 @@ async function resolveCustomerForOrder(
   return { contactId: contact.contact_id }
 }
 
+function isInactiveZohoCustomerError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err)
+  return message.includes('"code":3021') || message.toLowerCase().includes('customer is inactive')
+}
+
 /**
  * Writes back whatever a Zoho invoice already linked to this sales order
  * looks like — used both right after our own "accept" conversion and when
@@ -296,13 +301,21 @@ export async function syncZohoSalesOrderForOrder(payload: Payload, orderId: numb
       const taxType = resolveOrderTaxType(sellerState, customerState?.name)
 
       const lineItems = await buildZohoLineItems(payload, order, taxType, defaultGstPercent)
+      if (order.shippingAmount && order.shippingAmount > 0) {
+        const shippingTaxId = await resolveTaxId(defaultGstPercent, taxType)
+        lineItems.push({
+          name: order.shippingMethod === 'express' ? 'Express Shipping' : 'Standard Shipping',
+          rate: order.shippingAmount / 100,
+          quantity: 1,
+          tax_id: shippingTaxId,
+        })
+      }
       if (lineItems.length === 0) throw new Error('No valid line items for a sales order.')
 
       const gstin: string | undefined = order.businessDetails?.gstin || undefined
-      const companyName: string | undefined = order.businessDetails?.companyName || undefined
-      const gstTreatment = gstin ? 'business_gst' : companyName ? 'business_none' : undefined
+      const gstTreatment = gstin ? 'business_gst' : 'business_none'
 
-      salesOrder = await createZohoSalesOrder({
+      const salesOrderArgs = {
         customerId: contactId,
         referenceNumber: String(orderId),
         date: new Date(order.createdAt || Date.now()).toISOString().slice(0, 10),
@@ -310,7 +323,15 @@ export async function syncZohoSalesOrderForOrder(payload: Payload, orderId: numb
         gstTreatment,
         gstNo: gstin,
         lineItems,
-      })
+      }
+
+      try {
+        salesOrder = await createZohoSalesOrder(salesOrderArgs)
+      } catch (err) {
+        if (!isInactiveZohoCustomerError(err)) throw err
+        await markZohoContactActive(contactId)
+        salesOrder = await createZohoSalesOrder(salesOrderArgs)
+      }
 
       await payload.update({
         collection: 'orders',

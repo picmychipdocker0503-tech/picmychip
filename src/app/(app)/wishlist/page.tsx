@@ -106,7 +106,7 @@ export default function WishlistPage() {
             <Link className="group flex items-center gap-4" href={`/products/${product.slug}`}>
               <div className="bg-muted relative size-16 shrink-0 overflow-hidden rounded-lg">
                 {image ? (
-                  <Media className="relative h-full w-full" fill imgClassName="object-cover" resource={image} />
+                  <Media className="relative h-full w-full" fill imgClassName="object-cover" resource={image} size="64px" />
                 ) : (
                   <div className="text-muted-foreground flex h-full w-full items-center justify-center text-xs">
                     No image

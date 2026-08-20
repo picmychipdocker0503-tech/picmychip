@@ -2,6 +2,7 @@ import type { Address } from '@/payload-types'
 
 import { incrementCouponRedemption, redeemGiftCard } from '@/lib/discounts'
 import { computeCheckoutTotal } from '@/lib/checkoutTax'
+import { requireCheckoutShippingMethod } from '@/lib/checkoutShipping'
 import { getPostHogClient } from '@/lib/posthog-server'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
@@ -14,6 +15,7 @@ type Body = {
   shippingAddress?: Partial<Address>
   billingAddress?: Partial<Address>
   businessDetails?: { companyName?: string; gstin?: string; panNumber?: string }
+  shippingMethod?: string
 }
 
 /**
@@ -27,7 +29,7 @@ type Body = {
  */
 export async function POST(request: NextRequest) {
   const body = (await request.json()) as Body
-  const { cartId, email, shippingAddress, billingAddress, businessDetails } = body
+  const { cartId, email, shippingAddress, billingAddress, businessDetails, shippingMethod } = body
 
   if (!cartId || !email) {
     return NextResponse.json({ error: 'Missing cart or email.' }, { status: 400 })
@@ -47,6 +49,14 @@ export async function POST(request: NextRequest) {
 
     if (!cart || !cart.items || cart.items.length === 0) {
       return NextResponse.json({ error: 'Cart is empty.' }, { status: 400 })
+    }
+
+    let selectedShippingMethod
+    try {
+      selectedShippingMethod = requireCheckoutShippingMethod(shippingMethod)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Please select a valid shipping method.'
+      return NextResponse.json({ error: message }, { status: 400 })
     }
 
     const baseSubtotal = cart.subtotal ?? 0
@@ -70,7 +80,16 @@ export async function POST(request: NextRequest) {
       amount = Math.round(finalAmount)
     }
 
+    amount += selectedShippingMethod.amount
+
     const paymentMethod: 'cod' | 'gift-card' = amount <= 0 ? 'gift-card' : 'cod'
+
+    if (paymentMethod === 'cod') {
+      const featureFlags = await payload.findGlobal({ slug: 'feature-flags', depth: 0, overrideAccess: true })
+      if (!featureFlags?.cashOnDelivery) {
+        return NextResponse.json({ error: 'Cash on Delivery is currently unavailable.' }, { status: 400 })
+      }
+    }
 
     const items = cart.items.map((item) => ({
       product: typeof item.product === 'object' ? item.product?.id : item.product,
@@ -91,6 +110,8 @@ export async function POST(request: NextRequest) {
         amount,
         currency: cart.currency,
         paymentMethod,
+        shippingMethod: selectedShippingMethod.id,
+        shippingAmount: selectedShippingMethod.amount,
         discountsApplied: true,
         ...(cart.appliedCouponCode && cart.couponDiscountAmount
           ? { couponApplied: { code: cart.appliedCouponCode, discountAmount: cart.couponDiscountAmount } }

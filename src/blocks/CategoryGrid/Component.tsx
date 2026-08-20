@@ -34,7 +34,12 @@ export const CategoryGridBlock: React.FC<
             >
               <div className="card-hover from-orange/25 to-orange/10 border-orange/20 relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl border bg-gradient-to-br">
                 {image ? (
-                  <Media fill imgClassName="object-cover" resource={image} />
+                  <Media
+                    fill
+                    imgClassName="object-cover"
+                    resource={image}
+                    size="(max-width: 640px) 112px, (max-width: 1024px) 25vw, 16vw"
+                  />
                 ) : (
                   <Icon className="text-orange size-12 transition-transform duration-300 group-hover:scale-110" />
                 )}

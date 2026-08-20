@@ -169,6 +169,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
               imgClassName="object-contain"
               priority={priority}
               resource={image}
+              size="(max-width: 640px) 50vw, 25vw"
             />
           ) : (
             <div className="bg-background/50 flex h-full w-full items-center justify-center rounded-lg text-xs text-muted-foreground">

@@ -1,5 +1,6 @@
 import type { PaymentAdapter } from '@payloadcms/plugin-ecommerce/types'
 import type { Address } from '@/payload-types'
+import { getCheckoutShippingMethod } from '@/lib/checkoutShipping'
 import { scheduleZohoSalesOrderSync } from '@/hooks/createZohoSalesOrder'
 import crypto from 'crypto'
 
@@ -134,6 +135,15 @@ export const confirmOrder =
 
     const customer =
       typeof transaction.customer === 'object' ? transaction.customer?.id : transaction.customer
+    const shippingSnapshot = (transaction.payu?.shippingAddressSnapshot ?? undefined) as
+      | (Address & { shippingMethod?: string; shippingAmount?: number })
+      | undefined
+    const { shippingMethod: snapshotShippingMethod, shippingAmount: snapshotShippingAmount, ...shippingAddress } =
+      shippingSnapshot ?? {}
+    const shippingMethod = transaction.shippingMethod || snapshotShippingMethod
+    const shippingAmount =
+      typeof transaction.shippingAmount === 'number' ? transaction.shippingAmount : snapshotShippingAmount
+    const validShippingMethod = getCheckoutShippingMethod(shippingMethod)?.id
 
     const order = await payload.create({
       collection: ordersSlug as 'orders',
@@ -142,9 +152,11 @@ export const confirmOrder =
         currency: transaction.currency,
         ...(customer ? { customer } : { customerEmail: transaction.customerEmail }),
         items: transaction.items,
-        shippingAddress: (transaction.payu?.shippingAddressSnapshot ?? undefined) as Address | undefined,
+        shippingAddress: Object.keys(shippingAddress).length ? (shippingAddress as Address) : undefined,
         billingAddress: transaction.billingAddress,
         ...(transaction.businessDetails ? { businessDetails: transaction.businessDetails } : {}),
+        ...(validShippingMethod ? { shippingMethod: validShippingMethod } : {}),
+        ...(typeof shippingAmount === 'number' ? { shippingAmount } : {}),
         status: 'processing',
         transactions: [transaction.id],
       },

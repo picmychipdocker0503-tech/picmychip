@@ -2,7 +2,6 @@ import type { Product, Variant } from '@/payload-types'
 import type { Metadata } from 'next'
 
 import { Price } from '@/components/Price'
-import { PrintButton } from '@/components/PrintButton'
 import { getAccessibleOrder } from '@/lib/getAccessibleOrder'
 import { formatDateTime } from '@/utilities/formatDateTime'
 import { getCachedGlobal } from '@/utilities/getGlobals'
@@ -72,7 +71,6 @@ export default async function InvoicePage({ params, searchParams }: PageProps) {
               </p>
             )
           )}
-          <PrintButton />
         </div>
       </div>
 

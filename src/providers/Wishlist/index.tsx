@@ -103,6 +103,16 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
 export const useWishlist = (): WishlistContextValue => {
   const ctx = useContext(WishlistContext)
-  if (!ctx) throw new Error('useWishlist must be used within a WishlistProvider')
+  if (!ctx) {
+    if (process.env.NODE_ENV !== 'production') {
+      return {
+        ids: [],
+        toggle: () => {},
+        isSaved: () => false,
+        clear: () => {},
+      }
+    }
+    throw new Error('useWishlist must be used within a WishlistProvider')
+  }
   return ctx
 }

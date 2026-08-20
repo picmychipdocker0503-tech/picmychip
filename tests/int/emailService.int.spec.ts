@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { orderConfirmationEmailHtml } from '@/lib/email'
 import { sendMarketingEmail, sendTransactionalEmail } from '@/lib/email/emailService'
 import { buildZeptoMailAuthHeader } from '@/lib/email/providers/zeptomail'
 
@@ -46,6 +47,15 @@ describe('buildZeptoMailAuthHeader', () => {
   it('leaves an already-prefixed value as-is (case-insensitive)', () => {
     expect(buildZeptoMailAuthHeader('Zoho-enczapikey abc123')).toBe('Zoho-enczapikey abc123')
     expect(buildZeptoMailAuthHeader('zoho-enczapikey abc123')).toBe('zoho-enczapikey abc123')
+  })
+})
+
+describe('orderConfirmationEmailHtml', () => {
+  it('formats the stored paise amount as rupees in the customer email', () => {
+    const html = orderConfirmationEmailHtml({ id: 14, amount: 24485, currency: 'INR' })
+
+    expect(html).toContain('Order total:</strong> INR 244.85')
+    expect(html).not.toContain('24485.00')
   })
 })
 

@@ -33,6 +33,31 @@ type AuthContext = {
 
 const Context = createContext({} as AuthContext)
 
+function getPayloadErrorMessage(data: unknown, fallback: string): string {
+  const payload = data as { error?: unknown; errors?: { message?: unknown }[]; message?: unknown } | undefined
+  const errors = Array.isArray(payload?.errors) ? payload.errors : []
+  const firstMessage = errors.find((error) => typeof error?.message === 'string')?.message
+  if (typeof firstMessage === 'string' && firstMessage.trim()) return firstMessage
+  if (typeof payload?.message === 'string' && payload.message.trim()) return payload.message
+  if (typeof payload?.error === 'string' && payload.error.trim()) return payload.error
+  return fallback
+}
+
+async function readPayloadError(res: Response, fallback: string): Promise<string> {
+  const data = await res.json().catch(() => undefined)
+  return getPayloadErrorMessage(data, fallback)
+}
+
+function hasPayloadErrors(data: unknown): boolean {
+  const payload = data as { errors?: unknown } | undefined
+  return Array.isArray(payload?.errors) && payload.errors.length > 0
+}
+
+function getLoginUser(data: unknown): User | undefined {
+  const payload = data as { user?: User } | undefined
+  return payload?.user
+}
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>()
 
@@ -83,10 +108,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Read the body regardless of status — Payload returns a non-2xx status
     // with a specific `errors[0].message` (e.g. "verify your account before
     // logging in"), not just on success.
-    const { errors, user } = await res.json().catch(() => ({ errors: undefined, user: undefined }))
+    const data = await res.json().catch(() => undefined)
+    const user = getLoginUser(data)
 
-    if (!res.ok || errors || !user) {
-      throw new Error(errors?.[0]?.message || 'Invalid login')
+    if (!res.ok || hasPayloadErrors(data) || !user) {
+      throw new Error(getPayloadErrorMessage(data, 'The email or password provided is incorrect.'))
     }
 
     setUser(user)
@@ -168,31 +194,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [])
 
   const resetPassword = useCallback<ResetPassword>(async (args) => {
-    try {
-      const res = await fetch(`${getClientSideURL()}/api/users/reset-password`, {
-        body: JSON.stringify({
-          password: args.password,
-          passwordConfirm: args.passwordConfirm,
-          token: args.token,
-        }),
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        method: 'POST',
-      })
+    const res = await fetch(`${getClientSideURL()}/api/users/reset-password`, {
+      body: JSON.stringify({
+        password: args.password,
+        passwordConfirm: args.passwordConfirm,
+        token: args.token,
+      }),
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    })
 
-      if (res.ok) {
-        const { errors, user } = await res.json()
-        if (errors) throw new Error(errors[0].message)
-        setUser(user)
-        setStatus(user ? 'loggedIn' : undefined)
-      } else {
-        throw new Error('Invalid login')
-      }
-    } catch (e) {
-      throw new Error('An error occurred while attempting to login.')
+    const data = await res.json().catch(() => undefined)
+    const user = getLoginUser(data)
+
+    if (!res.ok || hasPayloadErrors(data) || !user) {
+      throw new Error(getPayloadErrorMessage(data, 'This link is invalid or has expired. Please request a new one.'))
     }
+
+    setUser(user)
+    setStatus(user ? 'loggedIn' : undefined)
   }, [])
 
   return (

@@ -34,19 +34,29 @@ export const LoginForm: React.FC = () => {
 
   const onSubmit = useCallback(
     async (data: FormData) => {
+      let user
       try {
-        const user = await login(data)
-        posthog.identify(String(user.id), { email: user.email })
-        posthog.capture('user_logged_in')
-        if (redirect?.current) router.push(redirect.current)
-        else router.push('/account')
+        user = await login(data)
       } catch (e) {
         setError(
           e instanceof Error && e.message
             ? e.message
             : 'There was an error with the credentials provided. Please try again.',
         )
+        return
       }
+
+      setError(null)
+
+      try {
+        posthog.identify(String(user.id), { email: user.email })
+        posthog.capture('user_logged_in')
+      } catch {
+        // Analytics must never block a successful login.
+      }
+
+      if (redirect?.current) router.push(redirect.current)
+      else router.push('/account')
     },
     [login, router],
   )

@@ -41,9 +41,13 @@ export const ForgotPasswordForm: React.FC = () => {
       setSuccess(true)
       setError('')
     } else {
-      setError(
-        'There was a problem while attempting to send you a password reset email. Please try again.',
-      )
+      const body = await response.json().catch(() => undefined)
+      const message =
+        body?.errors?.find?.((error: { message?: unknown }) => typeof error?.message === 'string')?.message ||
+        body?.message ||
+        body?.error ||
+        'There was a problem while attempting to send you a password reset email. Please try again.'
+      setError(message)
     }
   }, [])
 

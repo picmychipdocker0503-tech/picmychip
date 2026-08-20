@@ -21,6 +21,18 @@ const nextConfig: NextConfig = {
     loadPaths: ['./node_modules/@payloadcms/ui/dist/scss/'],
   },
   images: {
+    // Without this, Next's default (a matter of seconds) means the optimizer
+    // response is barely cached at all — the browser ends up sending a
+    // conditional request for the same image on nearly every repeat view,
+    // and each of those costs a real round trip to the image-optimization
+    // worker rather than being served straight from the browser's own disk
+    // cache. Not set to something much longer (e.g. a year, matching
+    // `_next/static`'s immutable caching) because filenames here aren't
+    // content-hashed (see generateFileURL in plugins/index.ts) — an editor
+    // replacing an existing Media document's file can end up reusing the
+    // same URL, so a correction should still show up for real visitors
+    // within a day rather than staying stale for months.
+    minimumCacheTTL: 86400,
     localPatterns: [
       {
         pathname: '/api/media/file/**',
@@ -110,6 +122,19 @@ const nextConfig: NextConfig = {
   },
   turbopack: {
     root: path.resolve(dirname),
+  },
+  experimental: {
+    // The homepage and ~200 product/blog/guide pages recently became eligible
+    // for static generation (removed the cookie-based locale read that was
+    // forcing the whole app dynamic). That's the intended win, but it means
+    // `next build` now actually executes every page's data-fetching — including
+    // Payload's heavy multi-block "pages" query — for real, concurrently,
+    // across every worker. At the default worker count (one per CPU core) that
+    // burst of simultaneous connections was enough to OOM this project's Neon
+    // compute mid-build. Capping workers trades some build time for staying
+    // under that ceiling. Raise this (or remove it) if the production Neon
+    // compute is sized larger than what hit the OOM here.
+    cpus: 2,
   },
 }
 

@@ -90,6 +90,8 @@ export default async function Order({ params, searchParams }: PageProps) {
         paymentMethod: true,
         couponApplied: true,
         giftCardApplied: true,
+        zohoInvoiceId: true,
+        invoiceSyncStatus: true,
       },
     })
 
@@ -247,9 +249,15 @@ export default async function Order({ params, searchParams }: PageProps) {
           <Button asChild variant="outline">
             <Link href={`/returns?orderId=${order.id}`}>Request a return / refund</Link>
           </Button>
-          <Button asChild variant="outline">
-            <Link href={`/orders/${order.id}/invoice`}>Download invoice</Link>
-          </Button>
+          {order.zohoInvoiceId && order.invoiceSyncStatus === 'completed' ? (
+            <Button asChild variant="outline">
+              <Link href={`/orders/${order.id}/invoice`}>Download invoice</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" disabled>
+              Invoice pending
+            </Button>
+          )}
         </div>
       </div>
     </div>

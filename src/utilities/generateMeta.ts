@@ -6,7 +6,7 @@ import { getServerSideURL } from './getURL'
 import { mergeOpenGraph } from './mergeOpenGraph'
 
 export const generateMeta = async (args: {
-  doc: Page | Product | Category | Guide
+  doc: Page | Product | Category | Guide | null
   path?: string
 }): Promise<Metadata> => {
   const { doc, path } = args || {}
@@ -24,7 +24,7 @@ export const generateMeta = async (args: {
   // filled in a dedicated SEO one, so the page never ships with an empty
   // snippet. Guarded by typeof since other doc types in this union have an
   // unrelated `description` field that holds richText, not a string.
-  const categoryDescription = 'description' in doc && typeof doc.description === 'string' ? doc.description : undefined
+  const categoryDescription = doc && 'description' in doc && typeof doc.description === 'string' ? doc.description : undefined
   const description = doc?.meta?.description || categoryDescription
 
   return {

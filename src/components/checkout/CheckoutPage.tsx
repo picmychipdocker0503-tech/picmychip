@@ -21,6 +21,7 @@ import { DeliveryEstimate } from '@/components/checkout/DeliveryEstimate'
 import { CreateAddressModal } from '@/components/addresses/CreateAddressModal'
 import { getClientSideURL } from '@/utilities/getURL'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
+import { checkoutShippingMethods, type CheckoutShippingMethodId } from '@/lib/checkoutShipping'
 import { computeOrderTaxAddOn, type TaxLineItem } from '@/lib/taxCalculation'
 import { Address, Product, Variant } from '@/payload-types'
 
@@ -57,6 +58,8 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
   const [billingAddressSameAsShipping, setBillingAddressSameAsShipping] = useState(true)
   const [isProcessingPayment, setProcessingPayment] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>('card')
+  const [checkoutStep, setCheckoutStep] = useState<'address' | 'dispatch' | 'review'>('address')
+  const [shippingMethodId, setShippingMethodId] = useState<CheckoutShippingMethodId | null>(null)
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
   // Derived, not separately captured — GSTIN/company come from the billing
   // address itself (see AddressForm's gstin field and the existing company field).
@@ -72,7 +75,8 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
 
   const cartIsEmpty = !cart || !cart.items || !cart.items.length
   const subtotalAfterDiscounts = cart?.subtotal ?? 0
-  const fullyCoveredByGiftCard = !cartIsEmpty && subtotalAfterDiscounts <= 0
+  const selectedShippingMethod = checkoutShippingMethods.find((method) => method.id === shippingMethodId)
+  const shippingAmount = selectedShippingMethod?.amount ?? 0
   // PayU only settles in INR — USD carts fall back to Cash on Delivery.
   const cardPaymentAvailable = cart?.currency === 'INR'
 
@@ -101,6 +105,11 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
           customerState,
         })
       : null
+  const checkoutTotalBeforeShipping = taxBreakdown
+    ? subtotalAfterDiscounts + taxBreakdown.totalTax
+    : (cart?.subtotal ?? 0)
+  const checkoutTotal = checkoutTotalBeforeShipping + shippingAmount
+  const fullyCoveredByGiftCard = !cartIsEmpty && checkoutTotal <= 0
 
   const applyDiscount = useCallback(
     async (args: { couponCode?: string; giftCardCode?: string; remove?: 'coupon' | 'gift-card' }) => {
@@ -155,6 +164,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
           shippingAddress: billingAddressSameAsShipping ? billingAddress : shippingAddress,
           billingAddress,
           businessDetails,
+          shippingMethod: shippingMethodId,
         }),
       })
       const data = await res.json()
@@ -180,14 +190,16 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
     billingAddress,
     billingAddressSameAsShipping,
     shippingAddress,
+    shippingMethodId,
     clearCart,
     router,
     t,
   ])
 
   const canGoToPayment = Boolean(
-    (email || user) && billingAddress && (billingAddressSameAsShipping || shippingAddress),
+    (email || user) && billingAddress && (billingAddressSameAsShipping || shippingAddress) && shippingMethodId,
   )
+  const canGoToDispatch = Boolean((email || user) && billingAddress && (billingAddressSameAsShipping || shippingAddress))
 
   // On initial load wait for addresses to be loaded and check to see if we can prefill a default one
   useEffect(() => {
@@ -238,6 +250,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
           ...(email ? { customerEmail: email } : {}),
           billingAddress,
           shippingAddress: billingAddressSameAsShipping ? billingAddress : shippingAddress,
+          shippingMethod: shippingMethodId,
           ...(businessDetails ? { businessDetails } : {}),
         },
       })) as unknown as PayuRedirectFields
@@ -259,7 +272,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
       toast.error(errorMessage)
       setIsInitiatingPayment(false)
     }
-  }, [billingAddress, billingAddressSameAsShipping, businessDetails, email, initiatePayment, shippingAddress, t])
+  }, [billingAddress, billingAddressSameAsShipping, businessDetails, email, initiatePayment, shippingAddress, shippingMethodId, t])
 
   if (cartIsEmpty && isProcessingPayment) {
     return (
@@ -284,6 +297,34 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
   return (
     <div className="flex flex-col items-stretch justify-stretch my-8 md:flex-row grow gap-10 md:gap-6 lg:gap-8">
       <div className="basis-full lg:basis-2/3 flex flex-col gap-8 justify-stretch">
+        <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+          {[
+            { id: 'address', label: 'Address' },
+            { id: 'dispatch', label: 'Dispatch' },
+            { id: 'review', label: 'Review Order & Make Payment' },
+          ].map((step, index, steps) => {
+            const isActive = checkoutStep === step.id
+            return (
+              <React.Fragment key={step.id}>
+                <button
+                  className={`border-b px-2 py-2 ${
+                    isActive ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
+                  }`}
+                  onClick={() => {
+                    if (step.id === 'dispatch' && !canGoToDispatch) return
+                    if (step.id === 'review' && !canGoToPayment) return
+                    setCheckoutStep(step.id as 'address' | 'dispatch' | 'review')
+                  }}
+                  type="button"
+                >
+                  {step.label}
+                </button>
+                {index < steps.length - 1 && <span className="text-muted-foreground">----</span>}
+              </React.Fragment>
+            )
+          })}
+        </div>
+
         <h2 className="font-medium text-3xl">{t('contact.heading')}</h2>
         {!user && (
           <div className=" bg-accent dark:bg-black rounded-lg p-4 w-full flex items-center">
@@ -428,7 +469,40 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
           pincode={(billingAddressSameAsShipping ? billingAddress : shippingAddress)?.postalCode ?? undefined}
         />
 
-        {fullyCoveredByGiftCard && (
+        <div className="flex flex-col gap-6">
+          <div>
+            <h2 className="font-medium text-3xl">Dispatch</h2>
+            <p className="text-muted-foreground mt-2 text-sm">Select a shipping method before payment.</p>
+          </div>
+          <div className="divide-y rounded-lg border">
+            {checkoutShippingMethods.map((method) => (
+              <label
+                className={`flex cursor-pointer items-start gap-4 p-5 ${
+                  shippingMethodId === method.id ? 'bg-primary/5' : ''
+                }`}
+                key={method.id}
+              >
+                <input
+                  checked={shippingMethodId === method.id}
+                  className="mt-1"
+                  disabled={!canGoToDispatch}
+                  onChange={() => {
+                    setShippingMethodId(method.id)
+                    setCheckoutStep('review')
+                  }}
+                  type="radio"
+                />
+                <span className="flex flex-1 flex-col gap-1">
+                  <span className="font-medium">{method.label}</span>
+                  <span className="text-muted-foreground text-sm">{method.eta}</span>
+                </span>
+                <Price amount={method.amount} as="span" />
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {shippingMethodId && fullyCoveredByGiftCard && (
           <div className="flex flex-col gap-4">
             <div className="bg-success/5 border-success/30 text-success rounded-lg border p-4 text-sm">
               {t('giftCardCovered')}
@@ -453,7 +527,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
           </div>
         )}
 
-        {!fullyCoveredByGiftCard && (
+        {shippingMethodId && !fullyCoveredByGiftCard && (
           <div className="flex flex-col gap-4">
             <h2 className="font-medium text-3xl">{t('paymentMethod.heading')}</h2>
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -583,7 +657,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                   <div className="flex items-stretch justify-stretch h-20 w-20 p-2 rounded-lg border">
                     <div className="relative w-full h-full">
                       {image && typeof image !== 'string' && (
-                        <Media className="" fill imgClassName="rounded-lg" resource={image} />
+                        <Media className="" fill imgClassName="rounded-lg" resource={image} size="80px" />
                       )}
                     </div>
                   </div>
@@ -718,18 +792,32 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                 </span>
                 <Price amount={taxBreakdown.totalTax} />
               </div>
+              {selectedShippingMethod && (
+                <div className="flex justify-between items-center text-sm text-muted-foreground">
+                  <span>{selectedShippingMethod.label}</span>
+                  <Price amount={selectedShippingMethod.amount} />
+                </div>
+              )}
               <div className="flex justify-between items-center gap-2">
                 <span className="uppercase">{tCart('total')}</span>
                 <Price
                   className="text-3xl font-medium"
-                  amount={subtotalAfterDiscounts + taxBreakdown.totalTax}
+                  amount={checkoutTotal}
                 />
               </div>
             </div>
           ) : (
-            <div className="flex justify-between items-center gap-2">
-              <span className="uppercase">{tCart('total')}</span>{' '}
-              <Price className="text-3xl font-medium" amount={cart.subtotal || 0} />
+            <div className="flex flex-col gap-2">
+              {selectedShippingMethod && (
+                <div className="flex justify-between items-center text-sm text-muted-foreground">
+                  <span>{selectedShippingMethod.label}</span>
+                  <Price amount={selectedShippingMethod.amount} />
+                </div>
+              )}
+              <div className="flex justify-between items-center gap-2">
+                <span className="uppercase">{tCart('total')}</span>{' '}
+                <Price className="text-3xl font-medium" amount={checkoutTotal} />
+              </div>
             </div>
           )}
         </div>

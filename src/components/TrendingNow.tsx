@@ -6,22 +6,36 @@ import configPromise from '@payload-config'
 import { FlameIcon } from 'lucide-react'
 import { getPayload } from 'payload'
 
-export const TrendingNow: React.FC = async () => {
+let devTrendingCache: Promise<Awaited<ReturnType<typeof loadTrendingNowData>>> | undefined
+
+async function loadTrendingNowData() {
   const payload = await getPayload({ config: configPromise })
+  const isDevelopment = process.env.NODE_ENV !== 'production'
   // Gift cards are already excluded inside getTrendingProducts. Over-fetch
   // and filter out-of-stock locally rather than pushing that into the
   // shared query — an out-of-stock item defeats the point of a "buy this"
   // section here, but the CMS-configurable trending block should still be
   // free to show one if a merchandiser pins it deliberately.
-  const candidates = await getTrendingProducts({ payload, limit: 24 })
-  const products = candidates.filter((product) => product.stockStatus !== 'out-of-stock').slice(0, 8)
+  const candidates = await getTrendingProducts({ payload, limit: isDevelopment ? 8 : 24 })
+  const products = candidates.filter((product) => product.stockStatus !== 'out-of-stock').slice(0, isDevelopment ? 4 : 8)
+
+  const ratings = isDevelopment
+    ? new Map()
+    : await getAverageRatings(
+        payload,
+        products.map((product) => product.id),
+      )
+
+  return { products, ratings }
+}
+
+export const TrendingNow: React.FC = async () => {
+  const isDevelopment = process.env.NODE_ENV !== 'production'
+  const { products, ratings } = await (isDevelopment
+    ? (devTrendingCache ??= loadTrendingNowData())
+    : loadTrendingNowData())
 
   if (products.length === 0) return null
-
-  const ratings = await getAverageRatings(
-    payload,
-    products.map((product) => product.id),
-  )
 
   return (
     <div className="container my-20">

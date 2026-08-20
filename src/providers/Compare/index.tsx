@@ -59,6 +59,17 @@ export const CompareProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
 export const useCompare = (): CompareContextValue => {
   const ctx = useContext(CompareContext)
-  if (!ctx) throw new Error('useCompare must be used within a CompareProvider')
+  if (!ctx) {
+    if (process.env.NODE_ENV !== 'production') {
+      return {
+        ids: [],
+        maxCompare: MAX_COMPARE,
+        toggle: () => {},
+        clear: () => {},
+        isComparing: () => false,
+      }
+    }
+    throw new Error('useCompare must be used within a CompareProvider')
+  }
   return ctx
 }

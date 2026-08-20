@@ -1,48 +1,15 @@
 import { getRequestConfig } from 'next-intl/server'
-import { cookies } from 'next/headers'
 
-import type { Locale } from './locales'
-
-import { defaultLocale, locales } from './locales'
 import en from '../../messages/en.json'
 
-type Messages = typeof en
-
-/**
- * Deep-merges locale-specific messages onto the English baseline so any key
- * not yet translated (e.g. newly-externalized strings with no Hindi content
- * yet) silently falls back to English instead of rendering the raw key path.
- */
-function deepMerge<T extends Record<string, unknown>>(base: T, override: Partial<T>): T {
-  const result: Record<string, unknown> = { ...base }
-
-  for (const key of Object.keys(override)) {
-    const baseValue = base[key]
-    const overrideValue = override[key]
-
-    if (
-      baseValue &&
-      overrideValue &&
-      typeof baseValue === 'object' &&
-      typeof overrideValue === 'object' &&
-      !Array.isArray(baseValue)
-    ) {
-      result[key] = deepMerge(baseValue as Record<string, unknown>, overrideValue as Record<string, unknown>)
-    } else {
-      result[key] = overrideValue
-    }
-  }
-
-  return result as T
-}
-
+// Locale is fixed to English at the backend rather than resolved per-request
+// from a cookie. `next-intl`'s translation-key architecture (`useTranslations`)
+// stays in place for the ~18 files that use it for UI-chrome strings (buttons,
+// labels, aria-labels — no CMS/page content runs through this), but nothing
+// here reads `cookies()`/`headers()` anymore. That matters beyond just this
+// file: any dynamic API call in the root layout's request-config forces
+// EVERY route in the app out of static rendering, since the layout wraps
+// every page. With this resolved statically, that's no longer the case.
 export default getRequestConfig(async () => {
-  const cookieStore = await cookies()
-  const stored = cookieStore.get('NEXT_LOCALE')?.value
-  const locale: Locale = locales.includes(stored as Locale) ? (stored as Locale) : defaultLocale
-
-  const messages: Messages =
-    locale === 'en' ? en : deepMerge(en, (await import(`../../messages/${locale}.json`)).default)
-
-  return { locale, messages }
+  return { locale: 'en', messages: en }
 })

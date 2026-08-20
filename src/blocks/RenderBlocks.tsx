@@ -16,6 +16,7 @@ import { FeatureBentoBlock } from '@/blocks/FeatureBento/Component'
 import { FlashDealBlock } from '@/blocks/FlashDeal/Component'
 import { FormBlock } from '@/blocks/Form/Component'
 import { HeroCarouselBlock } from '@/blocks/HeroCarousel/Component'
+import { HeroCarouselSkeleton } from '@/blocks/HeroCarousel/HeroCarouselSkeleton'
 import { IllustratedCategoryGridBlock } from '@/blocks/IllustratedCategoryGrid/Component'
 import { MediaBlock } from '@/blocks/MediaBlock/Component'
 import { RfqBomSectionBlock } from '@/blocks/RfqBomSection/Component'
@@ -28,7 +29,7 @@ import { ThreeItemGridBlock } from '@/blocks/ThreeItemGrid/Component'
 import { TrendingProductsBlock } from '@/blocks/TrendingProducts/Component'
 import { TrustBadgesStripBlock } from '@/blocks/TrustBadgesStrip/Component'
 import { toKebabCase } from '@/utilities/toKebabCase'
-import React, { Fragment } from 'react'
+import React, { Fragment, Suspense } from 'react'
 
 import type { Page } from '../payload-types'
 
@@ -62,6 +63,14 @@ const blockComponents = {
   trustBadgesStrip: TrustBadgesStripBlock,
 }
 
+// Most blocks fall back to nothing while their data resolves — they're
+// further down the page, so a brief blank beat there is unremarkable. The
+// hero is the one block visible without scrolling, so it gets a skeleton
+// that mirrors its real layout instead of just disappearing.
+const blockFallbacks: Partial<Record<keyof typeof blockComponents, React.ReactNode>> = {
+  heroCarousel: <HeroCarouselSkeleton />,
+}
+
 export const RenderBlocks: React.FC<{
   blocks: Page['layout'][0][]
   /** Skips the wrapper's top margin — for a block sitting directly under the
@@ -86,9 +95,16 @@ export const RenderBlocks: React.FC<{
               return (
                 <div className={noTopSpacing ? 'mb-16' : 'my-16'} key={index}>
                   <ScrollReveal>
-                    {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
-                    {/* @ts-ignore - weird type mismatch here */}
-                    <Block id={toKebabCase(blockName!)} {...block} />
+                    {/* Each block fetches its own data — without a boundary here, an
+                        unrelated block earlier in the layout (e.g. a slow query) blocks
+                        every block after it from even starting, since sibling async
+                        Server Components without Suspense render one after another
+                        rather than concurrently. This lets them resolve independently. */}
+                    <Suspense fallback={blockFallbacks[blockType] ?? null}>
+                      {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
+                      {/* @ts-ignore - weird type mismatch here */}
+                      <Block id={toKebabCase(blockName!)} {...block} />
+                    </Suspense>
                   </ScrollReveal>
                 </div>
               )

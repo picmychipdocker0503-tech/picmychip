@@ -25,6 +25,15 @@ export const QuickViewProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
 export const useQuickView = (): QuickViewContextValue => {
   const ctx = useContext(QuickViewContext)
-  if (!ctx) throw new Error('useQuickView must be used within a QuickViewProvider')
+  if (!ctx) {
+    if (process.env.NODE_ENV !== 'production') {
+      return {
+        product: null,
+        open: () => {},
+        close: () => {},
+      }
+    }
+    throw new Error('useQuickView must be used within a QuickViewProvider')
+  }
   return ctx
 }

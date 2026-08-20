@@ -69,7 +69,15 @@ export const FrequentlyBoughtTogether: React.FC<Props> = ({ mainProduct, compani
                   <div
                     className={`bg-muted relative aspect-square w-20 overflow-hidden rounded-lg border-2 transition-opacity ${checked ? 'border-primary' : 'border-transparent opacity-50'}`}
                   >
-                    {image && <Media className="relative h-full w-full" fill imgClassName="object-contain" resource={image} />}
+                    {image && (
+                      <Media
+                        className="relative h-full w-full"
+                        fill
+                        imgClassName="object-contain"
+                        resource={image}
+                        size="80px"
+                      />
+                    )}
                   </div>
                   <input checked={checked} className="accent-primary" disabled={isMain} onChange={() => toggle(item.id)} type="checkbox" />
                   <Link className="text-foreground line-clamp-2 text-xs hover:underline" href={`/products/${item.slug}`}>

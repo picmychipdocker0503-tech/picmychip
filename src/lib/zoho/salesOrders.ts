@@ -26,12 +26,8 @@ export async function createZohoSalesOrder(args: CreateZohoSalesOrderArgs): Prom
     // attached to the line items ("IGST cannot be applied as this is an
     // intrastate transaction") for any interstate order without a GSTIN.
     place_of_supply: args.placeOfSupply,
-    // gst_treatment/gst_no are specifically about the customer's GST
-    // registration, and — unlike place_of_supply — some Zoho orgs reject
-    // gst_treatment outright ("Invalid Element gst_treatment", code 8)
-    // unless there's a real GSTIN behind it, confirmed against a live org.
-    // Same reasoning applied to contact creation (src/lib/zoho/customers.ts).
-    ...(args.gstNo ? { gst_treatment: args.gstTreatment, gst_no: args.gstNo } : {}),
+    gst_treatment: args.gstTreatment,
+    ...(args.gstNo ? { gst_no: args.gstNo } : {}),
     line_items: args.lineItems.map((item) => ({
       item_id: item.item_id,
       name: item.name,

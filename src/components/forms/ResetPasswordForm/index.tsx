@@ -44,8 +44,12 @@ export const ResetPasswordForm: React.FC = () => {
         await resetPassword({ ...data, token })
         toast.success('Password reset. You are now logged in.')
         router.push('/account')
-      } catch {
-        setError('This link is invalid or has expired. Please request a new one.')
+      } catch (err) {
+        setError(
+          err instanceof Error && err.message
+            ? err.message
+            : 'This link is invalid or has expired. Please request a new one.',
+        )
       }
     },
     [resetPassword, router, token],

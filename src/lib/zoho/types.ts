@@ -16,6 +16,7 @@ export type ZohoContact = {
   company_name?: string
   gst_no?: string
   gst_treatment?: string
+  status?: string
   billing_address?: ZohoAddress
   shipping_address?: ZohoAddress
   contact_persons?: { first_name?: string; last_name?: string; email?: string; phone?: string }[]

@@ -158,6 +158,7 @@ export const ProductMatchingImage: React.FC<Props> = ({
   aspectRatio = 'square',
 }) => {
   const [imageError, setImageError] = useState(false)
+  const [imageLoading, setImageLoading] = useState(true)
 
   const categoryStr =
     typeof category === 'object' && category
@@ -194,9 +195,10 @@ export const ProductMatchingImage: React.FC<Props> = ({
         <div className="relative w-full h-full flex items-center justify-center">
           <Image
             alt={title || 'Product image'}
-            className={`object-contain max-h-full max-w-full transition-transform duration-300 ease-out group-hover:scale-105 ${imgClassName}`}
+            className={`object-contain max-h-full max-w-full transition-transform duration-300 ease-out group-hover:scale-105 ${imageLoading ? 'animate-shimmer' : ''} ${imgClassName}`}
             fill
             onError={() => setImageError(true)}
+            onLoad={() => setImageLoading(false)}
             priority={priority}
             quality={90}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

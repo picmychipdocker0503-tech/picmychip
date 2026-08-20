@@ -140,7 +140,7 @@ export function CartModal() {
                           href={`/products/${(item.product as Product)?.slug}`}
                         >
                           <div className="relative h-16 w-16 cursor-pointer overflow-hidden rounded-md border border-neutral-300 bg-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800">
-                            <Media fill imgClassName="h-full w-full object-cover" resource={image} />
+                            <Media fill imgClassName="h-full w-full object-cover" resource={image} size="64px" />
                           </div>
 
                           <div className="flex flex-1 flex-col text-base">

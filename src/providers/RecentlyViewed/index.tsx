@@ -46,6 +46,9 @@ export const RecentlyViewedProvider: React.FC<{ children: React.ReactNode }> = (
 
 export const useRecentlyViewed = (): RecentlyViewedContextValue => {
   const ctx = useContext(RecentlyViewedContext)
-  if (!ctx) throw new Error('useRecentlyViewed must be used within a RecentlyViewedProvider')
+  if (!ctx) {
+    if (process.env.NODE_ENV !== 'production') return { ids: [], track: () => {} }
+    throw new Error('useRecentlyViewed must be used within a RecentlyViewedProvider')
+  }
   return ctx
 }

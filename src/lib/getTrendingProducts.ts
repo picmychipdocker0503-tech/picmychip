@@ -28,8 +28,12 @@ export const getTrendingProducts = async ({ payload, limit, pinnedProducts }: Op
 
   const { docs: recentOrders } = await payload.find({
     collection: 'orders',
+    depth: 0,
     limit: 500,
     overrideAccess: true,
+    select: {
+      items: true,
+    },
     where: {
       and: [{ createdAt: { greater_than: since } }, { status: { equals: 'completed' } }],
     },

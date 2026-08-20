@@ -132,6 +132,7 @@ export const TeamGridBlock: React.FC<
                         className="h-full w-full"
                         imgClassName="h-full w-full object-cover grayscale transition-all duration-500 group-hover:grayscale-0 group-hover:scale-[1.03]"
                         resource={member.photo}
+                        size="(max-width: 640px) 45vw, (max-width: 768px) 30vw, 22vw"
                       />
                     ) : (
                       <div className="text-primary bg-primary/10 flex h-full w-full items-center justify-center text-3xl font-bold">

@@ -334,7 +334,7 @@ const CartRow: React.FC<{ item: CartItem; priceField: `priceIn${string}` }> = ({
     <li className="bg-card border-border flex gap-4 rounded-2xl border p-4 shadow-sm">
       <Link className="bg-muted relative size-20 shrink-0 overflow-hidden rounded-xl" href={`/products/${product.slug}`}>
         {image ? (
-          <Media className="relative h-full w-full" fill imgClassName="object-cover" resource={image} />
+          <Media className="relative h-full w-full" fill imgClassName="object-cover" resource={image} size="80px" />
         ) : (
           <div className="text-muted-foreground flex h-full w-full items-center justify-center text-xs">
             {t('noImage')}

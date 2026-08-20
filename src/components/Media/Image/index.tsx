@@ -8,10 +8,7 @@ import React from 'react'
 
 import type { Props as MediaProps } from '../types'
 
-import { cssVariables } from '@/cssVariables'
 import { PRODUCT_IMAGE_PLACEHOLDER } from '@/utilities/imagePlaceholder'
-
-const { breakpoints } = cssVariables
 
 export const Image: React.FC<MediaProps> = (props) => {
   const {
@@ -55,12 +52,12 @@ export const Image: React.FC<MediaProps> = (props) => {
     src = url || ''
   }
 
-  // NOTE: this is used by the browser to determine which image to download at different screen sizes
-  const sizes = sizeFromProps
-    ? sizeFromProps
-    : Object.entries(breakpoints)
-        .map(([, value]) => `(max-width: ${value}px) ${value}px`)
-        .join(', ')
+  // NOTE: this is used by the browser to determine which image to download at different screen
+  // sizes. Callers that render at less than full viewport width (grid thumbnails, avatars, etc.)
+  // should pass an explicit `size` — this fallback assumes full-bleed, which is always at least
+  // as accurate as the previous default (which mapped breakpoint *pixel constants* directly, so
+  // a narrow phone viewport still requested a 768px-wide image).
+  const sizes = sizeFromProps || '100vw'
 
   // Reset the fallback whenever the underlying image changes (e.g. switching
   // product variants) — a previous failure shouldn't stick to a new image.
@@ -73,7 +70,12 @@ export const Image: React.FC<MediaProps> = (props) => {
   return (
     <NextImage
       alt={hasError || !src ? 'Image unavailable' : alt || ''}
-      className={cn(imgClassName)}
+      // `next/image` already defers the actual fetch until the image nears the
+      // viewport (native lazy loading, on by default whenever `priority` isn't
+      // set) — the shimmer here just fills that same window with a visible
+      // placeholder instead of blank space, both before it's scrolled close
+      // enough to start loading and while the request itself is in flight.
+      className={cn(imgClassName, isLoading && !hasError && 'animate-shimmer')}
       fill={fill}
       height={!fill ? height || heightFromProps : undefined}
       onClick={onClick}

@@ -13,10 +13,9 @@ import { ensureStartsWith } from '@/utilities/ensureStartsWith'
 import { buildOrganizationJsonLd } from '@/utilities/jsonLd'
 import { Providers } from '@/providers'
 import { InitTheme } from '@/providers/Theme/InitTheme'
-import configPromise from '@payload-config'
+import { getCachedGlobal } from '@/utilities/getGlobals'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
-import { getPayload } from 'payload'
 import { GeistMono } from 'geist/font/mono'
 import { Inter } from 'next/font/google'
 import Script from 'next/script'
@@ -35,6 +34,7 @@ const inter = Inter({
 })
 
 const GA_MEASUREMENT_ID = 'G-65M0W91R3Q'
+const enableThirdPartyScripts = process.env.NODE_ENV === 'production'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -74,8 +74,7 @@ const twitterSite = TWITTER_SITE ? ensureStartsWith(TWITTER_SITE, 'https://') : 
 } */
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const payload = await getPayload({ config: configPromise })
-  const siteSettings = await payload.findGlobal({ slug: 'site-settings' })
+  const siteSettings = await getCachedGlobal('site-settings', 0)()
   const locale = await getLocale()
   const messages = await getMessages()
 
@@ -94,15 +93,19 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <meta content="Picmychip" name="apple-mobile-web-app-title" />
       </head>
       <body>
-        <Script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
+        {enableThirdPartyScripts && (
+          <>
+            <Script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
+            <Script id="google-analytics" strategy="afterInteractive">
+              {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
-        </Script>
+            </Script>
+          </>
+        )}
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
             <LivePreviewListener />

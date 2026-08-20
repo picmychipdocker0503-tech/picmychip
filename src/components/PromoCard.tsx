@@ -132,6 +132,7 @@ export const PromoCard: React.FC<Props> = ({
           fill
           imgClassName="object-contain transition-transform duration-300 group-hover:scale-105"
           resource={image}
+          size="(max-width: 640px) 192px, 20vw"
         />
       )}
     </>

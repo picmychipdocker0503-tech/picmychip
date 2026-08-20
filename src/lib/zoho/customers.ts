@@ -38,19 +38,14 @@ export function getZohoDisplayName(args: { companyName?: string | null; contactN
   return (args.contactName || '').trim()
 }
 
-// Some Zoho orgs reject `gst_treatment`/`gst_no`/`place_of_contact` outright
-// ("Invalid Element gst_treatment", code 8) when GST/India compliance isn't
-// enabled on that org — confirmed against a live org during testing. Only
-// sending these when there's an actual GSTIN to report keeps contact
-// creation working on orgs with and without GST enabled, rather than always
-// asserting a treatment (e.g. "consumer") that not every org accepts.
+// Contacts follow the storefront billing identity: GSTIN means a registered
+// business; no GSTIN means Zoho's unregistered-business treatment. The display
+// name remains company-first, falling back to the customer's own name.
 //
-// `displayNameOverride` lets a caller force a specific contact_name (the
-// code-3062 disambiguation retries below) or omit the field entirely by
-// passing `null` (used only when disambiguation has no email/phone to work
-// with, so the name genuinely can't change safely) — otherwise it's
-// recomputed from company/contact name via getZohoDisplayName every time,
-// per-spec: never trust a stale existing Display Name, always recalculate.
+// `displayNameOverride` lets a caller omit contact_name by passing `null`
+// when Zoho reports a Display Name collision. Email/phone must never be used
+// as a Display Name suffix; display names are always company name or customer
+// name only.
 const buildContactPayload = (args: FindOrCreateZohoCustomerArgs, displayNameOverride?: string | null) => {
   const contactName = displayNameOverride === null ? undefined : (displayNameOverride ?? getZohoDisplayName(args))
 
@@ -58,13 +53,9 @@ const buildContactPayload = (args: FindOrCreateZohoCustomerArgs, displayNameOver
     ...(contactName ? { contact_name: contactName } : {}),
     company_name: args.companyName || undefined,
     contact_type: 'customer',
-    ...(args.gstin
-      ? {
-          gst_no: args.gstin,
-          gst_treatment: 'business_gst',
-          place_of_contact: args.billingAddress?.state_code || args.shippingAddress?.state_code || undefined,
-        }
-      : {}),
+    gst_treatment: args.gstin ? 'business_gst' : 'business_none',
+    ...(args.gstin ? { gst_no: args.gstin } : {}),
+    place_of_contact: args.billingAddress?.state_code || args.shippingAddress?.state_code || undefined,
     billing_address: args.billingAddress,
     shipping_address: args.shippingAddress,
     contact_persons:
@@ -89,8 +80,12 @@ const buildContactPayload = (args: FindOrCreateZohoCustomerArgs, displayNameOver
  * drift from what we already have on file — avoids a write on every single
  * order for a repeat customer whose details haven't changed.
  */
-const contactNeedsUpdate = (existing: ZohoContact, args: FindOrCreateZohoCustomerArgs): boolean => {
-  const displayName = getZohoDisplayName(args)
+const contactNeedsUpdate = (
+  existing: ZohoContact,
+  args: FindOrCreateZohoCustomerArgs,
+  displayNameOverride?: string | null,
+): boolean => {
+  const displayName = displayNameOverride === null ? existing.contact_name : (displayNameOverride ?? getZohoDisplayName(args))
   if (existing.contact_name.trim().toLowerCase() !== displayName.toLowerCase()) return true
   if ((existing.gst_no || '') !== (args.gstin || '')) return true
   if ((existing.company_name || '') !== (args.companyName || '')) return true
@@ -121,6 +116,29 @@ function identityConflicts(existing: ZohoContact, args: FindOrCreateZohoCustomer
   return Boolean(existingGstin && existingGstin !== argsGstin)
 }
 
+function isZohoDuplicateContactError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err)
+  return message.includes('"code":3062') || message.includes('code:3062') || message.includes('already exists')
+}
+
+function extractDuplicateCustomerName(err: unknown): string | undefined {
+  let message = err instanceof Error ? err.message : String(err)
+  const jsonBody = message.match(/\{.*\}$/)?.[0]
+  if (jsonBody) {
+    try {
+      const parsed = JSON.parse(jsonBody) as { message?: string }
+      message = parsed.message || message
+    } catch {
+      // Fall back to the raw Error message below.
+    }
+  }
+  return message.match(/customer\s+["']([^"']+)["']\s+already exists/i)?.[1]
+}
+
+function extractEmail(text?: string): string | undefined {
+  return text?.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]
+}
+
 async function findByContactId(contactId: string): Promise<ZohoContact | undefined> {
   try {
     const data = await zohoFetch<{ contact: ZohoContact }>(`/contacts/${contactId}`)
@@ -131,7 +149,7 @@ async function findByContactId(contactId: string): Promise<ZohoContact | undefin
 }
 
 async function findByEmail(email: string): Promise<ZohoContact | undefined> {
-  const params = new URLSearchParams({ email })
+  const params = new URLSearchParams({ email, filter_by: 'Status.All' })
   const data = await zohoFetch<{ contacts: ZohoContact[] }>(`/contacts?${params.toString()}`)
   return data.contacts?.[0]
 }
@@ -142,11 +160,69 @@ async function findByGstinOrPhone(gstin?: string, phone?: string): Promise<ZohoC
   // to the general-purpose search_text param and filters the (small) result set
   // client-side. Best-effort: only used once email matching has already failed.
   const searchText = gstin || phone || ''
-  const params = new URLSearchParams({ search_text: searchText })
+  const params = new URLSearchParams({ search_text: searchText, filter_by: 'Status.All' })
   const data = await zohoFetch<{ contacts: ZohoContact[] }>(`/contacts?${params.toString()}`)
   return data.contacts?.find(
     (c) => (gstin && c.gst_no === gstin) || (phone && c.contact_persons?.some((p) => p.phone === phone)),
   )
+}
+
+async function findBySearchText(searchText: string): Promise<ZohoContact[]> {
+  const params = new URLSearchParams({ search_text: searchText, filter_by: 'Status.All' })
+  const data = await zohoFetch<{ contacts: ZohoContact[] }>(`/contacts?${params.toString()}`)
+  return data.contacts ?? []
+}
+
+async function findByDisplayName(displayName: string): Promise<ZohoContact | undefined> {
+  const contacts = await findBySearchText(displayName)
+  return contacts.find((c) => c.contact_name?.trim().toLowerCase() === displayName.trim().toLowerCase())
+}
+
+async function findDuplicateContact(args: FindOrCreateZohoCustomerArgs, duplicateName?: string): Promise<ZohoContact | undefined> {
+  const candidates: ZohoContact[] = []
+
+  if (args.email) {
+    const byEmail = await findByEmail(args.email)
+    if (byEmail) return byEmail
+  }
+
+  for (const searchText of [duplicateName, extractEmail(duplicateName), args.email, getZohoDisplayName(args)]) {
+    if (!searchText) continue
+    candidates.push(...(await findBySearchText(searchText)))
+  }
+
+  const seen = new Set<string>()
+  const unique = candidates.filter((contact) => {
+    if (seen.has(contact.contact_id)) return false
+    seen.add(contact.contact_id)
+    return true
+  })
+
+  const normalizedDuplicateName = duplicateName?.trim().toLowerCase()
+  const normalizedEmail = args.email?.trim().toLowerCase()
+
+  return unique.find((contact) => {
+    const contactName = contact.contact_name?.trim().toLowerCase()
+    if (normalizedDuplicateName && contactName === normalizedDuplicateName) return true
+    if (
+      normalizedEmail &&
+      (contactName?.includes(normalizedEmail) ||
+        contact.contact_persons?.some((person) => person.email?.trim().toLowerCase() === normalizedEmail))
+    ) {
+      return true
+    }
+    return false
+  })
+}
+
+export async function markZohoContactActive(contactId: string): Promise<void> {
+  await zohoFetch<{ message: string }>(`/contacts/${contactId}/active`, { method: 'POST' })
+}
+
+async function ensureContactActive(contact: ZohoContact): Promise<ZohoContact> {
+  if (contact.status?.toLowerCase() !== 'inactive') return contact
+  await markZohoContactActive(contact.contact_id)
+  return { ...contact, status: 'active' }
 }
 
 async function createContact(args: FindOrCreateZohoCustomerArgs, displayNameOverride?: string): Promise<ZohoContact> {
@@ -157,34 +233,27 @@ async function createContact(args: FindOrCreateZohoCustomerArgs, displayNameOver
   return data.contact
 }
 
-async function updateContact(contactId: string, args: FindOrCreateZohoCustomerArgs): Promise<ZohoContact> {
+async function updateContact(
+  contactId: string,
+  args: FindOrCreateZohoCustomerArgs,
+  displayNameOverride?: string | null,
+): Promise<ZohoContact> {
   try {
     const data = await zohoFetch<{ contact: ZohoContact }>(`/contacts/${contactId}`, {
       method: 'PUT',
-      body: JSON.stringify(buildContactPayload(args)),
+      body: JSON.stringify(buildContactPayload(args, displayNameOverride)),
     })
     return data.contact
   } catch (err) {
-    // A genuine name collision with a *different* contact (Zoho enforces a
-    // unique contact_name/Display Name org-wide) — every other failure
-    // (network, validation, etc.) still surfaces normally rather than being
-    // silently swallowed. This means two different Zoho contacts (different
-    // email/GSTIN/phone — that's *why* they're different contacts) both
-    // resolve to the same Display Name, e.g. two orders from the same
-    // person using different emails. Rather than silently keep whatever
-    // name this contact happened to have first (which can end up showing a
-    // completely unrelated customer's name/company on this order's
-    // documents), disambiguate with the email/phone that's already what's
-    // keeping them as separate contacts in the first place.
-    const message = err instanceof Error ? err.message : String(err)
-    if (!message.includes('"code":3062')) throw err
-
-    const disambiguator = args.email || args.phone
-    const displayNameOverride = disambiguator ? `${getZohoDisplayName(args)} (${disambiguator})` : null
+    // Zoho enforces a unique contact_name/Display Name org-wide. If this
+    // update collides with another contact, keep the existing display name
+    // rather than suffixing it with email/phone. Zoho Display Name must stay
+    // company name or customer name only.
+    if (!isZohoDuplicateContactError(err)) throw err
 
     const data = await zohoFetch<{ contact: ZohoContact }>(`/contacts/${contactId}`, {
       method: 'PUT',
-      body: JSON.stringify(buildContactPayload(args, displayNameOverride)),
+      body: JSON.stringify(buildContactPayload(args, null)),
     })
     return data.contact
   }
@@ -225,7 +294,13 @@ export async function findOrCreateZohoCustomer(
     existing = await findByGstinOrPhone(args.gstin, args.phone)
   }
 
+  if (!existing && args.email) {
+    const duplicate = await findDuplicateContact(args, `${getZohoDisplayName(args)} (${args.email})`)
+    existing = duplicate && !identityConflicts(duplicate, args) ? duplicate : undefined
+  }
+
   if (existing) {
+    existing = await ensureContactActive(existing)
     if (contactNeedsUpdate(existing, args)) {
       const updated = await updateContact(existing.contact_id, args)
       return { contact: updated, wasCreated: false, wasUpdated: true }
@@ -238,21 +313,22 @@ export async function findOrCreateZohoCustomer(
     return { contact: created, wasCreated: true, wasUpdated: false }
   } catch (err) {
     // Zoho enforces a unique contact_name/Display Name org-wide (code 3062,
-    // "already exists — specify a different name"). Reaching this point
-    // already means email/GSTIN/phone matching found nothing, so this is a
-    // genuinely different customer whose Display Name merely collides with
-    // someone else on file — adopting that other contact would incorrectly
-    // merge two different people's orders/addresses under one Zoho
-    // customer. Disambiguated instead, with whichever of email/phone this
-    // contact actually has (same reasoning as the identical fallback in
-    // updateContact above).
-    const message = err instanceof Error ? err.message : String(err)
-    if (!message.includes('"code":3062')) throw err
+    // "already exists — specify a different name"). Never create a fallback
+    // name like "Customer (email)" — display names must remain company name
+    // or customer name only. Reuse the matched contact when possible.
+    if (!isZohoDuplicateContactError(err)) throw err
 
-    const disambiguator = args.email || args.phone
-    if (!disambiguator) throw err
+    const duplicateName = extractDuplicateCustomerName(err)
+    const matched = await findDuplicateContact(args, duplicateName)
 
-    const created = await createContact(args, `${getZohoDisplayName(args)} (${disambiguator})`)
-    return { contact: created, wasCreated: true, wasUpdated: false }
+    if (matched && !identityConflicts(matched, args)) {
+      const active = await ensureContactActive(matched)
+      const updated = contactNeedsUpdate(active, args)
+        ? await updateContact(active.contact_id, args)
+        : active
+      return { contact: updated, wasCreated: false, wasUpdated: updated !== active }
+    }
+
+    throw err
   }
 }

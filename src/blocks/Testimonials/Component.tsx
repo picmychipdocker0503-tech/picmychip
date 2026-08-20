@@ -152,7 +152,12 @@ export const TestimonialsBlock: React.FC<
               <div className="flex shrink-0 items-center gap-3 sm:w-40 sm:flex-col sm:items-start">
                 <div className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary border border-primary/20 font-bold text-sm">
                   {card.photo?.url ? (
-                    <Media className="rounded-full" imgClassName="rounded-full object-cover" resource={card.photo} />
+                    <Media
+                      className="rounded-full"
+                      imgClassName="rounded-full object-cover"
+                      resource={card.photo}
+                      size="44px"
+                    />
                   ) : (
                     card.name.charAt(0).toUpperCase()
                   )}

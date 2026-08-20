@@ -317,7 +317,12 @@ export default async function MakerStudioPage() {
                   >
                     <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-muted">
                       {image ? (
-                        <Media fill imgClassName="object-cover transition group-hover:scale-105" resource={image} />
+                        <Media
+                          fill
+                          imgClassName="object-cover transition group-hover:scale-105"
+                          resource={image}
+                          size="(max-width: 768px) 100vw, 33vw"
+                        />
                       ) : (
                         <div className="flex h-full items-center justify-center">
                           <CpuIcon className="size-12 text-primary" />

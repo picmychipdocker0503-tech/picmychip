@@ -49,7 +49,7 @@ export const ProductComparisonTable: React.FC<Props> = ({ products, heading }) =
                   <Link className="flex flex-col items-start gap-2 hover:text-primary" href={`/products/${product.slug}`}>
                     {image && typeof image === 'object' && (
                       <div className="bg-muted relative size-16 overflow-hidden rounded-lg border border-border">
-                        <Media fill imgClassName="object-cover" resource={image} />
+                        <Media fill imgClassName="object-cover" resource={image} size="64px" />
                       </div>
                     )}
                     <span className="font-semibold">{product.title}</span>

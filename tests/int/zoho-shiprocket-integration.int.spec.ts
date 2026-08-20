@@ -742,6 +742,190 @@ describe('Zoho Books API integration (mocked fetch)', () => {
     expect(putBodies).toHaveLength(0)
   })
 
+  it('findOrCreateZohoCustomer reuses and activates an inactive email-matched customer', async () => {
+    const calls: { url: string; method?: string; body?: unknown }[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        calls.push({ url, method: init?.method, body: init?.body ? JSON.parse(init.body as string) : undefined })
+        if (url.includes('/oauth/v2/token')) return jsonResponse({ access_token: 'token', expires_in: 3600 })
+        if (url.includes('/contacts?email=')) {
+          expect(url).toContain('filter_by=Status.All')
+          return jsonResponse({
+            code: 0,
+            contacts: [{ contact_id: 'contact-1', contact_name: 'Keerthan Kumar P', status: 'inactive' }],
+          })
+        }
+        if (url.includes('/contacts/contact-1/active') && init?.method === 'POST') {
+          return jsonResponse({ code: 0, message: 'The contact has been marked as active.' })
+        }
+        throw new Error(`Unexpected fetch: ${url}`)
+      }),
+    )
+
+    const result = await findOrCreateZohoCustomer({
+      contactName: 'Keerthan Kumar P',
+      email: 'praveendevendran@gmail.com',
+    })
+
+    expect(result).toMatchObject({ wasCreated: false, wasUpdated: false })
+    expect(result.contact.contact_id).toBe('contact-1')
+    expect(calls.some((call) => call.url.includes('/contacts/contact-1/active') && call.method === 'POST')).toBe(true)
+    expect(calls.some((call) => call.url.includes('/contacts') && call.method === 'POST' && !call.url.includes('/active'))).toBe(false)
+  })
+
+  it('findOrCreateZohoCustomer recovers from an already-exists create race by reusing the existing email contact', async () => {
+    let emailSearchCount = 0
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url.includes('/oauth/v2/token')) return jsonResponse({ access_token: 'token', expires_in: 3600 })
+        if (url.includes('/contacts?email=')) {
+          emailSearchCount += 1
+          return jsonResponse({
+            code: 0,
+            contacts:
+              emailSearchCount === 1
+                ? []
+                : [{ contact_id: 'contact-1', contact_name: 'Keerthan Kumar P', status: 'active' }],
+          })
+        }
+        if (url.includes('/contacts?search_text=')) return jsonResponse({ code: 0, contacts: [] })
+        if (url.includes('/contacts') && init?.method === 'POST') {
+          return jsonResponse(
+            {
+              code: 3062,
+              message:
+                'The customer "Keerthan Kumar P (praveendevendran@gmail.com)" already exists. Please specify a different name.',
+            },
+            false,
+          )
+        }
+        throw new Error(`Unexpected fetch: ${url}`)
+      }),
+    )
+
+    const result = await findOrCreateZohoCustomer({
+      contactName: 'Keerthan Kumar P',
+      email: 'praveendevendran@gmail.com',
+    })
+
+    expect(result.contact.contact_id).toBe('contact-1')
+    expect(result.wasCreated).toBe(false)
+  })
+
+  it('findOrCreateZohoCustomer reuses the exact duplicate customer named by Zoho when email search misses it', async () => {
+    const postBodies: Record<string, unknown>[] = []
+    const putBodies: Record<string, unknown>[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        if (url.includes('/oauth/v2/token')) return jsonResponse({ access_token: 'token', expires_in: 3600 })
+        if (url.includes('/contacts?email=')) return jsonResponse({ code: 0, contacts: [] })
+        if (
+          url.includes('/contacts?search_text=') &&
+          new URL(url).searchParams.get('search_text') === 'Keerthan Kumar P (praveendevendran@gmail.com)'
+        ) {
+          return jsonResponse({
+            code: 0,
+            contacts: [
+              {
+                contact_id: 'contact-disambiguated',
+                contact_name: 'Keerthan Kumar P (praveendevendran@gmail.com)',
+                status: 'active',
+              },
+            ],
+          })
+        }
+        if (url.includes('/contacts?search_text=')) return jsonResponse({ code: 0, contacts: [] })
+        if (url.includes('/contacts/contact-disambiguated') && init?.method === 'PUT') {
+          const body = JSON.parse(init.body as string)
+          putBodies.push(body)
+          return jsonResponse({ code: 0, contact: { contact_id: 'contact-disambiguated', contact_name: body.contact_name } })
+        }
+        if (url.includes('/contacts') && init?.method === 'POST') {
+          postBodies.push(JSON.parse(init.body as string))
+          return jsonResponse(
+            {
+              code: 3062,
+              message:
+                'The customer "Keerthan Kumar P (praveendevendran@gmail.com)" already exists. Please specify a different name.',
+            },
+            false,
+          )
+        }
+        throw new Error(`Unexpected fetch: ${url}`)
+      }),
+    )
+
+    const result = await findOrCreateZohoCustomer({
+      contactName: 'Keerthan Kumar P',
+      email: 'praveendevendran@gmail.com',
+    })
+
+    expect(postBodies).toHaveLength(0)
+    expect(putBodies).toHaveLength(1)
+    expect(putBodies[0]).toMatchObject({ contact_name: 'Keerthan Kumar P' })
+    expect(result.contact.contact_id).toBe('contact-disambiguated')
+    expect(result.wasCreated).toBe(false)
+  })
+
+  it('findOrCreateZohoCustomer finds a duplicate contact by searching the email when exact display-name search misses', async () => {
+    const postBodies: Record<string, unknown>[] = []
+    const putBodies: Record<string, unknown>[] = []
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string, init?: RequestInit) => {
+        const searchText = url.includes('/contacts?search_text=') ? new URL(url).searchParams.get('search_text') : null
+        if (url.includes('/oauth/v2/token')) return jsonResponse({ access_token: 'token', expires_in: 3600 })
+        if (url.includes('/contacts?email=')) return jsonResponse({ code: 0, contacts: [] })
+        if (searchText === 'Keerthan Kumar P (praveendevendran@gmail.com)') {
+          return jsonResponse({ code: 0, contacts: [] })
+        }
+        if (searchText === 'praveendevendran@gmail.com') {
+          return jsonResponse({
+            code: 0,
+            contacts: [
+              {
+                contact_id: 'contact-by-email-search',
+                contact_name: 'Keerthan Kumar P (praveendevendran@gmail.com)',
+                status: 'active',
+              },
+            ],
+          })
+        }
+        if (url.includes('/contacts/contact-by-email-search') && init?.method === 'PUT') {
+          const body = JSON.parse(init.body as string)
+          putBodies.push(body)
+          return jsonResponse({ code: 0, contact: { contact_id: 'contact-by-email-search', contact_name: body.contact_name } })
+        }
+        if (url.includes('/contacts?search_text=')) return jsonResponse({ code: 0, contacts: [] })
+        if (url.includes('/contacts') && init?.method === 'POST') {
+          postBodies.push(JSON.parse(init.body as string))
+          return jsonResponse(
+            {
+              code: 3062,
+              message:
+                'The customer "Keerthan Kumar P (praveendevendran@gmail.com)" already exists. Please specify a different name.',
+            },
+            false,
+          )
+        }
+        throw new Error(`Unexpected fetch: ${url}`)
+      }),
+    )
+
+    const result = await findOrCreateZohoCustomer({
+      contactName: 'Keerthan Kumar P',
+      email: 'praveendevendran@gmail.com',
+    })
+
+    expect(postBodies).toHaveLength(0)
+    expect(putBodies[0]).toMatchObject({ contact_name: 'Keerthan Kumar P' })
+    expect(result.contact.contact_id).toBe('contact-by-email-search')
+    expect(result.wasCreated).toBe(false)
+  })
+
   describe('getZohoDisplayName', () => {
     it.each([
       ['ABC Electronics Pvt Ltd', 'Raj Kumar', 'ABC Electronics Pvt Ltd'],

@@ -22,6 +22,9 @@ import { getPayload } from 'payload'
 
 import type { Page, SiteSetting } from '@/payload-types'
 import { notFound } from 'next/navigation'
+import { Suspense } from 'react'
+
+const devPageCache = new Map<string, Page | null>()
 
 export async function generateStaticParams() {
   const payload = await getPayload({ config: configPromise })
@@ -102,19 +105,30 @@ export default async function Page({ params }: Args) {
       <RenderHero {...hero} />
       {isHome ? (
         <>
+          {/* Each section below fetches its own data independently. Without a Suspense
+              boundary per section, sibling async Server Components render one after
+              another rather than concurrently — one slow query would otherwise stall
+              every section after it, and the whole page's TTFB becomes the sum of all
+              of them instead of the slowest one. */}
           <RenderBlocks blocks={firstBlock} noTopSpacing />
           <ScrollReveal>
-            <FeaturedCategories />
+            <Suspense fallback={null}>
+              <FeaturedCategories />
+            </Suspense>
           </ScrollReveal>
           <ScrollReveal>
-            <TrendingNow />
+            <Suspense fallback={null}>
+              <TrendingNow />
+            </Suspense>
           </ScrollReveal>
           <ScrollReveal>
             <RecommendedForYou />
           </ScrollReveal>
           <RenderBlocks blocks={remainingBlocks} />
           <ScrollReveal>
-            <NewArrivals />
+            <Suspense fallback={null}>
+              <NewArrivals />
+            </Suspense>
           </ScrollReveal>
           <ScrollReveal>
             <RecentlyViewedProducts />
@@ -156,6 +170,10 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
 
 const queryPageBySlug = async ({ slug }: { slug: string }) => {
   const { isEnabled: draft } = await draftMode()
+  const cacheKey = `${slug}:${draft ? 'draft' : 'published'}`
+  if (process.env.NODE_ENV !== 'production' && !draft && devPageCache.has(cacheKey)) {
+    return devPageCache.get(cacheKey) || null
+  }
 
   const payload = await getPayload({ config: configPromise })
 
@@ -177,5 +195,7 @@ const queryPageBySlug = async ({ slug }: { slug: string }) => {
     },
   })
 
-  return result.docs?.[0] || null
+  const page = result.docs?.[0] || null
+  if (process.env.NODE_ENV !== 'production' && !draft) devPageCache.set(cacheKey, page)
+  return page
 }

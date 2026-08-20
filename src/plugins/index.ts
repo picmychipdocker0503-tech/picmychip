@@ -248,6 +248,27 @@ export const plugins: Plugin[] = [
             },
           },
           {
+            name: 'shippingMethod',
+            type: 'select',
+            options: [
+              { label: 'Express Shipping', value: 'express' },
+              { label: 'Standard Shipping', value: 'standard' },
+            ],
+            admin: {
+              position: 'sidebar',
+              readOnly: true,
+            },
+          },
+          {
+            name: 'shippingAmount',
+            type: 'number',
+            admin: {
+              position: 'sidebar',
+              readOnly: true,
+              description: 'Shipping charge paid for this order, stored in paise.',
+            },
+          },
+          {
             name: 'discountsApplied',
             type: 'checkbox',
             defaultValue: false,
@@ -584,7 +605,12 @@ export const plugins: Plugin[] = [
           ...defaultCollection.admin,
           group: 'Sales',
         },
-        fields: [...defaultCollection.fields, businessDetailsGroup()],
+        fields: [
+          ...defaultCollection.fields,
+          businessDetailsGroup(),
+          { name: 'shippingMethod', type: 'text', admin: { hidden: true } },
+          { name: 'shippingAmount', type: 'number', admin: { hidden: true } },
+        ],
       }),
     },
     payments: {

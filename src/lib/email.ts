@@ -36,7 +36,13 @@ export function orderConfirmationEmailHtml(order: {
   amount?: number | null
   currency?: string | null
 }): string {
-  const amount = typeof order.amount === 'number' ? order.amount.toFixed(2) : '—'
+  const amount =
+    typeof order.amount === 'number'
+      ? new Intl.NumberFormat('en-IN', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(order.amount / 100)
+      : '—'
   return wrapper(
     `Order confirmed — #${order.id}`,
     `<p>Thanks for your order! We've received it and it's now being processed.</p>

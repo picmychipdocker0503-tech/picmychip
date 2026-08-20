@@ -5,14 +5,17 @@ import configPromise from '@payload-config'
 import { SparklesIcon } from 'lucide-react'
 import { getPayload } from 'payload'
 
-export const NewArrivals: React.FC = async () => {
+let devNewArrivalsCache: Promise<Awaited<ReturnType<typeof loadNewArrivalsData>>> | undefined
+
+async function loadNewArrivalsData() {
   const payload = await getPayload({ config: configPromise })
+  const isDevelopment = process.env.NODE_ENV !== 'production'
 
   const { docs: products } = await payload.find({
     collection: 'products',
     depth: 1,
     draft: false,
-    limit: 8,
+    limit: isDevelopment ? 4 : 8,
     overrideAccess: false,
     sort: '-createdAt',
     // Gift cards are a payment instrument, not a component — they'd
@@ -28,12 +31,25 @@ export const NewArrivals: React.FC = async () => {
     },
   })
 
-  if (products.length === 0) return null
+  if (products.length === 0) return { products: [], ratings: new Map() }
 
-  const ratings = await getAverageRatings(
-    payload,
-    products.map((product) => product.id),
-  )
+  const ratings = isDevelopment
+    ? new Map()
+    : await getAverageRatings(
+        payload,
+        products.map((product) => product.id),
+      )
+
+  return { products, ratings }
+}
+
+export const NewArrivals: React.FC = async () => {
+  const isDevelopment = process.env.NODE_ENV !== 'production'
+  const { products, ratings } = await (isDevelopment
+    ? (devNewArrivalsCache ??= loadNewArrivalsData())
+    : loadNewArrivalsData())
+
+  if (products.length === 0) return null
 
   return (
     <div className="container my-20">

@@ -1,4 +1,5 @@
 import type { PayloadEmailAdapter as EmailAdapter, SendEmailOptions } from 'payload'
+import crypto from 'crypto'
 
 import { sendTransactionalEmail } from './emailService'
 
@@ -23,10 +24,10 @@ function flattenAddress(value: SendEmailOptions['to']): string {
 // intercept per-call (Payload's own internal verify-email/forgot-password
 // sends) — not a stable entity id like an order id, but bucketed to the
 // hour so a retried send within the same short window is still deduped.
-function bestEffortEventId(to: string, subject: string): string {
-  const hourBucket = new Date().toISOString().slice(0, 13)
+function bestEffortEventId(to: string, subject: string, html: string): string {
+  const contentHash = crypto.createHash('sha256').update(html || subject).digest('hex').slice(0, 16)
   const safeSubject = subject.replace(/[^a-zA-Z0-9]+/g, '_').slice(0, 40)
-  return `AUTH_${safeSubject}_${to}_${hourBucket}`
+  return `AUTH_${safeSubject}_${to}_${contentHash}`
 }
 
 /**
@@ -47,7 +48,7 @@ export const transactionalEmailPayloadAdapter = (): EmailAdapter => {
       const html = typeof message.html === 'string' ? message.html : ''
 
       const result = await sendTransactionalEmail(payload, {
-        eventId: bestEffortEventId(to, subject),
+        eventId: bestEffortEventId(to, subject, html),
         emailType: 'PAYLOAD_AUTH',
         to,
         subject,

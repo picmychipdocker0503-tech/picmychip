@@ -72,7 +72,7 @@ export const AccountAvatar: React.FC = () => {
     <div className="flex items-center gap-4">
       <div className="group relative size-20 shrink-0 overflow-hidden rounded-full border border-border bg-primary/10">
         {user.avatar && typeof user.avatar === 'object' ? (
-          <Media fill imgClassName="object-cover" resource={user.avatar} />
+          <Media fill imgClassName="object-cover" resource={user.avatar} size="80px" />
         ) : (
           <div className="flex h-full w-full items-center justify-center text-2xl font-semibold text-primary">
             {(user.name || user.email || '?').charAt(0).toUpperCase()}

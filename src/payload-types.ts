@@ -350,6 +350,11 @@ export interface Order {
   shiprocketOrderId?: string | null;
   shiprocketShipmentId?: string | null;
   paymentMethod?: ('card' | 'cod' | 'gift-card') | null;
+  shippingMethod?: ('express' | 'standard') | null;
+  /**
+   * Shipping charge paid for this order, stored in paise.
+   */
+  shippingAmount?: number | null;
   /**
    * Internal guard — prevents double-processing coupon/gift-card redemption.
    */
@@ -1862,6 +1867,8 @@ export interface Transaction {
     gstin?: string | null;
     panNumber?: string | null;
   };
+  shippingMethod?: string | null;
+  shippingAmount?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3960,6 +3967,8 @@ export interface OrdersSelect<T extends boolean = true> {
   shiprocketOrderId?: T;
   shiprocketShipmentId?: T;
   paymentMethod?: T;
+  shippingMethod?: T;
+  shippingAmount?: T;
   discountsApplied?: T;
   couponApplied?:
     | T
@@ -4088,6 +4097,8 @@ export interface TransactionsSelect<T extends boolean = true> {
         gstin?: T;
         panNumber?: T;
       };
+  shippingMethod?: T;
+  shippingAmount?: T;
   updatedAt?: T;
   createdAt?: T;
 }

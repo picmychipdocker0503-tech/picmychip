@@ -44,7 +44,7 @@ const HeroContent = ({ slide, stats }: { slide: Slide; stats: HeroStats }) => {
           </Link>
         )}
 
-        <Link href="/products" className="pmc-explore-button group">
+        <Link href="/shop" className="pmc-explore-button group">
           <span>Explore Products</span>
           <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
         </Link>
@@ -84,6 +84,7 @@ const ProductVisual = ({ slide, priority }: { slide: Slide; priority?: boolean }
             priority={priority}
             resource={slide.image}
             imgClassName="pmc-product-image"
+            size="(max-width: 900px) 100vw, 35vw"
           />
         ) : (
           <div className="pmc-product-placeholder">

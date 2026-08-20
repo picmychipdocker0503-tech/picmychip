@@ -92,6 +92,7 @@ const QuickViewBody: React.FC<{ product: Product }> = ({ product }) => {
               fill
               imgClassName="object-contain"
               resource={gallery[current].image}
+              size="(max-width: 640px) 100vw, 384px"
             />
           ) : null}
         </div>
@@ -105,7 +106,13 @@ const QuickViewBody: React.FC<{ product: Product }> = ({ product }) => {
                 type="button"
               >
                 {typeof item.image === 'object' && (
-                  <Media className="relative h-full w-full" fill imgClassName="object-contain" resource={item.image} />
+                  <Media
+                    className="relative h-full w-full"
+                    fill
+                    imgClassName="object-contain"
+                    resource={item.image}
+                    size="56px"
+                  />
                 )}
               </button>
             ))}

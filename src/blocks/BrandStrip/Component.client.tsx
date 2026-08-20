@@ -44,6 +44,7 @@ export const BrandStripClient: React.FC<{ brands: Brand[] }> = ({ brands }) => {
                     fill
                     imgClassName="object-contain"
                     resource={brand.logo}
+                    size="144px"
                   />
                 ) : (
                   <span className="text-muted-foreground hover:text-foreground text-sm font-bold tracking-wide whitespace-nowrap uppercase transition-colors">

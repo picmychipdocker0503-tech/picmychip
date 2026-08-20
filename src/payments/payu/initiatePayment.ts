@@ -2,6 +2,7 @@ import type { PaymentAdapter } from '@payloadcms/plugin-ecommerce/types'
 import crypto from 'crypto'
 import { getServerSideURL } from '@/utilities/getURL'
 import { computeCheckoutTotal } from '@/lib/checkoutTax'
+import { requireCheckoutShippingMethod } from '@/lib/checkoutShipping'
 
 type InitiatePaymentProps = {
   merchantKey: string
@@ -33,6 +34,8 @@ export const initiatePayment =
     const businessDetails = (data as Record<string, unknown>).businessDetails as
       | { companyName?: string; gstin?: string; panNumber?: string }
       | undefined
+    const shippingMethodId = (data as Record<string, unknown>).shippingMethod as string | undefined
+    const shippingMethod = requireCheckoutShippingMethod(shippingMethodId)
 
     if (currency !== 'INR') {
       throw new Error('Card / UPI / NetBanking payment via PayU is only available for INR orders.')
@@ -60,7 +63,7 @@ export const initiatePayment =
       customerState,
       defaultGstPercent,
     })
-    const amountInPaise = Math.round(finalAmount)
+    const amountInPaise = Math.round(finalAmount) + shippingMethod.amount
 
     if (!amountInPaise || typeof amountInPaise !== 'number' || amountInPaise < 100) {
       throw new Error('A valid amount of at least ₹1 is required to initiate a payment.')
@@ -129,9 +132,15 @@ export const initiatePayment =
           currency,
           items: flattenedCart,
           paymentMethod: 'payu',
+          shippingMethod: shippingMethod.id,
+          shippingAmount: shippingMethod.amount,
           payu: {
             txnid,
-            shippingAddressSnapshot: shippingAddress as unknown as Record<string, unknown>,
+            shippingAddressSnapshot: {
+              ...(shippingAddress as unknown as Record<string, unknown>),
+              shippingMethod: shippingMethod.id,
+              shippingAmount: shippingMethod.amount,
+            },
           },
           status: 'pending',
         },
