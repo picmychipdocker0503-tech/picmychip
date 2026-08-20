@@ -22,6 +22,7 @@ import { HeroCarousel } from '@/blocks/HeroCarousel/config'
 import { IllustratedCategoryGrid } from '@/blocks/IllustratedCategoryGrid/config'
 import { MediaBlock } from '@/blocks/MediaBlock/config'
 import { TeamCulture } from '@/blocks/TeamCulture/config'
+import { TeamGrid } from '@/blocks/TeamGrid/config'
 import { Testimonials } from '@/blocks/Testimonials/config'
 import { TrendingProducts } from '@/blocks/TrendingProducts/config'
 import { TrustBadgesStrip } from '@/blocks/TrustBadgesStrip/config'
@@ -124,6 +125,7 @@ export const Pages: CollectionConfig = {
                 TrustBadgesStrip,
                 Testimonials,
                 TeamCulture,
+                TeamGrid,
                 FeaturedCollection,
                 ContentFeed,
               ],

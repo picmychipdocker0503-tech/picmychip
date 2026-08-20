@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { ArrowRightIcon, MapPinIcon } from 'lucide-react'
 import React from 'react'
 
+import { OpenRoles } from '@/components/illustrations'
+
 export const metadata: Metadata = {
   description: 'Open roles at Picmychip — browse current openings and apply.',
   title: 'Careers',
@@ -81,7 +83,15 @@ export default async function CareersPage() {
           ))}
         </ul>
       ) : (
-        <p className="text-muted-foreground">No open roles right now — check back soon.</p>
+        <div className="border-border bg-card flex flex-col items-center gap-4 rounded-3xl border p-10 text-center sm:p-14">
+          <OpenRoles className="text-muted-foreground/40 size-24" />
+          <div>
+            <h2 className="text-foreground text-lg font-semibold">No open roles right now</h2>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Check back soon, or follow our socials to hear when new positions go live.
+            </p>
+          </div>
+        </div>
       )}
     </div>
   )

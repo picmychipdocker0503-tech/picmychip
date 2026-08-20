@@ -11,6 +11,7 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { toast } from 'sonner'
 
 type FormData = {
   password: string
@@ -41,6 +42,7 @@ export const ResetPasswordForm: React.FC = () => {
 
       try {
         await resetPassword({ ...data, token })
+        toast.success('Password reset. You are now logged in.')
         router.push('/account')
       } catch {
         setError('This link is invalid or has expired. Please request a new one.')

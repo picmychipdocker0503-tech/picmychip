@@ -59,5 +59,23 @@ export const FeatureFlags: GlobalConfig = {
       defaultValue: true,
       label: 'Show "Track order" link in the top utility bar',
     },
+    {
+      name: 'trustedByBrands',
+      type: 'checkbox',
+      defaultValue: true,
+      label: 'Show the "Trusted by brands worldwide" strip on the homepage',
+    },
+    {
+      name: 'rewardsProgram',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'Show the Rewards / loyalty points bar on the account page',
+    },
+    {
+      name: 'freeShippingBanner',
+      type: 'checkbox',
+      defaultValue: false,
+      label: 'Show the free-shipping progress banner in the cart drawer',
+    },
   ],
 }

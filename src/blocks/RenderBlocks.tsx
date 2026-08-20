@@ -21,6 +21,7 @@ import { RfqBomSectionBlock } from '@/blocks/RfqBomSection/Component'
 import { ServicesShowcaseBlock } from '@/blocks/ServicesShowcase/Component'
 import { StatsStripBlock } from '@/blocks/StatsStrip/Component'
 import { TeamCultureBlock } from '@/blocks/TeamCulture/Component'
+import { TeamGridBlock } from '@/blocks/TeamGrid/Component'
 import { TestimonialsBlock } from '@/blocks/Testimonials/Component'
 import { ThreeItemGridBlock } from '@/blocks/ThreeItemGrid/Component'
 import { TrendingProductsBlock } from '@/blocks/TrendingProducts/Component'
@@ -52,6 +53,7 @@ const blockComponents = {
   servicesShowcase: ServicesShowcaseBlock,
   statsStrip: StatsStripBlock,
   teamCulture: TeamCultureBlock,
+  teamGrid: TeamGridBlock,
   testimonials: TestimonialsBlock,
   threeItemGrid: ThreeItemGridBlock,
   trendingProducts: TrendingProductsBlock,

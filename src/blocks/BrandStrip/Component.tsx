@@ -1,13 +1,17 @@
 import type { Brand, BrandStripBlock as BrandStripBlockProps } from '@/payload-types'
 import React from 'react'
 
+import { getCachedGlobal } from '@/utilities/getGlobals'
 import { BrandStripClient } from './Component.client'
 
 export const BrandStripBlock: React.FC<
   BrandStripBlockProps & {
     id?: string | number
   }
-> = ({ heading, brands }) => {
+> = async ({ heading, brands }) => {
+  const featureFlags = await getCachedGlobal('feature-flags', 0)()
+  if (featureFlags?.trustedByBrands === false) return null
+
   const resolvedBrands = (brands ?? []).filter((brand): brand is Brand => typeof brand === 'object')
 
   if (resolvedBrands.length === 0) return null

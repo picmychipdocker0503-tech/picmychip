@@ -183,10 +183,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       })
 
       if (res.ok) {
-        const { data, errors } = await res.json()
+        const { errors, user } = await res.json()
         if (errors) throw new Error(errors[0].message)
-        setUser(data?.loginUser?.user)
-        setStatus(data?.loginUser?.user ? 'loggedIn' : undefined)
+        setUser(user)
+        setStatus(user ? 'loggedIn' : undefined)
       } else {
         throw new Error('Invalid login')
       }

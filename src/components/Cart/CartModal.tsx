@@ -22,6 +22,7 @@ import { OpenCartButton } from './OpenCart'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { FREE_SHIPPING_THRESHOLD } from '@/lib/shipping'
+import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import { Product, Variant } from '@/payload-types'
 
 type GalleryItem = NonNullable<Product['gallery']>[number]
@@ -30,6 +31,7 @@ type VariantOptionItem = NonNullable<Variant['options']>[number]
 export function CartModal() {
   const { cart } = useCart()
   const [isOpen, setIsOpen] = useState(false)
+  const flags = useFeatureFlags()
 
   const pathname = usePathname()
 
@@ -64,7 +66,7 @@ export function CartModal() {
         ) : (
           <div className="grow flex px-4">
             <div className="flex flex-col justify-between w-full">
-              {typeof cart?.subtotal === 'number' && (
+              {flags.freeShippingBanner && typeof cart?.subtotal === 'number' && (
                 <div className="border-border bg-muted/30 mb-2 rounded-lg border p-3 text-sm">
                   {cart.subtotal >= FREE_SHIPPING_THRESHOLD ? (
                     <p className="font-medium">🎉 You&apos;ve unlocked free shipping!</p>

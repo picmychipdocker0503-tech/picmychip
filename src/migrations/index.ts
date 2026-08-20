@@ -41,9 +41,14 @@ import * as migration_20260818_121920_add_team_testimonials_and_culture_block fr
 import * as migration_20260819_044939_add_email_events from './20260819_044939_add_email_events';
 import * as migration_20260819_072742_add_product_sale_pricing from './20260819_072742_add_product_sale_pricing';
 import * as migration_20260819_075443_add_product_perf_indexes from './20260819_075443_add_product_perf_indexes';
+import * as migration_20260819_120810_add_team_grid_and_story from './20260819_120810_add_team_grid_and_story';
+import * as migration_20260819_143501_make_team_quote_optional from './20260819_143501_make_team_quote_optional';
+import * as migration_20260819_195700_restore_customer_interaction_block from './20260819_195700_restore_customer_interaction_block';
 import * as migration_20260819_120731_remove_customer_interaction_block from './20260819_120731_remove_customer_interaction_block';
 import * as migration_20260819_131219_add_rfq_bom_section from './20260819_131219_add_rfq_bom_section';
 import * as migration_20260819_140542_add_track_order_feature_flag from './20260819_140542_add_track_order_feature_flag';
+import * as migration_20260819_212037_add_trusted_by_brands_feature_flag from './20260819_212037_add_trusted_by_brands_feature_flag';
+import * as migration_20260820_043804_add_rewards_free_shipping_flags from './20260820_043804_add_rewards_free_shipping_flags';
 
 export const migrations = [
   {
@@ -262,6 +267,21 @@ export const migrations = [
     name: '20260819_075443_add_product_perf_indexes',
   },
   {
+    up: migration_20260819_120810_add_team_grid_and_story.up,
+    down: migration_20260819_120810_add_team_grid_and_story.down,
+    name: '20260819_120810_add_team_grid_and_story',
+  },
+  {
+    up: migration_20260819_143501_make_team_quote_optional.up,
+    down: migration_20260819_143501_make_team_quote_optional.down,
+    name: '20260819_143501_make_team_quote_optional',
+  },
+  {
+    up: migration_20260819_195700_restore_customer_interaction_block.up,
+    down: migration_20260819_195700_restore_customer_interaction_block.down,
+    name: '20260819_195700_restore_customer_interaction_block',
+  },
+  {
     up: migration_20260819_120731_remove_customer_interaction_block.up,
     down: migration_20260819_120731_remove_customer_interaction_block.down,
     name: '20260819_120731_remove_customer_interaction_block',
@@ -275,5 +295,15 @@ export const migrations = [
     up: migration_20260819_140542_add_track_order_feature_flag.up,
     down: migration_20260819_140542_add_track_order_feature_flag.down,
     name: '20260819_140542_add_track_order_feature_flag',
+  },
+  {
+    up: migration_20260819_212037_add_trusted_by_brands_feature_flag.up,
+    down: migration_20260819_212037_add_trusted_by_brands_feature_flag.down,
+    name: '20260819_212037_add_trusted_by_brands_feature_flag',
+  },
+  {
+    up: migration_20260820_043804_add_rewards_free_shipping_flags.up,
+    down: migration_20260820_043804_add_rewards_free_shipping_flags.down,
+    name: '20260820_043804_add_rewards_free_shipping_flags',
   },
 ];

@@ -12,11 +12,13 @@ import { Order } from '@/payload-types'
 import { OrderItem } from '@/components/OrderItem'
 import { getPayload } from 'payload'
 import { redirect } from 'next/navigation'
+import { getCachedGlobal } from '@/utilities/getGlobals'
 
 export default async function AccountPage() {
   const headers = await getHeaders()
   const payload = await getPayload({ config: configPromise })
   const { user } = await payload.auth({ headers })
+  const featureFlags = await getCachedGlobal('feature-flags', 0)()
 
   let orders: Order[] | null = null
 
@@ -57,10 +59,12 @@ export default async function AccountPage() {
         <AccountForm />
       </div>
 
-      <div className="border p-8 rounded-lg bg-primary-foreground">
-        <h2 className="text-3xl font-medium mb-8">Rewards</h2>
-        <LoyaltyProgressBar />
-      </div>
+      {featureFlags?.rewardsProgram && (
+        <div className="border p-8 rounded-lg bg-primary-foreground">
+          <h2 className="text-3xl font-medium mb-8">Rewards</h2>
+          <LoyaltyProgressBar />
+        </div>
+      )}
 
       <div className=" border p-8 rounded-lg bg-primary-foreground">
         <h2 className="text-3xl font-medium mb-8">Recent Orders</h2>

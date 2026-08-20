@@ -14,11 +14,14 @@ export const CallToActionBlock: React.FC<
 > = ({ links, richText }) => {
   return (
     <section className="container my-20">
-      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-gradient-to-br from-neutral-950 via-card to-neutral-950 p-8 sm:p-12 lg:p-16 text-white shadow-2xl">
-        
+      <div className="relative overflow-hidden rounded-3xl border border-primary/30 bg-neutral-950 p-8 sm:p-12 lg:p-16 text-white shadow-2xl">
+
         {/* Ambient Neon Lighting */}
-        <div className="pointer-events-none absolute -left-20 -top-20 size-80 rounded-full bg-primary/20 blur-3xl" />
+        <div className="pointer-events-none absolute -left-20 -top-20 size-80 rounded-full bg-primary/25 blur-3xl" />
         <div className="pointer-events-none absolute -right-20 -bottom-20 size-80 rounded-full bg-orange-500/20 blur-3xl" />
+
+        {/* Subtle diagonal sheen, confined to the decorative side so it never crosses the copy */}
+        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-1/2 bg-gradient-to-br from-transparent via-white/[0.04] to-transparent lg:block" />
 
         {/* Decorative Hardware Icons */}
         <Chip className="text-primary pointer-events-none absolute -right-8 -bottom-8 hidden size-40 opacity-15 rotate-12 lg:block" />

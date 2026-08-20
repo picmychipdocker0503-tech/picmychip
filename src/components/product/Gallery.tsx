@@ -93,14 +93,33 @@ export const Gallery: React.FC<Props> = ({ gallery, product }) => {
     }
   }, [searchParams, api, gallery])
 
+  // The tilt + Buy Now overlay are a "hero shot" interaction, meant for a
+  // clean product photo — some gallery images (spec sheets, supplier
+  // infographics with text/icons baked into the pixels) look like a whole
+  // UI card, so tilting them reads as "the full card moving" rather than
+  // "the photo tilting". Scoping both to only the first/primary image keeps
+  // the effect feeling intentional regardless of what a later gallery image
+  // contains.
+  const isPrimaryImage = current === 0
+
+  // Switching images via a thumbnail click doesn't necessarily fire
+  // onMouseLeave first — clear any in-progress tilt so a leftover rotation
+  // never gets stuck on the (now inert) frame.
+  useEffect(() => {
+    if (!isPrimaryImage) {
+      if (tilt.ref.current) tilt.ref.current.style.transform = ''
+      if (tilt.glareRef.current) tilt.glareRef.current.style.opacity = '0'
+    }
+  }, [isPrimaryImage, tilt.ref, tilt.glareRef])
+
   return (
     <div>
       <div
         className="group relative mb-5 transition-transform duration-150 ease-out will-change-transform"
-        onMouseEnter={tilt.onMouseEnter}
-        onMouseLeave={tilt.onMouseLeave}
-        onMouseMove={tilt.onMouseMove}
-        ref={tilt.ref}
+        onMouseEnter={isPrimaryImage ? tilt.onMouseEnter : undefined}
+        onMouseLeave={isPrimaryImage ? tilt.onMouseLeave : undefined}
+        onMouseMove={isPrimaryImage ? tilt.onMouseMove : undefined}
+        ref={isPrimaryImage ? tilt.ref : undefined}
       >
         <button
           aria-label="Zoom image"
@@ -120,23 +139,27 @@ export const Gallery: React.FC<Props> = ({ gallery, product }) => {
           </span>
         </button>
 
-        {/* Cursor-tracked glare highlight, part of the 3D tilt effect. */}
-        <div
-          className="pointer-events-none absolute inset-0 z-10 rounded-2xl opacity-0 transition-opacity duration-150"
-          ref={tilt.glareRef}
-        />
+        {isPrimaryImage && (
+          <>
+            {/* Cursor-tracked glare highlight, part of the 3D tilt effect. */}
+            <div
+              className="pointer-events-none absolute inset-0 z-10 rounded-2xl opacity-0 transition-opacity duration-150"
+              ref={tilt.glareRef}
+            />
 
-        {product?.id && (
-          <button
-            aria-label="Buy now"
-            className="bg-primary text-primary-foreground absolute inset-x-4 bottom-4 z-20 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 disabled:pointer-events-none disabled:opacity-0"
-            disabled={isOutOfStock || isBuyingNow}
-            onClick={handleBuyNow}
-            type="button"
-          >
-            <ZapIcon className="size-4" />
-            {isBuyingNow ? 'Redirecting…' : 'Buy Now'}
-          </button>
+            {product?.id && (
+              <button
+                aria-label="Buy now"
+                className="bg-primary text-primary-foreground absolute inset-x-4 bottom-4 z-20 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-sm font-bold opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100 disabled:pointer-events-none disabled:opacity-0"
+                disabled={isOutOfStock || isBuyingNow}
+                onClick={handleBuyNow}
+                type="button"
+              >
+                <ZapIcon className="size-4" />
+                {isBuyingNow ? 'Redirecting…' : 'Buy Now'}
+              </button>
+            )}
+          </>
         )}
       </div>
 

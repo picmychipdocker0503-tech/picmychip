@@ -44,14 +44,20 @@ export const TeamCultureBlock: React.FC<
       },
     })
 
-    cards = docs.map((entry) => ({
-      key: entry.id,
-      name: entry.name,
-      photo: typeof entry.photo === 'object' ? entry.photo : undefined,
-      designation: entry.designation,
-      department: entry.department,
-      quote: entry.quote,
-    }))
+    // quote is optional on the collection (a team member can appear on the
+    // "Team" page without one) — this section is specifically the quote
+    // cards, so anyone without a real quote is skipped here rather than
+    // rendering an empty quote bubble.
+    cards = docs
+      .filter((entry) => Boolean(entry.quote?.trim()))
+      .map((entry) => ({
+        key: entry.id,
+        name: entry.name,
+        photo: typeof entry.photo === 'object' ? entry.photo : undefined,
+        designation: entry.designation,
+        department: entry.department,
+        quote: entry.quote as string,
+      }))
   }
 
   if (cards.length === 0) return null

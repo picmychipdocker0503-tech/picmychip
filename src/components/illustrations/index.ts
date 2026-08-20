@@ -14,6 +14,7 @@ import { FilamentSpool } from './FilamentSpool'
 import { Gear } from './Gear'
 import { Inductor } from './Inductor'
 import { Microcontroller } from './Microcontroller'
+import { OpenRoles } from './OpenRoles'
 import { QualityCheck } from './QualityCheck'
 import { Resistor } from './Resistor'
 import { ShippingBox } from './ShippingBox'
@@ -34,6 +35,7 @@ export {
   Gear,
   Inductor,
   Microcontroller,
+  OpenRoles,
   QualityCheck,
   Resistor,
   ShippingBox,

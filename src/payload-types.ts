@@ -897,6 +897,7 @@ export interface Page {
     | TrustBadgesStripBlock
     | TestimonialsBlock
     | TeamCultureBlock
+    | TeamGridBlock
     | FeaturedCollectionBlock
     | ContentFeedBlock
   )[];
@@ -1660,6 +1661,47 @@ export interface TeamCultureBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TeamGridBlock".
+ */
+export interface TeamGridBlock {
+  heading?: string | null;
+  /**
+   * One or two sentences under the heading.
+   */
+  intro?: string | null;
+  populateBy?: ('collection' | 'manual') | null;
+  members?:
+    | {
+        name: string;
+        photo?: (number | null) | Media;
+        designation?: string | null;
+        department?: string | null;
+        yearsAtCompany?: number | null;
+        story?: {
+          root: {
+            type: string;
+            children: {
+              type: any;
+              version: number;
+              [k: string]: unknown;
+            }[];
+            direction: ('ltr' | 'rtl') | null;
+            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+            indent: number;
+            version: number;
+          };
+          [k: string]: unknown;
+        } | null;
+        id?: string | null;
+      }[]
+    | null;
+  limit?: number | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'teamGrid';
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FeaturedCollectionBlock".
  */
 export interface FeaturedCollectionBlock {
@@ -2087,7 +2129,7 @@ export interface CommunityFeedback {
   createdAt: string;
 }
 /**
- * What the team thinks about working here — real quotes from real employees, shown on the "People & Culture" page. Only add quotes you have permission to publish.
+ * Real people, real quotes, real stories — shown on the "People & Culture" page (quote) and the "Team" page (full story). Only add people and content you have permission to publish.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "team-testimonials".
@@ -2105,10 +2147,28 @@ export interface TeamTestimonial {
   department?: string | null;
   photo?: (number | null) | Media;
   /**
-   * What they would say about working at Picmychip, in their own words.
+   * What they would say about working at Picmychip, in their own words. Optional — leave blank if you don't have a real quote from them yet; they'll still appear on the "Team" page, just not in the People & Culture quote cards, which only show people who have one.
    */
-  quote: string;
+  quote?: string | null;
   yearsAtCompany?: number | null;
+  /**
+   * Their longer story — how they got into this field, what they work on, what they're proud of. Shown on the "Team" page profile grid, separate from the short quote above. Optional — a person can appear on Team without one.
+   */
+  story?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
   /**
    * Only featured quotes are shown on the People & Culture page.
    */
@@ -2564,6 +2624,7 @@ export interface PagesSelect<T extends boolean = true> {
         trustBadgesStrip?: T | TrustBadgesStripBlockSelect<T>;
         testimonials?: T | TestimonialsBlockSelect<T>;
         teamCulture?: T | TeamCultureBlockSelect<T>;
+        teamGrid?: T | TeamGridBlockSelect<T>;
         featuredCollection?: T | FeaturedCollectionBlockSelect<T>;
         contentFeed?: T | ContentFeedBlockSelect<T>;
       };
@@ -2935,6 +2996,29 @@ export interface TeamCultureBlockSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "TeamGridBlock_select".
+ */
+export interface TeamGridBlockSelect<T extends boolean = true> {
+  heading?: T;
+  intro?: T;
+  populateBy?: T;
+  members?:
+    | T
+    | {
+        name?: T;
+        photo?: T;
+        designation?: T;
+        department?: T;
+        yearsAtCompany?: T;
+        story?: T;
+        id?: T;
+      };
+  limit?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "FeaturedCollectionBlock_select".
  */
 export interface FeaturedCollectionBlockSelect<T extends boolean = true> {
@@ -3188,6 +3272,7 @@ export interface TeamTestimonialsSelect<T extends boolean = true> {
   photo?: T;
   quote?: T;
   yearsAtCompany?: T;
+  story?: T;
   featured?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -4169,6 +4254,9 @@ export interface FeatureFlag {
   recentlyViewed?: boolean | null;
   searchAutocomplete?: boolean | null;
   trackOrder?: boolean | null;
+  trustedByBrands?: boolean | null;
+  rewardsProgram?: boolean | null;
+  freeShippingBanner?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -4317,6 +4405,9 @@ export interface FeatureFlagsSelect<T extends boolean = true> {
   recentlyViewed?: T;
   searchAutocomplete?: T;
   trackOrder?: T;
+  trustedByBrands?: T;
+  rewardsProgram?: T;
+  freeShippingBanner?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

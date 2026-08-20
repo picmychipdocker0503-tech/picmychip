@@ -35,7 +35,7 @@ export const AccountAvatar: React.FC = () => {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      formData.append('alt', `${user.name || 'User'} avatar`)
+      formData.append('_payload', JSON.stringify({ alt: `${user.name || 'User'} avatar` }))
 
       const mediaResponse = await fetch(`${getClientSideURL()}/api/media`, {
         body: formData,

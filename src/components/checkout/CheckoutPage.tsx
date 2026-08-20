@@ -212,8 +212,15 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
   }, [])
 
   useEffect(() => {
-    if (!cardPaymentAvailable) setPaymentMethod('cod')
-  }, [cardPaymentAvailable])
+    if (!cardPaymentAvailable && flags.cashOnDelivery) {
+      setPaymentMethod('cod')
+    } else if (!flags.cashOnDelivery) {
+      // Also corrects the case where this effect's own first run (before the
+      // async flag fetch resolves) latched onto 'cod' via the optimistic
+      // cashOnDelivery: true default in useFeatureFlags.
+      setPaymentMethod('card')
+    }
+  }, [cardPaymentAvailable, flags.cashOnDelivery])
 
   // PayU redirects the browser back here with ?error=payment_failed if its callback
   // (src/payments/payu/endpoints/callback.ts) couldn't confirm the order.
@@ -461,16 +468,18 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                 />
                 <span>{t('paymentMethod.cardUpiNetbanking')}</span>
               </label>
-              <label
-                className={`flex flex-1 cursor-pointer items-center gap-3 rounded-lg border p-4 ${paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-border'}`}
-              >
-                <input
-                  checked={paymentMethod === 'cod'}
-                  onChange={() => setPaymentMethod('cod')}
-                  type="radio"
-                />
-                <span>{t('paymentMethod.cashOnDelivery')}</span>
-              </label>
+              {flags.cashOnDelivery && (
+                <label
+                  className={`flex flex-1 cursor-pointer items-center gap-3 rounded-lg border p-4 ${paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-border'}`}
+                >
+                  <input
+                    checked={paymentMethod === 'cod'}
+                    onChange={() => setPaymentMethod('cod')}
+                    type="radio"
+                  />
+                  <span>{t('paymentMethod.cashOnDelivery')}</span>
+                </label>
+              )}
             </div>
 
             {!cardPaymentAvailable && (

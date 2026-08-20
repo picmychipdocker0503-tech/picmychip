@@ -14,6 +14,9 @@ const DEFAULTS: FeatureFlag = {
   recentlyViewed: true,
   searchAutocomplete: true,
   trackOrder: true,
+  trustedByBrands: true,
+  rewardsProgram: false,
+  freeShippingBanner: false,
   updatedAt: '',
   createdAt: '',
 }
