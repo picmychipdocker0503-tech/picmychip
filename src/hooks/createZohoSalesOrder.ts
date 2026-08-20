@@ -2,34 +2,31 @@ import type { CollectionAfterChangeHook } from 'payload'
 
 import { syncZohoSalesOrderForOrder } from '@/lib/orderIntegrations/syncZohoSalesOrder'
 
-const scheduledOrderIds = new Set<string>()
+const runningOrderIds = new Set<string>()
 
 /**
- * Deferred (setTimeout) rather than run inline — avoids a race where the
- * sync reads the order before its creating transaction has committed.
- * Dedup-guarded so calling this from both the afterChange hook and directly
- * from PayU's confirmOrder (belt-and-suspenders against the hook not firing
- * in time) never runs the sync twice for the same order.
+ * Runs the Zoho sync in the request that created the order.
+ *
+ * This used to be delayed with setTimeout, but production runs on Vercel
+ * serverless functions where delayed background work can be frozen after the
+ * response is sent. That left orders stuck at "processing" until the admin
+ * Retry button ran the exact same sync in a foreground request.
  */
-export function scheduleZohoSalesOrderSync(
+export async function runZohoSalesOrderSync(
   req: Parameters<CollectionAfterChangeHook>[0]['req'],
   orderId: number | string,
-) {
+): Promise<void> {
   const key = String(orderId)
-  if (scheduledOrderIds.has(key)) return
-  scheduledOrderIds.add(key)
+  if (runningOrderIds.has(key)) return
+  runningOrderIds.add(key)
 
-  const delayMs = Number(process.env.ZOHO_INVOICE_SYNC_DELAY_MS || 1500)
-
-  setTimeout(() => {
-    syncZohoSalesOrderForOrder(req.payload, orderId)
-      .catch((err) => {
-        req.payload.logger.error({ msg: 'Background Zoho sales order sync failed', err, orderId })
-      })
-      .finally(() => {
-        scheduledOrderIds.delete(key)
-      })
-  }, delayMs)
+  try {
+    await syncZohoSalesOrderForOrder(req.payload, orderId)
+  } catch (err) {
+    req.payload.logger.error({ msg: 'Zoho sales order sync failed', err, orderId })
+  } finally {
+    runningOrderIds.delete(key)
+  }
 }
 
 /**
@@ -46,7 +43,7 @@ export function scheduleZohoSalesOrderSync(
 export const createZohoSalesOrder: CollectionAfterChangeHook = async ({ doc, operation, req }) => {
   if (operation !== 'create') return doc
 
-  scheduleZohoSalesOrderSync(req, doc.id)
+  await runZohoSalesOrderSync(req, doc.id)
 
   return doc
 }

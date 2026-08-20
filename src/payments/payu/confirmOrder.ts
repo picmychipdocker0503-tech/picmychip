@@ -1,7 +1,6 @@
 import type { PaymentAdapter } from '@payloadcms/plugin-ecommerce/types'
 import type { Address } from '@/payload-types'
 import { getCheckoutShippingMethod } from '@/lib/checkoutShipping'
-import { scheduleZohoSalesOrderSync } from '@/hooks/createZohoSalesOrder'
 import crypto from 'crypto'
 
 type ConfirmOrderProps = {
@@ -184,8 +183,6 @@ export const confirmOrder =
       },
       req,
     })
-
-    scheduleZohoSalesOrderSync(req, order.id)
 
     return {
       message: 'Payment confirmed successfully',
