@@ -16,6 +16,7 @@ import {
 } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
+import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
 import { Brands } from '@/collections/Brands'
@@ -48,6 +49,12 @@ const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
 export default buildConfig({
+  // Required for any collection's `upload.resizeOptions`/`formatOptions` to
+  // actually run (Media.ts sets both) — without this, Payload silently skips
+  // image processing and warns "sharp not installed" even though the
+  // package is a real, installed dependency, because it only looks for a
+  // `sharp` module passed in through config, never node_modules directly.
+  sharp,
   // Formalizes the admin panel's language config so adding a language pack
   // later is a one-line change. Hindi isn't available here — unlike the
   // storefront's next-intl setup, @payloadcms/translations doesn't ship a

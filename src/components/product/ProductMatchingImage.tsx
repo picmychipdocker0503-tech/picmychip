@@ -200,6 +200,7 @@ export const ProductMatchingImage: React.FC<Props> = ({
             onError={() => setImageError(true)}
             onLoad={() => setImageLoading(false)}
             priority={priority}
+            fetchPriority={priority ? 'high' : undefined}
             quality={90}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
             src={imageUrl}

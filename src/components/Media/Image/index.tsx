@@ -87,6 +87,11 @@ export const Image: React.FC<MediaProps> = (props) => {
         }
       }}
       priority={priority}
+      // `priority` alone (this version's deprecated-but-still-functional prop)
+      // correctly suppresses lazy-loading and emits a <link rel="preload">, but
+      // no longer sets fetchpriority="high" on the <img> itself the way it used
+      // to — that's apparently opt-in now via this separate prop.
+      fetchPriority={priority ? 'high' : undefined}
       quality={90}
       sizes={sizes}
       src={hasError || !src ? PRODUCT_IMAGE_PLACEHOLDER : src}
