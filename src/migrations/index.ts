@@ -55,6 +55,7 @@ import * as migration_20260820_114334_add_team_testimonials_linked_user from './
 import * as migration_20260820_130557_add_category_description from './20260820_130557_add_category_description';
 import * as migration_20260820_131235_add_order_review_request from './20260820_131235_add_order_review_request';
 import * as migration_20260820_134902_add_wishlists_collection from './20260820_134902_add_wishlists_collection';
+import * as migration_20260820_183000_add_checkout_shipping_fields from './20260820_183000_add_checkout_shipping_fields';
 
 export const migrations = [
   {
@@ -341,5 +342,10 @@ export const migrations = [
     up: migration_20260820_134902_add_wishlists_collection.up,
     down: migration_20260820_134902_add_wishlists_collection.down,
     name: '20260820_134902_add_wishlists_collection',
+  },
+  {
+    up: migration_20260820_183000_add_checkout_shipping_fields.up,
+    down: migration_20260820_183000_add_checkout_shipping_fields.down,
+    name: '20260820_183000_add_checkout_shipping_fields',
   },
 ];
