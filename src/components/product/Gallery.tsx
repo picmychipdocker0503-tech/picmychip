@@ -4,10 +4,10 @@ import type { Product, Variant } from '@/payload-types'
 
 import { Media } from '@/components/Media'
 import { GridTileImage } from '@/components/Grid/tile'
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { useTilt3D } from '@/lib/useTilt3D'
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
-import { ChevronLeftIcon, ChevronRightIcon, ZapIcon, ZoomInIcon } from 'lucide-react'
+import { ChevronLeftIcon, ChevronRightIcon, XIcon, ZapIcon, ZoomInIcon } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -184,8 +184,17 @@ export const Gallery: React.FC<Props> = ({ gallery, product }) => {
       )}
 
       <Dialog onOpenChange={setLightboxOpen} open={lightboxOpen}>
-        <DialogContent className="max-w-[calc(100%-2rem)] border-none bg-transparent p-0 shadow-none sm:max-w-3xl">
+        <DialogContent
+          className="max-w-[calc(100%-2rem)] border-none bg-transparent p-0 shadow-none sm:max-w-3xl"
+          showCloseButton={false}
+        >
           <DialogTitle className="sr-only">Product image</DialogTitle>
+          <DialogClose
+            aria-label="Close"
+            className="bg-background/90 absolute top-3 right-3 z-10 flex size-9 items-center justify-center rounded-full border shadow-sm"
+          >
+            <XIcon className="size-4" />
+          </DialogClose>
           <div className="relative aspect-square w-full">
             <Media resource={gallery[current].image} className="h-full w-full" fill imgClassName="object-contain" />
           </div>

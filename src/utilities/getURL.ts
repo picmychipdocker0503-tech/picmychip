@@ -11,7 +11,11 @@ export const getServerSideURL = () => {
     url = 'http://localhost:3000'
   }
 
-  return url
+  // A trailing slash here turns `${getServerSideURL()}/category/${slug}` into
+  // a double slash, whose `new URL(...).pathname` (e.g. in breadcrumb links)
+  // becomes "//category/slug" — a protocol-relative URL that browsers resolve
+  // to host "category" instead of a same-site path.
+  return url.replace(/\/+$/, '')
 }
 
 export const getClientSideURL = () => {
