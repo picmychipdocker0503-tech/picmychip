@@ -1,5 +1,6 @@
 import type { Product } from '@/payload-types'
 
+import { Price } from '@/components/Price'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { BadgePercent } from 'lucide-react'
 
@@ -32,7 +33,7 @@ export const PriceTiers: React.FC<Props> = ({ product }) => {
             <TableRow key={tier.id ?? tier.minQuantity}>
               <TableCell className="font-medium">{tier.minQuantity}+</TableCell>
               <TableCell className="text-primary font-semibold">
-                ₹{tier.priceInINR?.toFixed(2)}
+                {typeof tier.priceInINR === 'number' && <Price amount={tier.priceInINR} as="span" />}
               </TableCell>
             </TableRow>
           ))}

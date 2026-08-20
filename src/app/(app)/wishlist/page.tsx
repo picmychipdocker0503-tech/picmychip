@@ -5,7 +5,7 @@ import type { Product } from '@/payload-types'
 import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
 import { useWishlist } from '@/providers/Wishlist'
-import { getClientSideURL } from '@/utilities/getURL'
+import { getWishlistProducts } from '@/providers/Wishlist/actions'
 import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import {
   createColumnHelper,
@@ -67,13 +67,9 @@ export default function WishlistPage() {
     }
 
     setIsFetching(true)
-    const query = ids.map((id) => `where[id][in][]=${id}`).join('&')
 
-    fetch(`${getClientSideURL()}/api/products?${query}&depth=1&limit=${ids.length}`, {
-      credentials: 'include',
-    })
-      .then((response) => response.json())
-      .then((data) => setProducts(data?.docs ?? []))
+    getWishlistProducts(ids)
+      .then((docs) => setProducts(docs))
       .finally(() => setIsFetching(false))
   }, [ids])
 

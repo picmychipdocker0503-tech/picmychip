@@ -7,7 +7,7 @@ import { DataTableShell } from '@/components/admin/DataTable/DataTableShell'
 import { useServerTable } from '@/components/admin/DataTable/useServerTable'
 import { formatDateTime } from '@/utilities/formatDateTime'
 import { createColumnHelper } from '@tanstack/react-table'
-import { FileTextIcon } from 'lucide-react'
+import { FileTextIcon, PlusIcon } from 'lucide-react'
 import React, { useCallback, useMemo } from 'react'
 
 import type { ListApiResponse } from '../../DataTable/types'
@@ -81,7 +81,15 @@ export const DatasheetsTable: React.FC<{ initialData: ListApiResponse<Datasheet>
       searchInput={searchInput}
       searchPlaceholder="Search by title or filename…"
       table={table}
-      toolbarRight={<BulkActionsBar collection="datasheets" onDeleted={refetch} table={table} />}
+      toolbarRight={
+        <div className="flex items-center gap-3">
+          <BulkActionsBar collection="datasheets" onDeleted={refetch} table={table} />
+          <a className="pmc-btn pmc-btn-primary pmc-btn-sm rounded-full" href="/admin/collections/datasheets/create">
+            <PlusIcon className="size-4" />
+            Create New
+          </a>
+        </div>
+      }
       totalDocs={data.totalDocs}
     />
   )

@@ -29,8 +29,10 @@ type Props = {
   topProducts: TopProductsReport
 }
 
+// Money fields (order.amount, etc.) are stored in paise — divide by 100
+// before formatting, same convention as `useCurrency().formatCurrency`.
 const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount)
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount / 100)
 
 const SectionCard: React.FC<{ children: React.ReactNode; description?: string; title: string }> = ({
   title,

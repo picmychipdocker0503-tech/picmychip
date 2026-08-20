@@ -88,6 +88,7 @@ export interface Config {
     coupons: Coupon;
     'gift-cards': GiftCard;
     'stock-alerts': StockAlert;
+    wishlists: Wishlist;
     'return-requests': ReturnRequest;
     'email-events': EmailEvent;
     forms: Form;
@@ -135,6 +136,7 @@ export interface Config {
     coupons: CouponsSelect<false> | CouponsSelect<true>;
     'gift-cards': GiftCardsSelect<false> | GiftCardsSelect<true>;
     'stock-alerts': StockAlertsSelect<false> | StockAlertsSelect<true>;
+    wishlists: WishlistsSelect<false> | WishlistsSelect<true>;
     'return-requests': ReturnRequestsSelect<false> | ReturnRequestsSelect<true>;
     'email-events': EmailEventsSelect<false> | EmailEventsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
@@ -2317,6 +2319,33 @@ export interface StockAlert {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "wishlists".
+ */
+export interface Wishlist {
+  id: number;
+  customer: number | User;
+  product: number | Product;
+  /**
+   * Optional — set when the customer saved a specific variant rather than the base product.
+   */
+  variant?: (number | null) | Variant;
+  /**
+   * Product price (INR) when this was saved — the baseline for price-drop emails.
+   */
+  priceAtAdd?: number | null;
+  /**
+   * Price at the time of the last price-drop email sent for this item, if any.
+   */
+  lastNotifiedPrice?: number | null;
+  /**
+   * When a back-in-stock email was last sent for this item. Cleared automatically if the product goes out of stock again, so the next restock notifies again.
+   */
+  stockAlertSentAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "return-requests".
  */
 export interface ReturnRequest {
@@ -2486,6 +2515,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'stock-alerts';
         value: number | StockAlert;
+      } | null)
+    | ({
+        relationTo: 'wishlists';
+        value: number | Wishlist;
       } | null)
     | ({
         relationTo: 'return-requests';
@@ -3391,6 +3424,20 @@ export interface StockAlertsSelect<T extends boolean = true> {
   variant?: T;
   email?: T;
   notifiedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "wishlists_select".
+ */
+export interface WishlistsSelect<T extends boolean = true> {
+  customer?: T;
+  product?: T;
+  variant?: T;
+  priceAtAdd?: T;
+  lastNotifiedPrice?: T;
+  stockAlertSentAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

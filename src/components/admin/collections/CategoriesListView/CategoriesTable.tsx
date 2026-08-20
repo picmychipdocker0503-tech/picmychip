@@ -8,6 +8,7 @@ import { useServerTable } from '@/components/admin/DataTable/useServerTable'
 import { SPEC_SCHEMA_OPTIONS } from '@/fields/productSpecs/specSchemaOptions'
 import { formatDateTime } from '@/utilities/formatDateTime'
 import { createColumnHelper } from '@tanstack/react-table'
+import { PlusIcon } from 'lucide-react'
 import React, { useCallback, useMemo } from 'react'
 
 import type { ListApiResponse } from '../../DataTable/types'
@@ -83,7 +84,15 @@ export const CategoriesTable: React.FC<{ initialData: ListApiResponse<Category> 
       searchInput={searchInput}
       searchPlaceholder="Search by title…"
       table={table}
-      toolbarRight={<BulkActionsBar collection="categories" onDeleted={refetch} table={table} />}
+      toolbarRight={
+        <div className="flex items-center gap-3">
+          <BulkActionsBar collection="categories" onDeleted={refetch} table={table} />
+          <a className="pmc-btn pmc-btn-primary pmc-btn-sm rounded-full" href="/admin/collections/categories/create">
+            <PlusIcon className="size-4" />
+            Create New
+          </a>
+        </div>
+      }
       totalDocs={data.totalDocs}
     />
   )

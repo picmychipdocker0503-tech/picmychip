@@ -69,6 +69,22 @@ export function backInStockEmailHtml(product: { title?: string | null; slug?: st
   )
 }
 
+export function priceDropEmailHtml(args: {
+  title?: string | null
+  slug?: string | null
+  oldPrice: number
+  newPrice: number
+  siteUrl: string
+}): string {
+  const percentOff = args.oldPrice > 0 ? Math.round((1 - args.newPrice / args.oldPrice) * 100) : 0
+  return wrapper(
+    'Price drop on an item in your wishlist',
+    `<p><strong>${args.title}</strong> just got cheaper${percentOff > 0 ? ` — ${percentOff}% off` : ''}.</p>
+     <p><s>₹${args.oldPrice.toFixed(2)}</s> &nbsp; <strong>₹${args.newPrice.toFixed(2)}</strong></p>
+     <p><a href="${args.siteUrl}/products/${args.slug}">View product</a></p>`,
+  )
+}
+
 export function abandonedCartEmailHtml(cart: {
   itemCount: number
   siteUrl: string

@@ -36,6 +36,7 @@ import { Services } from '@/collections/Services'
 import { StockAlerts } from '@/collections/StockAlerts'
 import { TeamTestimonials } from '@/collections/TeamTestimonials'
 import { Users } from '@/collections/Users'
+import { Wishlists } from '@/collections/Wishlists'
 import { FeatureFlags } from '@/globals/FeatureFlags'
 import { Footer } from '@/globals/Footer'
 import { Header } from '@/globals/Header'
@@ -122,6 +123,7 @@ export default buildConfig({
     Coupons,
     GiftCards,
     StockAlerts,
+    Wishlists,
     ReturnRequests,
     EmailEvents,
   ],

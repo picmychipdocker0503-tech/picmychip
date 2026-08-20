@@ -9,6 +9,7 @@ import { productSpecsGroup, SPEC_SCHEMA_OPTIONS } from '@/fields/productSpecs'
 import { deriveSalePricing } from '@/hooks/deriveSalePricing'
 import { deriveStockStatus } from '@/hooks/deriveStockStatus'
 import { notifyBackInStock } from '@/hooks/notifyBackInStock'
+import { notifyWishlistChanges } from '@/hooks/notifyWishlistChanges'
 import { removeProductFromSearchIndex } from '@/hooks/removeProductFromSearchIndex'
 import { syncProductToSearchIndex } from '@/hooks/syncProductToSearchIndex'
 import { revalidateProduct, revalidateProductDelete } from './hooks/revalidateProduct'
@@ -37,6 +38,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       ...(defaultCollection?.hooks?.afterChange ?? []),
       syncProductToSearchIndex,
       notifyBackInStock,
+      notifyWishlistChanges,
       revalidateProduct,
     ],
     afterDelete: [

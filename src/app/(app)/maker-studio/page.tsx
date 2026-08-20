@@ -108,11 +108,13 @@ function formatPrice(product: Product) {
 
   if (typeof price !== 'number' || price <= 0) return 'Quote'
 
+  // Stored in paise (smallest currency unit) — divide by 100 before
+  // formatting, same convention as `useCurrency().formatCurrency`.
   return new Intl.NumberFormat('en-IN', {
     currency: 'INR',
     maximumFractionDigits: 0,
     style: 'currency',
-  }).format(price)
+  }).format(price / 100)
 }
 
 export default async function MakerStudioPage() {

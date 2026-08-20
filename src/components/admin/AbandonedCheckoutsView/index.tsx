@@ -46,8 +46,10 @@ const Icon: React.FC<{ path: keyof typeof ICONS }> = ({ path }) => (
   </svg>
 )
 
+// Money fields (cart.subtotal, etc.) are stored in paise — divide by 100
+// before formatting, same convention as `useCurrency().formatCurrency`.
 const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount)
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount / 100)
 
 export const AbandonedCheckoutsView: React.FC<AdminViewServerProps> = async ({ initPageResult }) => {
   const user = initPageResult?.req?.user

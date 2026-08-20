@@ -8,6 +8,7 @@ import { DataTableShell } from '@/components/admin/DataTable/DataTableShell'
 import { useServerTable } from '@/components/admin/DataTable/useServerTable'
 import { formatDateTime } from '@/utilities/formatDateTime'
 import { createColumnHelper } from '@tanstack/react-table'
+import { PlusIcon } from 'lucide-react'
 import React, { useCallback, useMemo } from 'react'
 
 import type { ListApiResponse } from '../../DataTable/types'
@@ -88,7 +89,15 @@ export const CouponsTable: React.FC<{ initialData: ListApiResponse<Coupon> }> = 
       searchInput={searchInput}
       searchPlaceholder="Search by code…"
       table={table}
-      toolbarRight={<BulkActionsBar collection="coupons" onDeleted={refetch} table={table} />}
+      toolbarRight={
+        <div className="flex items-center gap-3">
+          <BulkActionsBar collection="coupons" onDeleted={refetch} table={table} />
+          <a className="pmc-btn pmc-btn-primary pmc-btn-sm rounded-full" href="/admin/collections/coupons/create">
+            <PlusIcon className="size-4" />
+            Create New
+          </a>
+        </div>
+      }
       totalDocs={data.totalDocs}
     />
   )

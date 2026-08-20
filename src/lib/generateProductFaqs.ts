@@ -5,6 +5,12 @@ import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 
 export type ProductFaqItem = { question: string; answer: string }
 
+// priceInINR/compareAtPriceInINR/priceTiers[].priceInINR are stored in the
+// smallest currency unit (paise), matching the ecommerce plugin's currency
+// config (INR, decimals: 2) — divide by 100 before displaying, the same way
+// `useCurrency().formatCurrency` does on the client.
+const formatINR = (paise: number): string => (paise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
 const STOCK_ANSWER: Record<string, (title: string, leadTimeDays?: number | null) => string> = {
   'in-stock': (title) =>
     `Yes, the ${title} is in stock and ready to ship. Orders placed before 3 PM dispatch the same business day.`,
@@ -52,8 +58,8 @@ export const generateProductFaqs = (product: Product): ProductFaqItem[] => {
     const hasDiscount =
       typeof product.compareAtPriceInINR === 'number' && product.compareAtPriceInINR > product.priceInINR
     const priceAnswer = hasDiscount
-      ? `The ${title} is priced at ₹${product.priceInINR.toFixed(2)}, discounted from ₹${product.compareAtPriceInINR!.toFixed(2)}.`
-      : `The ${title} is priced at ₹${product.priceInINR.toFixed(2)}.`
+      ? `The ${title} is priced at ₹${formatINR(product.priceInINR)}, discounted from ₹${formatINR(product.compareAtPriceInINR!)}.`
+      : `The ${title} is priced at ₹${formatINR(product.priceInINR)}.`
     items.push({ question: `How much does the ${title} cost?`, answer: priceAnswer })
   }
 
@@ -65,7 +71,7 @@ export const generateProductFaqs = (product: Product): ProductFaqItem[] => {
       question: `Is bulk or volume pricing available for the ${title}?`,
       answer: `Yes — tiered pricing kicks in starting at ${cheapest[0]?.minQuantity} units${
         best?.minQuantity && best.minQuantity !== cheapest[0]?.minQuantity
-          ? `, down to ₹${best.priceInINR?.toFixed(2)} per unit at ${best.minQuantity}+ units`
+          ? `, down to ₹${typeof best.priceInINR === 'number' ? formatINR(best.priceInINR) : best.priceInINR} per unit at ${best.minQuantity}+ units`
           : ''
       }. See the Bulk Pricing table on this page for the full breakdown.`,
     })

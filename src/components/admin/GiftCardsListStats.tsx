@@ -34,8 +34,10 @@ const Icon: React.FC<{ path: keyof typeof ICONS }> = ({ path }) => (
   </svg>
 )
 
+// Money fields (gift card balance, etc.) are stored in paise — divide by
+// 100 before formatting, same convention as `useCurrency().formatCurrency`.
 const formatCurrency = (amount: number) =>
-  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount)
+  new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount / 100)
 
 /** Rendered via Gift Cards' `admin.components.beforeList` — a stat-card row above the table. */
 export const GiftCardsListStats: React.FC = async () => {

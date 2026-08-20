@@ -1,0 +1,74 @@
+▲ Next.js 16.2.12 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.0.100:3000
+- Environments: .env
+✓ Ready in 783ms
+- Experiments (use with caution):
+  ⨯ turbopackServerFastRefresh
+
+○ Compiling /rfq ...
+/*! 🌼 daisyUI 5.6.18 */
+[15:23:56] [33mWARN[39m: [36mMeilisearch unreachable at boot, search will use the database fallback: MeilisearchRequestError: Request to http://127.0.0.1:7700/health has failed[39m
+ GET /rfq 200 in 48s (next.js: 25.6s, application-code: 22.2s)
+ GET /shop 200 in 48s (next.js: 17.8s, application-code: 30.0s)
+ GET /manifest.webmanifest 200 in 937ms (next.js: 909ms, application-code: 27ms)
+ GET /manifest.webmanifest 200 in 18ms (next.js: 6ms, application-code: 12ms)
+ GET / 200 in 42s (next.js: 16.1s, application-code: 25.6s)
+ GET /rfq 200 in 742ms (next.js: 7ms, application-code: 736ms)
+ GET /manifest.webmanifest 200 in 11ms (next.js: 4ms, application-code: 7ms)
+ GET /shop 200 in 2.4s (next.js: 6ms, application-code: 2.4s)
+ GET /api/users/me?depth=0&select%5Bid%5D=true&select%5Bcart%5D=true 200 in 10.6s (next.js: 7.6s, application-code: 3.0s)
+ GET /api/globals/feature-flags 200 in 10.6s (next.js: 7.6s, application-code: 3.0s)
+ GET /manifest.webmanifest 200 in 50ms (next.js: 40ms, application-code: 10ms)
+ GET /api/carts/5?depth=2&populate%5Bproducts%5D%5BpriceInINR%5D=true&populate%5Bproducts%5D%5Bslug%5D=true&populate%5Bproducts%5D%5Btitle%5D=true&populate%5Bproducts%5D%5Bgallery%5D=true&populate%5Bproducts%5D%5Binventory%5D=true&populate%5Bproducts%5D%5BgstPercent%5D=true&populate%5Bvariants%5D%5Boptions%5D=true&populate%5Bvariants%5D%5BpriceInINR%5D=true&populate%5Bvariants%5D%5Btitle%5D=true&populate%5Bvariants%5D%5Binventory%5D=true&select%5Bitems%5D=true&select%5Bsubtotal%5D=true&select%5Bcurrency%5D=true&select%5BappliedCouponCode%5D=true&select%5BcouponDiscountAmount%5D=true&select%5BappliedGiftCardCode%5D=true&select%5BgiftCardAmountApplied%5D=true&select%5Bsecret%5D=true 200 in 11.1s (next.js: 7.6s, application-code: 3.4s)
+ GET /api/users/me 200 in 11.1s (next.js: 7.4s, application-code: 3.7s)
+ GET /api/users/me?depth=0&select%5Bid%5D=true&select%5Bcart%5D=true 200 in 2.6s (next.js: 15ms, application-code: 2.5s)
+ GET /api/globals/feature-flags 200 in 2.6s (next.js: 25ms, application-code: 2.5s)
+ GET /api/addresses?depth=0&limit=0&pagination=false 200 in 2.6s (next.js: 5ms, application-code: 2.6s)
+ GET / 200 in 8.9s (next.js: 11ms, application-code: 8.8s)
+ GET /api/carts/5?depth=2&populate%5Bproducts%5D%5BpriceInINR%5D=true&populate%5Bproducts%5D%5Bslug%5D=true&populate%5Bproducts%5D%5Btitle%5D=true&populate%5Bproducts%5D%5Bgallery%5D=true&populate%5Bproducts%5D%5Binventory%5D=true&populate%5Bproducts%5D%5BgstPercent%5D=true&populate%5Bvariants%5D%5Boptions%5D=true&populate%5Bvariants%5D%5BpriceInINR%5D=true&populate%5Bvariants%5D%5Btitle%5D=true&populate%5Bvariants%5D%5Binventory%5D=true&select%5Bitems%5D=true&select%5Bsubtotal%5D=true&select%5Bcurrency%5D=true&select%5BappliedCouponCode%5D=true&select%5BcouponDiscountAmount%5D=true&select%5BappliedGiftCardCode%5D=true&select%5BgiftCardAmountApplied%5D=true&select%5Bsecret%5D=true 200 in 3.1s (next.js: 5ms, application-code: 3.1s)
+ GET /api/globals/feature-flags 200 in 1536ms (next.js: 16ms, application-code: 1520ms)
+ GET /api/users/me 200 in 3.5s (next.js: 6ms, application-code: 3.5s)
+ GET /api/users/me?depth=0&select%5Bid%5D=true&select%5Bcart%5D=true 200 in 1557ms (next.js: 4ms, application-code: 1553ms)
+ GET /api/addresses?depth=0&limit=0&pagination=false 200 in 1433ms (next.js: 4ms, application-code: 1429ms)
+ GET /api/globals/feature-flags 200 in 1120ms (next.js: 3ms, application-code: 1116ms)
+ GET /api/users/me?depth=0&select%5Bid%5D=true&select%5Bcart%5D=true 200 in 1131ms (next.js: 4ms, application-code: 1128ms)
+ GET /api/carts/5?depth=2&populate%5Bproducts%5D%5BpriceInINR%5D=true&populate%5Bproducts%5D%5Bslug%5D=true&populate%5Bproducts%5D%5Btitle%5D=true&populate%5Bproducts%5D%5Bgallery%5D=true&populate%5Bproducts%5D%5Binventory%5D=true&populate%5Bproducts%5D%5BgstPercent%5D=true&populate%5Bvariants%5D%5Boptions%5D=true&populate%5Bvariants%5D%5BpriceInINR%5D=true&populate%5Bvariants%5D%5Btitle%5D=true&populate%5Bvariants%5D%5Binventory%5D=true&select%5Bitems%5D=true&select%5Bsubtotal%5D=true&select%5Bcurrency%5D=true&select%5BappliedCouponCode%5D=true&select%5BcouponDiscountAmount%5D=true&select%5BappliedGiftCardCode%5D=true&select%5BgiftCardAmountApplied%5D=true&select%5Bsecret%5D=true 200 in 1936ms (next.js: 5ms, application-code: 1932ms)
+ GET /api/addresses?depth=0&limit=0&pagination=false 200 in 1142ms (next.js: 5ms, application-code: 1137ms)
+ GET /api/carts/5?depth=2&populate%5Bproducts%5D%5BpriceInINR%5D=true&populate%5Bproducts%5D%5Bslug%5D=true&populate%5Bproducts%5D%5Btitle%5D=true&populate%5Bproducts%5D%5Bgallery%5D=true&populate%5Bproducts%5D%5Binventory%5D=true&populate%5Bproducts%5D%5BgstPercent%5D=true&populate%5Bvariants%5D%5Boptions%5D=true&populate%5Bvariants%5D%5BpriceInINR%5D=true&populate%5Bvariants%5D%5Btitle%5D=true&populate%5Bvariants%5D%5Binventory%5D=true&select%5Bitems%5D=true&select%5Bsubtotal%5D=true&select%5Bcurrency%5D=true&select%5BappliedCouponCode%5D=true&select%5BcouponDiscountAmount%5D=true&select%5BappliedGiftCardCode%5D=true&select%5BgiftCardAmountApplied%5D=true&select%5Bsecret%5D=true 200 in 1589ms (next.js: 12ms, application-code: 1577ms)
+ GET /api/addresses?depth=0&limit=0&pagination=false 200 in 1137ms (next.js: 4ms, application-code: 1134ms)
+ GET /api/carts/5?depth=2&populate%5Bproducts%5D%5BpriceInINR%5D=true&populate%5Bproducts%5D%5Bslug%5D=true&populate%5Bproducts%5D%5Btitle%5D=true&populate%5Bproducts%5D%5Bgallery%5D=true&populate%5Bproducts%5D%5Binventory%5D=true&populate%5Bproducts%5D%5BgstPercent%5D=true&populate%5Bvariants%5D%5Boptions%5D=true&populate%5Bvariants%5D%5BpriceInINR%5D=true&populate%5Bvariants%5D%5Btitle%5D=true&populate%5Bvariants%5D%5Binventory%5D=true&select%5Bitems%5D=true&select%5Bsubtotal%5D=true&select%5Bcurrency%5D=true&select%5BappliedCouponCode%5D=true&select%5BcouponDiscountAmount%5D=true&select%5BappliedGiftCardCode%5D=true&select%5BgiftCardAmountApplied%5D=true&select%5Bsecret%5D=true 200 in 1578ms (next.js: 4ms, application-code: 1575ms)
+ GET /api/carts/5?depth=2&populate%5Bproducts%5D%5BpriceInINR%5D=true&populate%5Bproducts%5D%5Bslug%5D=true&populate%5Bproducts%5D%5Btitle%5D=true&populate%5Bproducts%5D%5Bgallery%5D=true&populate%5Bproducts%5D%5Binventory%5D=true&populate%5Bproducts%5D%5BgstPercent%5D=true&populate%5Bvariants%5D%5Boptions%5D=true&populate%5Bvariants%5D%5BpriceInINR%5D=true&populate%5Bvariants%5D%5Btitle%5D=true&populate%5Bvariants%5D%5Binventory%5D=true&select%5Bitems%5D=true&select%5Bsubtotal%5D=true&select%5Bcurrency%5D=true&select%5BappliedCouponCode%5D=true&select%5BcouponDiscountAmount%5D=true&select%5BappliedGiftCardCode%5D=true&select%5BgiftCardAmountApplied%5D=true&select%5Bsecret%5D=true 200 in 1602ms (next.js: 6ms, application-code: 1596ms)
+ GET / 200 in 7.2s (next.js: 5ms, application-code: 7.2s)
+[15:25:05] [33mWARN[39m: [36mMeilisearch unreachable at boot, search will use the database fallback: MeilisearchRequestError: Request to http://127.0.0.1:7700/health has failed[39m
+ GET /category/capacitor 200 in 11.6s (next.js: 8.9s, generate-params: 7.7s, application-code: 2.7s)
+[15:25:27] [33mWARN[39m: [36mMeilisearch unreachable at boot, search will use the database fallback: MeilisearchRequestError: Request to http://127.0.0.1:7700/health has failed[39m
+ GET /category/capacitor 200 in 10.1s (next.js: 11ms, generate-params: 7ms, application-code: 10.1s)
+ GET /manifest.webmanifest 200 in 13ms (next.js: 5ms, application-code: 8ms)
+ GET /guides 200 in 3.1s (next.js: 902ms, application-code: 2.2s)
+ GET /manifest.webmanifest 200 in 23ms (next.js: 19ms, application-code: 4ms)
+ GET /manifest.webmanifest 200 in 11ms (next.js: 7ms, application-code: 4ms)
+ GET /category/db-connectors 200 in 2.1s (next.js: 12ms, generate-params: 9ms, application-code: 2.1s)
+ GET /manifest.webmanifest 200 in 26ms (next.js: 20ms, application-code: 6ms)
+[15:26:29] [33mWARN[39m: [36mMeilisearch unreachable at boot, search will use the database fallback: MeilisearchRequestError: Request to http://127.0.0.1:7700/health has failed[39m
+ GET /manifest.webmanifest 200 in 11ms (next.js: 7ms, application-code: 5ms)
+ GET /category/components 200 in 541ms (next.js: 14ms, generate-params: 22µs, application-code: 527ms)
+ GET /manifest.webmanifest 200 in 16ms (next.js: 10ms, application-code: 6ms)
+ GET /manifest.webmanifest 200 in 9ms (next.js: 4ms, application-code: 5ms)
+ GET /category/buzzer 200 in 518ms (next.js: 11ms, generate-params: 8ms, application-code: 507ms)
+ GET /manifest.webmanifest 200 in 8ms (next.js: 4ms, application-code: 4ms)
+ GET /manifest.webmanifest 200 in 13ms (next.js: 9ms, application-code: 5ms)
+[15:26:38] [33mWARN[39m: [36mMeilisearch unreachable at boot, search will use the database fallback: MeilisearchRequestError: Request to http://127.0.0.1:7700/health has failed[39m
+ GET /category/capacitor 200 in 13.0s (next.js: 3ms, generate-params: 26µs, application-code: 13.0s)
+ GET /api/products?category=4&page=2 200 in 3.4s (next.js: 721ms, application-code: 2.7s)
+[15:27:04] [33mWARN[39m: [36mMeilisearch unreachable at boot, search will use the database fallback: MeilisearchRequestError: Request to http://127.0.0.1:7700/health has failed[39m
+ GET /manifest.webmanifest 200 in 13ms (next.js: 5ms, application-code: 9ms)
+ GET /products/gmc10cg271j50ntct 200 in 14.3s (next.js: 9.3s, generate-params: 8.0s, application-code: 5.0s)
+ GET /manifest.webmanifest 200 in 325ms (next.js: 192ms, application-code: 132ms)
+ GET /api/products?where[id][in][]=32&where[id][in][]=196&where[id][in][]=7&where[id][in][]=182&depth=1&limit=4 200 in 884ms (next.js: 351ms, application-code: 533ms)
+ GET /api/products?where[id][in][]=32&where[id][in][]=196&where[id][in][]=7&where[id][in][]=182&depth=1&limit=4 200 in 402ms (next.js: 162ms, application-code: 240ms)
+ GET /api/globals/feature-flags 200 in 1759ms (next.js: 367ms, application-code: 1392ms)
+ GET /api/globals/feature-flags 200 in 1936ms (next.js: 555ms, application-code: 1382ms)
+ GET /manifest.webmanifest 200 in 173ms (next.js: 169ms, application-code: 5ms)
+ GET /api/products?category=4&page=2 200 in 1835ms (next.js: 2ms, application-code: 1833ms)
+[?25h

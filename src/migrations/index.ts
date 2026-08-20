@@ -54,6 +54,7 @@ import * as migration_20260820_074514_add_contact_info_map_query from './2026082
 import * as migration_20260820_114334_add_team_testimonials_linked_user from './20260820_114334_add_team_testimonials_linked_user';
 import * as migration_20260820_130557_add_category_description from './20260820_130557_add_category_description';
 import * as migration_20260820_131235_add_order_review_request from './20260820_131235_add_order_review_request';
+import * as migration_20260820_134902_add_wishlists_collection from './20260820_134902_add_wishlists_collection';
 
 export const migrations = [
   {
@@ -335,5 +336,10 @@ export const migrations = [
     up: migration_20260820_131235_add_order_review_request.up,
     down: migration_20260820_131235_add_order_review_request.down,
     name: '20260820_131235_add_order_review_request',
+  },
+  {
+    up: migration_20260820_134902_add_wishlists_collection.up,
+    down: migration_20260820_134902_add_wishlists_collection.down,
+    name: '20260820_134902_add_wishlists_collection',
   },
 ];
