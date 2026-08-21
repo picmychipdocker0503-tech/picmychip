@@ -36,8 +36,8 @@ export async function FeaturedCategories() {
   if (categories.length === 0) return null
 
   return (
-    <section className="container mb-20">
-      <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
+    <section className="container mb-10 sm:mb-20">
+      <div className="mb-6 sm:mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 rounded-full border border-primary/20 mb-3">
             <Layers className="size-3.5" />
@@ -59,7 +59,7 @@ export async function FeaturedCategories() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+      <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
         {categories.map((category, index) => {
           const Icon = CATEGORY_ICON_MAP[category.slug] ?? EmptyState
 
@@ -67,17 +67,17 @@ export async function FeaturedCategories() {
             <ScrollReveal index={index} key={category.id} staggerMs={50}>
               <Link
                 href={`/category/${category.slug}`}
-                className="group relative flex flex-col items-center gap-4 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-md px-6 py-8 text-center transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-card hover:shadow-lg overflow-hidden"
+                className="group relative flex flex-col items-center gap-2 sm:gap-4 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-md px-3 py-5 sm:px-6 sm:py-8 text-center transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-card hover:shadow-lg overflow-hidden"
               >
-                <div className="flex size-14 shrink-0 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground border border-border/80 group-hover:border-primary/30 group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-110 transition-all duration-300 shadow-sm">
-                  <Icon className="size-7" />
+                <div className="flex size-11 sm:size-14 shrink-0 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground border border-border/80 group-hover:border-primary/30 group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-110 transition-all duration-300 shadow-sm">
+                  <Icon className="size-5 sm:size-7" />
                 </div>
 
                 <div>
-                  <span className="text-sm sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors block">
+                  <span className="text-xs sm:text-base font-semibold text-foreground group-hover:text-primary transition-colors block">
                     {category.title}
                   </span>
-                  <span className="mt-1 text-[11px] font-medium text-muted-foreground block">
+                  <span className="mt-1 hidden sm:block text-[11px] font-medium text-muted-foreground">
                     Datasheet Verified
                   </span>
                 </div>

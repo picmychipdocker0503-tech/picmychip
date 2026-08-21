@@ -70,7 +70,12 @@ export const PromoCard: React.FC<Props> = ({
   }
 
   const wrapperClassName = cn(
-    'group relative flex flex-col items-stretch gap-4 overflow-hidden rounded-3xl px-7 py-7 transition-transform duration-300 sm:flex-row sm:items-center sm:px-10',
+    // Row layout (image beside text) is the base/mobile behavior, not just a
+    // sm:+ upgrade — stacking the image full-width above the text (the old
+    // mobile layout) doubled each card's height for no real benefit at
+    // typical phone widths. py-7 is pinned back for sm:+ since it used to
+    // apply at every size; every other property already had a sm: override.
+    'group relative flex flex-row items-center gap-4 overflow-hidden rounded-3xl px-5 py-5 transition-transform duration-300 sm:px-10 sm:py-7',
     tone === 'dark' ? 'bg-neutral-950 text-white hover:-translate-y-0.5' : 'bg-muted text-foreground hover:-translate-y-0.5',
     className,
   )
@@ -102,7 +107,7 @@ export const PromoCard: React.FC<Props> = ({
         {productId ? (
           <button
             aria-label="Buy now"
-            className="bg-primary text-primary-foreground relative z-20 mt-6 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-transform group-hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
+            className="bg-primary text-primary-foreground relative z-20 mt-3 sm:mt-6 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-transform group-hover:scale-105 disabled:pointer-events-none disabled:opacity-50"
             disabled={disabled || isBuyingNow}
             onClick={handleBuyNow}
             type="button"
@@ -118,7 +123,7 @@ export const PromoCard: React.FC<Props> = ({
           </button>
         ) : (
           href && (
-            <span className="bg-primary text-primary-foreground mt-6 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-transform group-hover:scale-105">
+            <span className="bg-primary text-primary-foreground mt-3 sm:mt-6 inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-sm font-semibold transition-transform group-hover:scale-105">
               {buttonLabel}
               <ArrowRight className="size-3.5" />
             </span>
@@ -128,11 +133,11 @@ export const PromoCard: React.FC<Props> = ({
 
       {typeof image === 'object' && image && (
         <Media
-          className="relative order-first aspect-square w-full max-w-48 shrink-0 self-center sm:order-none sm:w-2/5 sm:max-w-none"
+          className="relative aspect-square w-24 shrink-0 self-center sm:w-2/5 sm:max-w-none"
           fill
           imgClassName="object-contain transition-transform duration-300 group-hover:scale-105"
           resource={image}
-          size="(max-width: 640px) 192px, 20vw"
+          size="(max-width: 640px) 96px, 20vw"
         />
       )}
     </>

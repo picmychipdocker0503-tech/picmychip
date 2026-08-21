@@ -83,11 +83,11 @@ export const HeroCarouselBlock: React.FC<
 
   return (
     <section className="pmc-home-section">
-      <div className={`grid grid-cols-1 gap-4${sideProducts.length > 0 ? ' lg:grid-cols-[1.6fr_1fr]' : ''}`}>
+      <div className={`grid grid-cols-1 gap-3 sm:gap-4${sideProducts.length > 0 ? ' lg:grid-cols-[1.6fr_1fr]' : ''}`}>
         <HeroCarouselClient slides={slides} stats={{ componentCount: productCount, reviewMessage }} />
 
         {sideProducts.length > 0 && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
             {sideProducts.map((product) => {
               const image = product.gallery?.find((item) => typeof item.image === 'object')?.image
               const category =
@@ -101,7 +101,7 @@ export const HeroCarouselBlock: React.FC<
 
               return (
                 <PromoCard
-                  className="min-h-[180px] flex-1"
+                  className="min-h-[140px] flex-1 sm:min-h-[180px]"
                   disabled={product.stockStatus === 'out-of-stock'}
                   eyebrow={category?.title || 'Featured'}
                   heading={product.title}

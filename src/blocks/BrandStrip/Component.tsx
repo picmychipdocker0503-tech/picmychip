@@ -1,8 +1,15 @@
 import type { Brand, BrandStripBlock as BrandStripBlockProps } from '@/payload-types'
+import dynamic from 'next/dynamic'
 import React from 'react'
 
 import { getCachedGlobal } from '@/utilities/getGlobals'
-import { BrandStripClient } from './Component.client'
+
+// Below-the-fold brand row — splits `embla-carousel` (+ its auto-scroll
+// plugin) out of every page's main bundle into its own chunk, fetched only
+// on pages that actually render this block.
+const BrandStripClient = dynamic(() =>
+  import('./Component.client').then((mod) => mod.BrandStripClient),
+)
 
 export const BrandStripBlock: React.FC<
   BrandStripBlockProps & {

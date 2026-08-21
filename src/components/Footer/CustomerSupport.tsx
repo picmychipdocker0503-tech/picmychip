@@ -1,6 +1,7 @@
 'use client'
 
 import { useFeaturebase } from 'featurebase-js/react'
+import { ensureFeaturebaseBooted } from '@/lib/featurebase'
 import { HeadphonesIcon, MailIcon, PhoneIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import React from 'react'
@@ -22,7 +23,14 @@ export const CustomerSupport: React.FC<Props> = ({ supportEmail, supportPhone })
         <div>
           <div className="text-foreground font-semibold">{t('askSpecialist')}</div>
           <div className="text-muted-foreground text-sm">{t('hereToHelp')}</div>
-          <button className="text-primary text-sm font-semibold hover:underline" onClick={show} type="button">
+          <button
+            className="text-primary text-sm font-semibold hover:underline"
+            onClick={() => {
+              ensureFeaturebaseBooted()
+              show()
+            }}
+            type="button"
+          >
             {t('startChat')}
           </button>
         </div>

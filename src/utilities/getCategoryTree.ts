@@ -1,11 +1,10 @@
 import type { Payload } from 'payload'
 
-import { sortCategoriesBySequence } from './categoryOrdering'
-
 export type CategoryTreeNode = {
   id: string
   title: string
   slug: string
+  sequence: number
   children: CategoryTreeNode[]
 }
 
@@ -17,6 +16,13 @@ export type CategoryTree = {
 }
 
 const EMPTY_TREE: CategoryTree = { topLevel: [], childrenBySlug: new Map() }
+
+const sortTreeNodes = (nodes: CategoryTreeNode[]): CategoryTreeNode[] =>
+  [...nodes].sort((a, b) => {
+    const sequenceDiff = a.sequence - b.sequence
+    if (sequenceDiff !== 0) return sequenceDiff
+    return a.title.localeCompare(b.title)
+  })
 
 /**
  * Categories carry a self-referencing `parent` field (see Categories collection),
@@ -31,8 +37,8 @@ export const getCategoryTree = async (payload: Payload): Promise<CategoryTree> =
     depth: 0,
     limit: 0,
     pagination: false,
-    select: { title: true, slug: true, parent: true },
-    sort: 'title',
+    select: { title: true, slug: true, parent: true, sequence: true },
+    sort: 'sequence',
   })
 
   const nodesById = new Map<string, CategoryTreeNode>()
@@ -42,6 +48,7 @@ export const getCategoryTree = async (payload: Payload): Promise<CategoryTree> =
       id: String(category.id),
       title: category.title,
       slug: category.slug,
+      sequence: category.sequence ?? 1000,
       children: [],
     })
   }
@@ -66,11 +73,11 @@ export const getCategoryTree = async (payload: Payload): Promise<CategoryTree> =
   }
 
   for (const node of nodesById.values()) {
-    node.children = sortCategoriesBySequence(node.children)
+    node.children = sortTreeNodes(node.children)
     childrenBySlug.set(node.slug, node.children)
   }
 
-  return { topLevel: sortCategoriesBySequence(topLevel), childrenBySlug }
+  return { topLevel: sortTreeNodes(topLevel), childrenBySlug }
 }
 
 export const getCategoryTreeSafe = async (payload: Payload): Promise<CategoryTree> => {

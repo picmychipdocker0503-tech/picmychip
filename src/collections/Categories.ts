@@ -4,6 +4,7 @@ import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, CollectionCo
 import { revalidatePath } from 'next/cache'
 
 import { adminOnly } from '@/access/adminOnly'
+import { checkRole } from '@/access/utilities'
 import { CallToAction } from '@/blocks/CallToAction/config'
 import { ComparisonTable } from '@/blocks/ComparisonTable/config'
 import { Content } from '@/blocks/Content/config'
@@ -39,6 +40,58 @@ const revalidateCategoryNavOnDelete: CollectionAfterDeleteHook = ({ req: { paylo
   }
 }
 
+type ReorderItem = {
+  id: string
+  order: number
+}
+
+const jsonResponse = (body: unknown, status = 200): Response =>
+  Response.json(body, {
+    status,
+  })
+
+const validateReorderPayload = (body: unknown): ReorderItem[] => {
+  if (!Array.isArray(body) || body.length === 0) {
+    throw new Error('Payload must be a non-empty array.')
+  }
+
+  const seenIDs = new Set<string>()
+
+  return body.map((item, index) => {
+    if (!item || typeof item !== 'object') {
+      throw new Error(`Item ${index + 1} must be an object.`)
+    }
+
+    const { id, order } = item as { id?: unknown; order?: unknown }
+    const normalizedID = typeof id === 'number' ? String(id) : id
+    const normalizedOrder = typeof order === 'string' && order.trim() ? Number(order) : order
+
+    if (typeof normalizedID !== 'string' || normalizedID.trim().length === 0) {
+      throw new Error(`Item ${index + 1} must include a valid id.`)
+    }
+
+    if (seenIDs.has(normalizedID)) {
+      throw new Error(`Duplicate category id "${normalizedID}" in reorder payload.`)
+    }
+
+    if (
+      typeof normalizedOrder !== 'number' ||
+      !Number.isFinite(normalizedOrder) ||
+      !Number.isInteger(normalizedOrder) ||
+      normalizedOrder < 0
+    ) {
+      throw new Error(`Item ${index + 1} must include a non-negative integer order.`)
+    }
+
+    seenIDs.add(normalizedID)
+
+    return {
+      id: normalizedID,
+      order: normalizedOrder,
+    }
+  })
+}
+
 export const Categories: CollectionConfig = {
   slug: 'categories',
   access: {
@@ -58,6 +111,73 @@ export const Categories: CollectionConfig = {
       },
     },
   },
+  defaultSort: 'sequence',
+  endpoints: [
+    {
+      path: '/reorder',
+      method: 'put',
+      handler: async (req) => {
+        if (!checkRole(['admin'], req.user)) {
+          return jsonResponse({ error: 'Forbidden.' }, 403)
+        }
+
+        let updates: ReorderItem[]
+
+        try {
+          const body = typeof req.json === 'function' ? await req.json() : null
+          updates = validateReorderPayload(body)
+        } catch (error) {
+          return jsonResponse(
+            { error: error instanceof Error ? error.message : 'Invalid reorder payload.' },
+            400,
+          )
+        }
+
+        const transactionID = await req.payload.db.beginTransaction()
+
+        if (!transactionID) {
+          return jsonResponse({ error: 'Database transactions are unavailable.' }, 500)
+        }
+
+        req.transactionID = transactionID
+
+        try {
+          await Promise.all(
+            updates.map(({ id, order }) =>
+              req.payload.update({
+                collection: 'categories',
+                id,
+                data: {
+                  sequence: order,
+                },
+                depth: 0,
+                disableTransaction: true,
+                overrideAccess: true,
+                req,
+              }),
+            ),
+          )
+
+          await req.payload.db.commitTransaction(transactionID)
+
+          return jsonResponse({
+            success: true,
+            updated: updates.length,
+          })
+        } catch (error) {
+          await req.payload.db.rollbackTransaction(transactionID)
+          req.payload.logger.error({
+            err: error,
+            msg: 'Failed to reorder categories',
+          })
+
+          return jsonResponse({ error: 'Failed to update category order.' }, 500)
+        } finally {
+          delete req.transactionID
+        }
+      },
+    },
+  ],
   hooks: {
     afterChange: [revalidateCategoryNav],
     afterDelete: [revalidateCategoryNavOnDelete],

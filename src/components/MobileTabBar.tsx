@@ -1,6 +1,7 @@
 'use client'
 
 import { NavIconBadge } from '@/components/ui/nav-icon-badge'
+import { ensureFeaturebaseBooted } from '@/lib/featurebase'
 import { useAuth } from '@/providers/Auth'
 import { useWishlist } from '@/providers/Wishlist'
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
@@ -49,7 +50,10 @@ export const MobileTabBar: React.FC = () => {
         <button
           aria-label="Chat"
           className="text-muted-foreground flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium"
-          onClick={showChat}
+          onClick={() => {
+            ensureFeaturebaseBooted()
+            showChat()
+          }}
           type="button"
         >
           <MessageCircleIcon className="size-5" />

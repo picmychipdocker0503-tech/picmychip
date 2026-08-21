@@ -2490,3 +2490,107 @@ input[type='reset']:disabled {
   @apply bg-primary text-primary-foreground fixed top-2 left-2 z-[100] -translate-y-16 rounded-lg px-4 py-2 text-sm font-medium transition-transform focus:translate-y-0;
 }
 
+/* PICMYCHIP branded loading mark — see components/LoadingSpinner. Brand
+   green is hardcoded (not var(--primary)) since this is a fixed logo mark,
+   not a themed UI element — it shouldn't shift color across daisyUI themes. */
+@keyframes pmc-fade-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pmc-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pmc-ring-fade {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pmc-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.pmc-loader-core {
+  fill: #00521c;
+  transform-origin: 55px 55px;
+  opacity: 0;
+  animation: pmc-fade-scale-in 0.5s cubic-bezier(0.16, 0.84, 0.44, 1) 0.05s forwards;
+}
+
+.pmc-loader-text {
+  font-weight: 700;
+  fill: #ffffff;
+  opacity: 0;
+  animation: pmc-fade-in 0.45s ease 0.4s forwards;
+}
+
+.pmc-loader-ring-track {
+  stroke: #00521c;
+  stroke-opacity: 0.15;
+  stroke-width: 2.5;
+}
+
+.pmc-loader-ring {
+  stroke: #00521c;
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-dasharray: 46 212;
+  opacity: 0;
+  transform-origin: 55px 55px;
+  animation:
+    pmc-ring-fade 0.4s ease 0.55s forwards,
+    pmc-spin 1.8s cubic-bezier(0.45, 0, 0.55, 1) 0.55s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pmc-loader-core,
+  .pmc-loader-text,
+  .pmc-loader-ring {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* Plays once whenever the quantity stepper mounts (i.e. the moment
+   AddToCartButton swaps from the plain button into the stepper) — see
+   components/Cart/AddToCartButton. */
+@keyframes pmc-cart-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.06);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.pmc-cart-pop {
+  animation: pmc-cart-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pmc-cart-pop {
+    animation: none !important;
+  }
+}
+

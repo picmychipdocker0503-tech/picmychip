@@ -2,6 +2,7 @@
 
 import type { Product } from '@/payload-types'
 
+import { AddToCartButton } from '@/components/Cart/AddToCartButton'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
 import { ProductMatchingImage } from '@/components/product/ProductMatchingImage'
@@ -9,12 +10,11 @@ import { useTilt3D } from '@/lib/useTilt3D'
 import { useCompare } from '@/providers/Compare'
 import { useQuickView } from '@/providers/QuickView'
 import { useWishlist } from '@/providers/Wishlist'
-import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
+import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import clsx from 'clsx'
-import { CheckIcon, HeartIcon, ScaleIcon, SearchIcon, ShoppingCartIcon, ShieldCheck, TagIcon } from 'lucide-react'
+import { CheckIcon, HeartIcon, ScaleIcon, SearchIcon, ShieldCheck, TagIcon } from 'lucide-react'
 import Link from 'next/link'
-import React, { useState } from 'react'
-import { toast } from 'sonner'
+import React from 'react'
 
 type Props = {
   product: Partial<Product>
@@ -41,9 +41,7 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
   const { toggle, isComparing } = useCompare()
   const { toggle: toggleWishlist, isSaved } = useWishlist()
   const { open: openQuickView } = useQuickView()
-  const { addItem, isLoading } = useCart()
   const { currency } = useCurrency()
-  const [justAdded, setJustAdded] = useState(false)
   const tilt = useTilt3D<HTMLDivElement>()
 
   const priceField = `priceIn${currency.code}` as keyof Product
@@ -103,19 +101,8 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
 
   const firstCategory = Array.isArray(categories) && categories[0] ? categories[0] : undefined
 
-  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-
-    if (!product.id) return
-
-    setJustAdded(true)
-    window.setTimeout(() => setJustAdded(false), 1500)
-
-    addItem({ product: product.id, variant: variantId }).then(() => {
-      toast.success('Added to sourcing cart.')
-    })
-  }
+  const variantInventory =
+    firstVariant && typeof firstVariant === 'object' ? firstVariant.inventory : undefined
 
   return (
     <Link className="relative inline-block h-full w-full group" href={`/products/${slug}`}>
@@ -260,15 +247,15 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
               <span className={stockInfo.className}>{stockInfo.label}</span>
             </div>
 
-            <button
-              className="inline-flex items-center gap-1.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground px-3.5 py-1.5 text-xs font-bold transition-all shadow-md shadow-primary/15 disabled:opacity-50 cursor-pointer"
-              disabled={isLoading || isOutOfStock}
-              onClick={handleAddToCart}
-              type="button"
-            >
-              {justAdded ? <CheckIcon className="size-3.5" /> : <ShoppingCartIcon className="size-3.5" />}
-              <span>{justAdded ? 'Added' : 'Add'}</span>
-            </button>
+            {product.id && (
+              <AddToCartButton
+                outOfStock={isOutOfStock}
+                inventory={hasVariants ? variantInventory : product.inventory}
+                productId={product.id}
+                successMessage="Added to sourcing cart."
+                variantId={variantId}
+              />
+            )}
           </div>
         </div>
 

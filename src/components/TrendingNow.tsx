@@ -38,12 +38,12 @@ export const TrendingNow: React.FC = async () => {
   if (products.length === 0) return null
 
   return (
-    <div className="container my-20">
+    <div className="container my-10 sm:my-20">
       <span className="eyebrow inline-flex items-center gap-1.5">
         <FlameIcon className="size-3.5" />
         Trending Now
       </span>
-      <h2 className="mt-2 mb-8 text-2xl font-semibold tracking-tight text-foreground md:text-3xl lg:text-4xl">
+      <h2 className="mt-2 mb-5 sm:mb-8 text-2xl font-semibold tracking-tight text-foreground md:text-3xl lg:text-4xl">
         Best Sellers This Month
       </h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">

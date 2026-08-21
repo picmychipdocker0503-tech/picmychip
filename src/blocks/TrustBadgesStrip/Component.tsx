@@ -53,9 +53,9 @@ export const TrustBadgesStripBlock: React.FC<
   const country = SHIP_TO_COUNTRY[currency?.code ?? '']?.country
 
   return (
-    <section className="container my-12">
-      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl p-8 sm:p-12">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+    <section className="container my-8 sm:my-12">
+      <div className="relative overflow-hidden rounded-3xl border border-border/80 bg-card/60 backdrop-blur-xl p-5 sm:p-12">
+        <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6 mb-6 sm:mb-10">
           <div>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase tracking-wider text-primary bg-primary/10 rounded-full border border-primary/20 mb-3">
               <Sparkles className="size-3.5" />

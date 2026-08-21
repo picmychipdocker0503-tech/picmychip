@@ -6,16 +6,25 @@ import { EcommerceAuthSync } from '@/providers/EcommerceAuthSync'
 import { QuickViewProvider } from '@/providers/QuickView'
 import { RecentlyViewedProvider } from '@/providers/RecentlyViewed'
 import { WishlistProvider } from '@/providers/Wishlist'
-import { QuickViewModal } from '@/components/product/QuickViewModal'
 import { EcommerceProvider } from '@payloadcms/plugin-ecommerce/client/react'
 import { payuAdapterClient } from '@/payments/payu/client'
 import { FeaturebaseProvider } from 'featurebase-js/react'
+import dynamic from 'next/dynamic'
 import React, { useState } from 'react'
+
+// Renders nothing until a product is actually quick-viewed, so every page
+// paying for its Radix Dialog + cart/wishlist deps upfront (rather than only
+// the pages where a shopper opens quick view) was pure waste.
+const QuickViewModal = dynamic(
+  () => import('@/components/product/QuickViewModal').then((mod) => mod.QuickViewModal),
+  { ssr: false },
+)
 
 import { HeaderThemeProvider } from './HeaderTheme'
 import { ThemeProvider } from './Theme'
 import { SonnerProvider } from '@/providers/Sonner'
 import { currenciesConfig } from '@/lib/currencies'
+import { FEATUREBASE_APP_ID } from '@/lib/featurebase'
 
 const enableFeaturebase = process.env.NODE_ENV === 'production'
 
@@ -106,7 +115,7 @@ export const Providers: React.FC<{
 
   return (
     <FeaturebaseProvider
-      appId="6a630b8ebfd7b125f2342f3f"
+      appId={FEATUREBASE_APP_ID}
       hideDefaultLauncher={hideDefaultLauncher}
       // Without this, the SDK auto-boots its full messenger — runtime script,
       // iframe, and a live WebSocket — on every single page load, for every

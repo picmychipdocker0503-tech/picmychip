@@ -2,11 +2,12 @@
 
 import type { Product } from '@/payload-types'
 
+import { AddToCartButton } from '@/components/Cart/AddToCartButton'
 import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
 import { useWishlist } from '@/providers/Wishlist'
 import { getWishlistProducts } from '@/providers/Wishlist/actions'
-import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
+import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import {
   createColumnHelper,
   flexRender,
@@ -27,14 +28,12 @@ import {
   ChevronRightIcon,
   ClockIcon,
   HeartIcon,
-  ShoppingCartIcon,
   XCircleIcon,
   XIcon,
 } from 'lucide-react'
 import Link from 'next/link'
 import posthog from 'posthog-js'
 import React, { useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 const STOCK_DISPLAY = {
   'in-stock': { label: 'In Stock', icon: CheckCircle2Icon, className: 'text-success' },
@@ -44,8 +43,6 @@ const STOCK_DISPLAY = {
 } as const
 
 type TableMeta = {
-  isCartLoading: boolean
-  onAddToCart: (product: Product) => void
   onRemove: (product: Product) => void
 }
 
@@ -53,7 +50,6 @@ const columnHelper = createColumnHelper<Product>()
 
 export default function WishlistPage() {
   const { ids, toggle, clear } = useWishlist()
-  const { addItem, isLoading } = useCart()
   const { currency } = useCurrency()
   const [products, setProducts] = useState<Product[]>([])
   const [isFetching, setIsFetching] = useState(true)
@@ -77,19 +73,9 @@ export default function WishlistPage() {
 
   const meta = useMemo<TableMeta>(
     () => ({
-      isCartLoading: isLoading,
-      onAddToCart: (product) => {
-        posthog.capture('wishlist_item_added_to_cart', {
-          product_id: product.id,
-          product_title: product.title,
-        })
-        addItem({ product: product.id }).then(() => {
-          toast.success('Item added to cart.')
-        })
-      },
       onRemove: (product) => toggle(String(product.id)),
     }),
-    [isLoading, addItem, toggle],
+    [toggle],
   )
 
   const columns = useMemo(
@@ -151,17 +137,18 @@ export default function WishlistPage() {
       columnHelper.display({
         cell: (info) => {
           const product = info.row.original
-          const tableMeta = info.table.options.meta as TableMeta
           return (
-            <button
-              className="btn btn-ghost btn-sm gap-1.5 border border-white/30 bg-white/10 text-foreground shadow-sm backdrop-blur-md backdrop-saturate-150 hover:border-white/40 hover:bg-white/20"
-              disabled={tableMeta.isCartLoading || product.stockStatus === 'out-of-stock'}
-              onClick={() => tableMeta.onAddToCart(product)}
-              type="button"
-            >
-              <ShoppingCartIcon className="size-4" />
-              Add to Cart
-            </button>
+            <AddToCartButton
+              outOfStock={product.stockStatus === 'out-of-stock'}
+              inventory={product.inventory}
+              onBeforeAdd={() =>
+                posthog.capture('wishlist_item_added_to_cart', {
+                  product_id: product.id,
+                  product_title: product.title,
+                })
+              }
+              productId={product.id}
+            />
           )
         },
         header: 'Action',

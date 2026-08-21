@@ -35,6 +35,8 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
 
   const iconButtonClass =
     'relative hidden size-10 items-center justify-center rounded-full text-muted-foreground transition-[background-color,color,transform] hover:bg-muted hover:text-foreground active:scale-95 md:inline-flex'
+  const rfqActionClass =
+    'border-border bg-card hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:ring-primary/15 inline-flex h-11 min-w-28 items-center justify-center gap-2 rounded-full border px-5 text-sm font-semibold text-foreground shadow-sm transition-all hover:shadow-md hover:shadow-primary/10 focus-visible:outline-none focus-visible:ring-4 active:scale-95'
 
   return (
     <>
@@ -67,14 +69,14 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
 
           <div className="hidden shrink-0 items-center gap-3 lg:flex">
             <Link
-              className="border-primary text-foreground hover:bg-primary hover:text-primary-foreground inline-flex h-11 min-w-28 items-center justify-center gap-2 border bg-background px-5 text-sm font-semibold transition-colors"
+              className={rfqActionClass}
               href="/rfq?upload=1"
             >
               <UploadIcon className="size-4" />
               BOM
             </Link>
             <Link
-              className="border-primary text-foreground hover:bg-primary hover:text-primary-foreground inline-flex h-11 min-w-28 items-center justify-center gap-2 border bg-background px-5 text-sm font-semibold transition-colors"
+              className={rfqActionClass}
               href="/rfq#rfq-form"
             >
               <ReceiptTextIcon className="size-4" />

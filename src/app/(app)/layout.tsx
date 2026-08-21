@@ -1,10 +1,9 @@
 import type { Viewport } from 'next'
 import type { ReactNode } from 'react'
 
-import { CompareBar } from '@/components/CompareBar'
 import { Footer } from '@/components/Footer'
 import { Header } from '@/components/Header'
-import { InstallPrompt } from '@/components/InstallPrompt'
+import { CompareBar, InstallPrompt } from '@/components/GlobalOverlays'
 import { JsonLd } from '@/components/JsonLd'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { MobileTabBar } from '@/components/MobileTabBar'

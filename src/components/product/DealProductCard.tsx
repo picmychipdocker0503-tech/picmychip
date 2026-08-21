@@ -2,6 +2,7 @@
 
 import type { Product } from '@/payload-types'
 
+import { AddToCartButton } from '@/components/Cart/AddToCartButton'
 import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
@@ -81,7 +82,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
   }
 
   return (
-    <div className="group bg-card border-border relative flex h-full flex-col items-center gap-4 rounded-2xl border p-6 text-center transition-colors duration-250 hover:border-primary">
+    <div className="group bg-card border-border relative flex h-full flex-col items-center gap-3 sm:gap-4 rounded-2xl border p-4 sm:p-6 text-center transition-colors duration-250 hover:border-primary">
       <div className="absolute top-1/2 right-3 z-10 flex -translate-y-1/2 flex-col gap-2 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
         <button
           aria-label="Quick view"
@@ -187,16 +188,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
 
       <div className="mt-1 flex w-full items-center justify-between gap-2">
         <span className={`text-xs font-medium ${stockInfo.className}`}>{stockInfo.label}</span>
-        <button
-          aria-label="Add to cart"
-          className="inline-flex items-center gap-1.5 rounded-full border border-secondary-content/15 bg-secondary/70 px-3.5 py-1.5 text-xs font-bold text-secondary-content shadow-sm backdrop-blur-md backdrop-saturate-150 transition-all hover:bg-secondary hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
-          disabled={isOutOfStock || isLoading}
-          onClick={handleAddToCart}
-          type="button"
-        >
-          {justAdded ? <CheckIcon className="size-3.5" /> : <ShoppingCartIcon className="size-3.5" />}
-          {justAdded ? 'Added' : 'Add to Cart'}
-        </button>
+        {product.id && <AddToCartButton outOfStock={isOutOfStock} productId={product.id} />}
       </div>
     </div>
   )

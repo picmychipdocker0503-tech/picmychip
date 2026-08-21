@@ -1,10 +1,16 @@
 import type { Product, CarouselBlock as CarouselBlockProps } from '@/payload-types'
 
 import configPromise from '@payload-config'
+import dynamic from 'next/dynamic'
 import { DefaultDocumentIDType, getPayload } from 'payload'
 import React from 'react'
 
-import { CarouselClient } from './Component.client'
+// Below-the-fold product row — splits `embla-carousel` (+ its auto-scroll
+// plugin) out of every page's main bundle into its own chunk, fetched only
+// on pages that actually render this block.
+const CarouselClient = dynamic(() =>
+  import('./Component.client').then((mod) => mod.CarouselClient),
+)
 
 export const CarouselBlock: React.FC<
   CarouselBlockProps & {
