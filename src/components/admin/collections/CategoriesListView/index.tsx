@@ -23,7 +23,7 @@ export const CategoriesListView: React.FC<ListViewServerProps> = async ({ Before
 
   const page = Number(toParam(searchParams?.dtPage)) || 1
   const limit = Number(toParam(searchParams?.dtLimit)) || DEFAULT_LIMIT
-  const sort = toParam(searchParams?.dtSort) || undefined
+  const sort = toParam(searchParams?.dtSort) || 'sequence'
   const search = toParam(searchParams?.dtSearch)
 
   const payload = await getPayload({ config: configPromise })

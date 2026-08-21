@@ -87,6 +87,16 @@ export const Categories: CollectionConfig = {
       filterOptions: ({ id }) => (id ? { id: { not_equals: id } } : true),
     },
     {
+      name: 'sequence',
+      type: 'number',
+      defaultValue: 1000,
+      index: true,
+      admin: {
+        position: 'sidebar',
+        description: 'Controls category order in product category pickers and storefront menus.',
+      },
+    },
+    {
       name: 'specSchemaType',
       type: 'select',
       defaultValue: 'none',

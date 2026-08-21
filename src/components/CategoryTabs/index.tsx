@@ -4,6 +4,7 @@ import clsx from 'clsx'
 import React, { Suspense } from 'react'
 
 import { Item } from './Item'
+import { sortCategoriesBySequence } from '@/utilities/categoryOrdering'
 
 async function List() {
   const payload = await getPayload({ config: configPromise })
@@ -16,7 +17,9 @@ async function List() {
     },
   })
 
-  const categories = categoriesData.docs?.map((category) => {
+  const categories = sortCategoriesBySequence(
+    categoriesData.docs.filter((category) => category.slug !== 'shop' && category.slug !== 'components'),
+  ).map((category) => {
     return {
       href: `/shop/${category.slug}`,
       title: category.title,

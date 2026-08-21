@@ -1,5 +1,7 @@
 import type { CategoryTreeNode } from './getCategoryTree'
 
+import { sortCategoriesBySequence } from './categoryOrdering'
+
 export type CategoryMenuGroup = {
   heading: string
   categories: CategoryTreeNode[]
@@ -12,7 +14,11 @@ export type CategoryMenuGroup = {
 // Groups with expandable (has-subcategory) items are listed first, so the
 // categories worth hovering for a flyout are the ones a visitor sees first.
 const GROUPS: { heading: string; slugs: string[] }[] = [
-  { heading: 'Connectors & Cables', slugs: ['connectors', 'cables'] },
+  { heading: 'Drone parts', slugs: ['drone-parts'] },
+  { heading: 'Connectors', slugs: ['connectors'] },
+  { heading: 'Modules', slugs: ['modules'] },
+  { heading: 'Cables', slugs: ['cables'] },
+  { heading: "Fan's and Accessories", slugs: ['cooling-fans-filters-and-grills', 'fans-and-accessories'] },
   {
     heading: 'Components',
     slugs: [
@@ -26,21 +32,17 @@ const GROUPS: { heading: string; slugs: string[] }[] = [
       'buzzer',
       'switch',
       'fuse',
-      'components',
     ],
   },
-  { heading: 'Hardware & Materials', slugs: ['nuts-and-screws', 'brass', 'nylon', 'nylon-with-brass'] },
-  { heading: 'Drone & Cooling', slugs: ['drone-parts', 'cooling-fans-filters-and-grills'] },
+  { heading: 'Hand Tools & Consumables', slugs: ['hand-tools-and-consumables', 'hand-tools-consumables'] },
+  { heading: 'Fasteners', slugs: ['nuts-and-screws', 'brass', 'nylon', 'nylon-with-brass', 'fasteners'] },
+  { heading: 'A/C - D/C Power supply', slugs: ['ac-dc-power-supply', 'a-c-d-c-power-supply', 'power-supply'] },
+  { heading: 'R&D Tools', slugs: ['rd-tools', 'r-and-d-tools', 'research-and-development-tools'] },
 ]
-
-// Within a group, categories with subcategories sort above plain leaf
-// categories, so the expandable ones are immediately visible.
-const byHasChildrenFirst = (a: CategoryTreeNode, b: CategoryTreeNode): number =>
-  Number(b.children.length > 0) - Number(a.children.length > 0)
 
 // A stray "Shop" category would otherwise render as "Shop > Shop" inside its
 // own trigger menu — not a real browsable section, so drop it here.
-const EXCLUDED_SLUGS = new Set(['shop'])
+const EXCLUDED_SLUGS = new Set(['shop', 'components'])
 
 export const groupCategoriesForMenu = (categories: CategoryTreeNode[]): CategoryMenuGroup[] => {
   const remaining = new Map(
@@ -55,11 +57,11 @@ export const groupCategoriesForMenu = (categories: CategoryTreeNode[]): Category
       .filter((category): category is CategoryTreeNode => Boolean(category))
 
     matched.forEach((category) => remaining.delete(category.slug))
-    if (matched.length) groups.push({ heading, categories: matched.sort(byHasChildrenFirst) })
+    if (matched.length) groups.push({ heading, categories: sortCategoriesBySequence(matched) })
   }
 
   if (remaining.size) {
-    groups.push({ heading: 'More', categories: Array.from(remaining.values()).sort(byHasChildrenFirst) })
+    groups.push({ heading: 'More', categories: sortCategoriesBySequence(Array.from(remaining.values())) })
   }
 
   return groups

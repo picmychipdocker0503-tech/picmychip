@@ -4,6 +4,7 @@ import clsx from 'clsx'
 import React, { Suspense } from 'react'
 
 import { CategoryItem } from './Categories.client'
+import { sortCategoriesBySequence } from '@/utilities/categoryOrdering'
 
 async function CategoryList() {
   const payload = await getPayload({ config: configPromise })
@@ -13,9 +14,12 @@ async function CategoryList() {
     limit: 200,
     sort: 'title',
   })
+  const orderedCategories = sortCategoriesBySequence(
+    categories.docs.filter((category) => category.slug !== 'shop' && category.slug !== 'components'),
+  )
 
   const counts = await Promise.all(
-    categories.docs.map((category) =>
+    orderedCategories.map((category) =>
       payload.count({
         collection: 'products',
         where: {
@@ -42,7 +46,7 @@ async function CategoryList() {
         </svg>
       </summary>
       <ul className="menu mt-2 w-full p-0">
-        {categories.docs.map((category, index) => (
+        {orderedCategories.map((category, index) => (
           <li key={category.id}>
             <CategoryItem category={category} count={counts[index]?.totalDocs ?? 0} />
           </li>

@@ -1,5 +1,7 @@
 import type { Payload } from 'payload'
 
+import { sortCategoriesBySequence } from './categoryOrdering'
+
 export type CategoryTreeNode = {
   id: string
   title: string
@@ -64,10 +66,11 @@ export const getCategoryTree = async (payload: Payload): Promise<CategoryTree> =
   }
 
   for (const node of nodesById.values()) {
+    node.children = sortCategoriesBySequence(node.children)
     childrenBySlug.set(node.slug, node.children)
   }
 
-  return { topLevel, childrenBySlug }
+  return { topLevel: sortCategoriesBySequence(topLevel), childrenBySlug }
 }
 
 export const getCategoryTreeSafe = async (payload: Payload): Promise<CategoryTree> => {

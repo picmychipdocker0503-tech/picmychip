@@ -36,6 +36,8 @@ type Args = {
   }>
 }
 
+export const revalidate = 60
+
 /**
  * Without this, every product page rendered dynamically on every request —
  * a full set of DB queries (product, reviews, related products, category
@@ -62,7 +64,15 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
   const { slug } = await params
   const product = await queryProductBySlug({ slug })
 
-  if (!product) return notFound()
+  if (!product) {
+    return {
+      robots: {
+        follow: false,
+        index: false,
+      },
+      title: 'Product not found',
+    }
+  }
 
   const gallery = product.gallery?.filter((item) => typeof item.image === 'object') || []
 

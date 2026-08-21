@@ -300,7 +300,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       type: 'relationship',
       admin: {
         position: 'sidebar',
-        sortOptions: 'title',
+        sortOptions: 'sequence',
       },
       hasMany: true,
       relationTo: 'categories',

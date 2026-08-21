@@ -1035,6 +1035,10 @@ export interface Category {
    */
   parent?: (number | null) | Category;
   /**
+   * Controls category order in product category pickers and storefront menus.
+   */
+  sequence?: number | null;
+  /**
    * Which spec schema products in this category use (should match the Spec Schema set on those Products).
    */
   specSchemaType?: ('none' | 'drone-motors' | 'sbc' | 'microcontrollers' | 'mechanical' | 'tools' | 'filaments') | null;
@@ -3152,6 +3156,7 @@ export interface CategoriesSelect<T extends boolean = true> {
   title?: T;
   description?: T;
   parent?: T;
+  sequence?: T;
   specSchemaType?: T;
   layout?:
     | T
