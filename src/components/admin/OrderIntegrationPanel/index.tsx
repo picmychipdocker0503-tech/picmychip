@@ -30,6 +30,21 @@ type ActionResponse = {
   zohoSalesOrderNumber?: string
 }
 
+async function readActionResponse(res: Response): Promise<ActionResponse> {
+  const contentType = res.headers.get('content-type') || ''
+
+  if (contentType.includes('application/json')) {
+    return (await res.json()) as ActionResponse
+  }
+
+  const text = await res.text().catch(() => '')
+  return {
+    error:
+      text.trim() ||
+      `Production returned ${res.status} ${res.statusText || 'without a readable error body.'}`,
+  }
+}
+
 /**
  * Rendered via the Orders collection's `admin.components.edit.beforeDocumentControls`
  * (same slot CouponUsageSummary uses on Coupons). Shows the Zoho sales
@@ -91,7 +106,7 @@ export const OrderIntegrationPanel: React.FC = () => {
     setLastResponse(null)
     try {
       const res = await fetch(`/api/admin/orders/${id}/${action}`, { method: 'POST', credentials: 'include' })
-      const data = (await res.json()) as ActionResponse
+      const data = await readActionResponse(res)
       setLastResponse(data)
       if (!res.ok) throw new Error(data.error || 'Request failed.')
       if (data.salesOrderSyncStatus === 'completed' || data.invoiceSyncStatus === 'completed') {
