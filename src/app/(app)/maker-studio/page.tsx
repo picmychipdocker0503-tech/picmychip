@@ -70,6 +70,7 @@ const bundles = [
   'Drone service pack',
   'Bench repair stack',
 ]
+const assetDomain = (process.env.NEXT_PUBLIC_ASSET_DOMAIN || 'https://assets.picmychip.in').replace(/\/$/, '')
 
 async function getStudioProducts() {
   const payload = await getPayload({ config: configPromise })
@@ -95,7 +96,7 @@ function getProductImage(product?: Product): MediaType | undefined {
 
   return {
     ...image,
-    url: `/media/${image.filename}`,
+    url: image.url || `${assetDomain}/media/${image.filename}`,
   }
 }
 

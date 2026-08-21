@@ -5,6 +5,8 @@ import React, { useEffect, useRef } from 'react'
 
 import type { Props as MediaProps } from '../types'
 
+const assetDomain = (process.env.NEXT_PUBLIC_ASSET_DOMAIN || 'https://assets.picmychip.in').replace(/\/$/, '')
+
 export const Video: React.FC<MediaProps> = (props) => {
   const { onClick, resource, videoClassName } = props
 
@@ -22,7 +24,8 @@ export const Video: React.FC<MediaProps> = (props) => {
   }, [])
 
   if (resource && typeof resource === 'object') {
-    const { filename } = resource
+    const { filename, url } = resource
+    const src = url || (filename ? `${assetDomain}/media/${filename}` : '')
 
     return (
       <video
@@ -35,7 +38,7 @@ export const Video: React.FC<MediaProps> = (props) => {
         playsInline
         ref={videoRef}
       >
-        <source src={`${process.env.NEXT_PUBLIC_SERVER_URL}/media/${filename}`} />
+        <source src={src} />
       </video>
     )
   }

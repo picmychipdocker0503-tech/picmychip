@@ -11,7 +11,7 @@ const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
 
 const NEXT_PUBLIC_SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000'
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL
+const NEXT_PUBLIC_ASSET_DOMAIN = process.env.NEXT_PUBLIC_ASSET_DOMAIN || 'https://assets.picmychip.in'
 
 const nextConfig: NextConfig = {
   skipTrailingSlashRedirect: true,
@@ -45,7 +45,7 @@ const nextConfig: NextConfig = {
         hostname: 'localhost',
         port: '3000',
       },
-      ...[NEXT_PUBLIC_SERVER_URL, R2_PUBLIC_URL]
+      ...[NEXT_PUBLIC_SERVER_URL, NEXT_PUBLIC_ASSET_DOMAIN]
         .filter((item): item is string => Boolean(item))
         .map((item) => {
           const url = new URL(item)
