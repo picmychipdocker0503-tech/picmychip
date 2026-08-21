@@ -1,7 +1,6 @@
 'use client'
 
-import { useFeaturebase } from 'featurebase-js/react'
-import { ensureFeaturebaseBooted } from '@/lib/featurebase'
+import { showTawkChat } from '@/lib/tawk'
 import { MailIcon, MessageCircleIcon } from 'lucide-react'
 import React from 'react'
 
@@ -10,7 +9,6 @@ type Props = {
 }
 
 export const BulkOrderContact: React.FC<Props> = ({ supportEmail }) => {
-  const { show } = useFeaturebase()
   const email = supportEmail || 'sales@Picmychip.com'
 
   return (
@@ -23,10 +21,7 @@ export const BulkOrderContact: React.FC<Props> = ({ supportEmail }) => {
         </a>
         <button
           className="text-primary inline-flex items-center gap-1.5 font-medium hover:underline"
-          onClick={() => {
-            ensureFeaturebaseBooted()
-            show()
-          }}
+          onClick={showTawkChat}
           type="button"
         >
           <MessageCircleIcon className="size-4" />

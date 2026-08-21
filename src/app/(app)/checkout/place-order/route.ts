@@ -3,6 +3,7 @@ import type { Address } from '@/payload-types'
 import { incrementCouponRedemption, redeemGiftCard } from '@/lib/discounts'
 import { computeCheckoutTotal } from '@/lib/checkoutTax'
 import { requireCheckoutShippingMethod } from '@/lib/checkoutShipping'
+import { runZohoSalesOrderSync } from '@/hooks/createZohoSalesOrder'
 import { getPostHogClient } from '@/lib/posthog-server'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
@@ -62,7 +63,7 @@ export async function POST(request: NextRequest) {
     const baseSubtotal = cart.subtotal ?? 0
 
     let amount = baseSubtotal
-    if (baseSubtotal > 0 || selectedShippingMethod.amount > 0) {
+    if (baseSubtotal > 0) {
       const siteSettings = await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
       const tax = siteSettings?.taxSettings
       const defaultGstPercent = tax?.gstRatePercent ?? 18
@@ -73,13 +74,14 @@ export async function POST(request: NextRequest) {
         payload,
         items: cart.items,
         baseSubtotal,
-        shippingAmount: selectedShippingMethod.amount,
         businessState,
         customerState,
         defaultGstPercent,
       })
       amount = Math.round(finalAmount)
     }
+
+    amount += selectedShippingMethod.amount
 
     const paymentMethod: 'cod' | 'gift-card' = amount <= 0 ? 'gift-card' : 'cod'
 
@@ -134,6 +136,8 @@ export async function POST(request: NextRequest) {
     if (cart.appliedGiftCardCode && cart.giftCardAmountApplied) {
       await redeemGiftCard(payload, cart.appliedGiftCardCode, cart.giftCardAmountApplied, order.id)
     }
+
+    await runZohoSalesOrderSync({ payload }, order.id)
 
     const distinctId = user ? String(user.id) : email
     const posthog = getPostHogClient()

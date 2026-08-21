@@ -87,8 +87,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
   const taxBreakdown =
     !cartIsEmpty && cart?.currency === 'INR'
       ? computeOrderTaxAddOn({
-          items: [
-            ...(cart.items || []).reduce<TaxLineItem[]>((acc, item) => {
+          items: (cart.items || []).reduce<TaxLineItem[]>((acc, item) => {
             if (typeof item.product !== 'object' || !item.product || !item.quantity) return acc
             const unitPrice =
               item.variant && typeof item.variant === 'object'
@@ -99,18 +98,17 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
               nominal: unitPrice * item.quantity,
             })
             return acc
-            }, []),
-            ...(shippingAmount > 0 ? [{ gstPercent: defaultGstPercent, nominal: shippingAmount }] : []),
-          ],
-          amount: subtotalAfterDiscounts + shippingAmount,
+          }, []),
+          amount: subtotalAfterDiscounts,
           defaultGstPercent,
           businessState,
           customerState,
         })
       : null
-  const checkoutTotal = taxBreakdown
-    ? subtotalAfterDiscounts + shippingAmount + taxBreakdown.totalTax
-    : (cart?.subtotal ?? 0) + shippingAmount
+  const checkoutTotalBeforeShipping = taxBreakdown
+    ? subtotalAfterDiscounts + taxBreakdown.totalTax
+    : (cart?.subtotal ?? 0)
+  const checkoutTotal = checkoutTotalBeforeShipping + shippingAmount
   const fullyCoveredByGiftCard = !cartIsEmpty && checkoutTotal <= 0
 
   const applyDiscount = useCallback(
@@ -247,17 +245,11 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
   const payWithPayu = useCallback(async () => {
     setIsInitiatingPayment(true)
     try {
-      const paymentShippingAddress = {
-        ...(billingAddressSameAsShipping ? billingAddress : shippingAddress),
-        shippingMethod: shippingMethodId,
-        shippingAmount: selectedShippingMethod?.amount,
-      }
-
       const data = (await initiatePayment('payu', {
         additionalData: {
           ...(email ? { customerEmail: email } : {}),
           billingAddress,
-          shippingAddress: paymentShippingAddress,
+          shippingAddress: billingAddressSameAsShipping ? billingAddress : shippingAddress,
           shippingMethod: shippingMethodId,
           ...(businessDetails ? { businessDetails } : {}),
         },
@@ -269,14 +261,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
         redirectToPayU(data)
       }
     } catch (error) {
-      let errorData: { cause?: { code?: string } } = {}
-      if (error instanceof Error) {
-        try {
-          errorData = JSON.parse(error.message) as { cause?: { code?: string } }
-        } catch {
-          errorData = {}
-        }
-      }
+      const errorData = error instanceof Error ? JSON.parse(error.message) : {}
       let errorMessage = t('paymentInitError')
 
       if (errorData?.cause?.code === 'OutOfStock') {
@@ -287,17 +272,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
       toast.error(errorMessage)
       setIsInitiatingPayment(false)
     }
-  }, [
-    billingAddress,
-    billingAddressSameAsShipping,
-    businessDetails,
-    email,
-    initiatePayment,
-    selectedShippingMethod?.amount,
-    shippingAddress,
-    shippingMethodId,
-    t,
-  ])
+  }, [billingAddress, billingAddressSameAsShipping, businessDetails, email, initiatePayment, shippingAddress, shippingMethodId, t])
 
   if (cartIsEmpty && isProcessingPayment) {
     return (

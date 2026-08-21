@@ -38,19 +38,9 @@ export function getZohoDisplayName(args: { companyName?: string | null; contactN
   return (args.contactName || '').trim()
 }
 
-export function getZohoGstTreatment(args: {
-  companyName?: string | null
-  gstin?: string | null
-}): 'consumer' | 'business_none' | 'business_gst' {
-  if ((args.gstin || '').trim()) return 'business_gst'
-  if ((args.companyName || '').trim()) return 'business_none'
-  return 'consumer'
-}
-
-// Contacts follow the storefront billing identity: company + GSTIN means a
-// registered business, company without GSTIN means unregistered business, and
-// no company/GSTIN means consumer. The display name remains company-first,
-// falling back to the customer's own name.
+// Contacts follow the storefront billing identity: GSTIN means a registered
+// business; no GSTIN means Zoho's unregistered-business treatment. The display
+// name remains company-first, falling back to the customer's own name.
 //
 // `displayNameOverride` lets a caller omit contact_name by passing `null`
 // when Zoho reports a Display Name collision. Email/phone must never be used
@@ -63,7 +53,7 @@ const buildContactPayload = (args: FindOrCreateZohoCustomerArgs, displayNameOver
     ...(contactName ? { contact_name: contactName } : {}),
     company_name: args.companyName || undefined,
     contact_type: 'customer',
-    gst_treatment: getZohoGstTreatment(args),
+    gst_treatment: args.gstin ? 'business_gst' : 'business_none',
     ...(args.gstin ? { gst_no: args.gstin } : {}),
     place_of_contact: args.billingAddress?.state_code || args.shippingAddress?.state_code || undefined,
     billing_address: args.billingAddress,
@@ -154,26 +144,53 @@ function normalizeText(value?: string | null): string {
 }
 
 function normalizePhone(value?: string | null): string {
-  return (value || '').replace(/\D/g, '')
+  const digits = (value || '').replace(/\D/g, '')
+  return digits.length > 10 ? digits.slice(-10) : digits
 }
 
-function contactHasEmail(contact: ZohoContact, email?: string): boolean {
+function contactEmails(contact: ZohoContact): string[] {
+  const rootEmail = (contact as ZohoContact & { email?: string }).email
+  return [rootEmail, ...(contact.contact_persons?.map((person) => person.email) ?? [])]
+    .map(normalizeText)
+    .filter(Boolean)
+}
+
+function contactPhones(contact: ZohoContact): string[] {
+  const root = contact as ZohoContact & { phone?: string; mobile?: string }
+  return [
+    root.phone,
+    root.mobile,
+    contact.billing_address?.phone,
+    contact.shipping_address?.phone,
+    ...(contact.contact_persons?.flatMap((person) => {
+      const typedPerson = person as typeof person & { mobile?: string }
+      return [typedPerson.phone, typedPerson.mobile]
+    }) ?? []),
+  ]
+    .map(normalizePhone)
+    .filter(Boolean)
+}
+
+function contactNameMatches(contact: ZohoContact, args: FindOrCreateZohoCustomerArgs, duplicateName?: string): boolean {
+  const names = [duplicateName, getZohoDisplayName(args), args.contactName].map(normalizeText).filter(Boolean)
+  return names.includes(normalizeText(contact.contact_name))
+}
+
+function contactEmailMatches(contact: ZohoContact, email?: string): boolean {
   const normalizedEmail = normalizeText(email)
-  if (!normalizedEmail) return false
-  return contact.contact_persons?.some((person) => normalizeText(person.email) === normalizedEmail) ?? false
+  return Boolean(normalizedEmail && contactEmails(contact).includes(normalizedEmail))
 }
 
-function contactHasPhone(contact: ZohoContact, phone?: string): boolean {
+function contactPhoneMatches(contact: ZohoContact, phone?: string): boolean {
   const normalizedPhone = normalizePhone(phone)
-  if (!normalizedPhone) return false
-  return (
-    contact.contact_persons?.some((person) => normalizePhone(person.phone).endsWith(normalizedPhone) || normalizedPhone.endsWith(normalizePhone(person.phone))) ??
-    false
-  )
+  return Boolean(normalizedPhone && contactPhones(contact).includes(normalizedPhone))
 }
 
-async function getFullContact(contact: ZohoContact): Promise<ZohoContact> {
-  return (await findByContactId(contact.contact_id)) || contact
+function getUniqueDisplayName(args: FindOrCreateZohoCustomerArgs): string | undefined {
+  const base = getZohoDisplayName(args)
+  if (args.email) return `${base} (${args.email.trim().toLowerCase()})`
+  const phone = normalizePhone(args.phone)
+  return phone ? `${base} (${phone})` : undefined
 }
 
 async function findByContactId(contactId: string): Promise<ZohoContact | undefined> {
@@ -186,26 +203,9 @@ async function findByContactId(contactId: string): Promise<ZohoContact | undefin
 }
 
 async function findByEmail(email: string): Promise<ZohoContact | undefined> {
-  const candidates: ZohoContact[] = []
-
-  for (const filterBy of ['Status.All', 'Status.Active', 'Status.Inactive']) {
-    const params = new URLSearchParams({ email, filter_by: filterBy })
-    const data = await zohoFetch<{ contacts: ZohoContact[] }>(`/contacts?${params.toString()}`)
-    candidates.push(...(data.contacts ?? []))
-  }
-
-  candidates.push(...(await findBySearchText(email)))
-
-  const seen = new Set<string>()
-  for (const candidate of candidates) {
-    if (seen.has(candidate.contact_id)) continue
-    seen.add(candidate.contact_id)
-
-    const full = await getFullContact(candidate)
-    if (contactHasEmail(full, email)) return full
-  }
-
-  return undefined
+  const params = new URLSearchParams({ email, filter_by: 'Status.All' })
+  const data = await zohoFetch<{ contacts: ZohoContact[] }>(`/contacts?${params.toString()}`)
+  return data.contacts?.[0]
 }
 
 async function findByGstinOrPhone(gstin?: string, phone?: string): Promise<ZohoContact | undefined> {
@@ -213,69 +213,41 @@ async function findByGstinOrPhone(gstin?: string, phone?: string): Promise<ZohoC
   // Zoho's contacts list endpoint has no dedicated gst_no/phone filter — falls back
   // to the general-purpose search_text param and filters the (small) result set
   // client-side. Best-effort: only used once email matching has already failed.
-  const contacts = await findBySearchText(gstin || phone || '')
-  for (const contact of contacts) {
-    const full = await getFullContact(contact)
-    if ((gstin && normalizeText(full.gst_no) === normalizeText(gstin)) || (phone && contactHasPhone(full, phone))) {
-      return full
-    }
-  }
-  return undefined
+  const searchText = gstin || phone || ''
+  const params = new URLSearchParams({ search_text: searchText, filter_by: 'Status.All' })
+  const data = await zohoFetch<{ contacts: ZohoContact[] }>(`/contacts?${params.toString()}`)
+  return data.contacts?.find((c) => (gstin && c.gst_no === gstin) || contactPhoneMatches(c, phone))
 }
 
 async function findBySearchText(searchText: string): Promise<ZohoContact[]> {
-  const contacts: ZohoContact[] = []
-
-  for (const filterBy of ['Status.All', 'Status.Active', 'Status.Inactive']) {
-    const params = new URLSearchParams({ search_text: searchText, filter_by: filterBy })
-    const data = await zohoFetch<{ contacts: ZohoContact[] }>(`/contacts?${params.toString()}`)
-    contacts.push(...(data.contacts ?? []))
-  }
-
-  const seen = new Set<string>()
-  return contacts.filter((contact) => {
-    if (seen.has(contact.contact_id)) return false
-    seen.add(contact.contact_id)
-    return true
-  })
+  const params = new URLSearchParams({ search_text: searchText, filter_by: 'Status.All' })
+  const data = await zohoFetch<{ contacts: ZohoContact[] }>(`/contacts?${params.toString()}`)
+  return data.contacts ?? []
 }
 
 async function findByDisplayName(displayName: string): Promise<ZohoContact | undefined> {
   const contacts = await findBySearchText(displayName)
-  const matched = contacts.find((c) => normalizeText(c.contact_name) === normalizeText(displayName))
-  return matched ? getFullContact(matched) : undefined
-}
-
-async function findByDisplayNameAndIdentity(args: FindOrCreateZohoCustomerArgs): Promise<ZohoContact | undefined> {
-  const displayName = getZohoDisplayName(args)
-  const contacts = await findBySearchText(displayName)
-
-  for (const contact of contacts) {
-    if (normalizeText(contact.contact_name) !== normalizeText(displayName)) continue
-
-    const full = await getFullContact(contact)
-    if (args.gstin && normalizeText(full.gst_no) === normalizeText(args.gstin)) return full
-    if (args.email && contactHasEmail(full, args.email)) return full
-    if (args.phone && contactHasPhone(full, args.phone)) return full
-  }
-
-  return undefined
+  return contacts.find((c) => c.contact_name?.trim().toLowerCase() === displayName.trim().toLowerCase())
 }
 
 async function findDuplicateContact(args: FindOrCreateZohoCustomerArgs, duplicateName?: string): Promise<ZohoContact | undefined> {
   const candidates: ZohoContact[] = []
-
-  if (duplicateName) {
-    const byDisplayName = await findByDisplayName(duplicateName)
-    if (byDisplayName) return byDisplayName
-  }
 
   if (args.email) {
     const byEmail = await findByEmail(args.email)
     if (byEmail) return byEmail
   }
 
-  for (const searchText of [duplicateName, extractEmail(duplicateName), args.email, getZohoDisplayName(args)]) {
+  const uniqueDisplayName = getUniqueDisplayName(args)
+  for (const searchText of [
+    duplicateName,
+    extractEmail(duplicateName),
+    args.phone,
+    args.email,
+    uniqueDisplayName,
+    getZohoDisplayName(args),
+    args.contactName,
+  ]) {
     if (!searchText) continue
     candidates.push(...(await findBySearchText(searchText)))
   }
@@ -287,21 +259,11 @@ async function findDuplicateContact(args: FindOrCreateZohoCustomerArgs, duplicat
     return true
   })
 
-  const normalizedDuplicateName = duplicateName?.trim().toLowerCase()
-  const normalizedEmail = args.email?.trim().toLowerCase()
-
-  return unique.find((contact) => {
-    const contactName = contact.contact_name?.trim().toLowerCase()
-    if (normalizedDuplicateName && contactName === normalizedDuplicateName) return true
-    if (
-      normalizedEmail &&
-      (contactName?.includes(normalizedEmail) ||
-        contact.contact_persons?.some((person) => person.email?.trim().toLowerCase() === normalizedEmail))
-    ) {
-      return true
-    }
-    return false
-  })
+  return (
+    unique.find((contact) => contactNameMatches(contact, args, duplicateName) && contactPhoneMatches(contact, args.phone)) ||
+    unique.find((contact) => contactEmailMatches(contact, args.email)) ||
+    unique.find((contact) => contact.contact_name && normalizeText(contact.contact_name) === normalizeText(uniqueDisplayName))
+  )
 }
 
 export async function markZohoContactActive(contactId: string): Promise<void> {
@@ -383,10 +345,6 @@ export async function findOrCreateZohoCustomer(
     existing = await findByGstinOrPhone(args.gstin, args.phone)
   }
 
-  if (!existing) {
-    existing = await findByDisplayNameAndIdentity(args)
-  }
-
   if (!existing && args.email) {
     const duplicate = await findDuplicateContact(args, `${getZohoDisplayName(args)} (${args.email})`)
     existing = duplicate && !identityConflicts(duplicate, args) ? duplicate : undefined
@@ -405,26 +363,27 @@ export async function findOrCreateZohoCustomer(
     const created = await createContact(args)
     return { contact: created, wasCreated: true, wasUpdated: false }
   } catch (err) {
-    // Zoho enforces a unique contact_name/Display Name org-wide (code 3062,
-    // "already exists — specify a different name"). Never create a fallback
-    // name like "Customer (email)" — display names must remain company name
-    // or customer name only. Reuse the matched contact when possible.
+    // Zoho enforces a unique contact_name/Display Name org-wide (code 3062).
+    // Reuse/update an existing contact when phone+name or email matches; if
+    // only the display name collides, create a deterministic email/phone-suffixed
+    // display name so a genuinely different customer can still be created.
     if (!isZohoDuplicateContactError(err)) throw err
 
     const duplicateName = extractDuplicateCustomerName(err)
     const matched = await findDuplicateContact(args, duplicateName)
 
-    if (matched) {
-      const duplicateNameMatches =
-        duplicateName &&
-        matched.contact_name?.trim().toLowerCase() === duplicateName.trim().toLowerCase()
+    if (matched && !identityConflicts(matched, args)) {
       const active = await ensureContactActive(matched)
-      if (identityConflicts(active, args) && !duplicateNameMatches) throw err
-
-      const updated = !identityConflicts(active, args) && contactNeedsUpdate(active, args)
+      const updated = contactNeedsUpdate(active, args)
         ? await updateContact(active.contact_id, args)
         : active
       return { contact: updated, wasCreated: false, wasUpdated: updated !== active }
+    }
+
+    const uniqueDisplayName = getUniqueDisplayName(args)
+    if (uniqueDisplayName) {
+      const created = await createContact(args, uniqueDisplayName)
+      return { contact: created, wasCreated: true, wasUpdated: false }
     }
 
     throw err

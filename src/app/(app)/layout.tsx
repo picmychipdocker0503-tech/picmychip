@@ -103,6 +103,28 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
             </Script>
+            <Script id="tawk-to" strategy="afterInteractive">
+              {`
+            var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+            // Mobile already has its own "Chat" tab in the bottom nav (see
+            // MobileTabBar), so Tawk's own default floating bubble is
+            // redundant clutter there — hidden once the widget loads.
+            // Desktop has no such bottom nav, so it keeps the bubble.
+            Tawk_API.onLoad = function () {
+              if (window.matchMedia('(max-width: 767px)').matches) {
+                Tawk_API.hideWidget();
+              }
+            };
+            (function(){
+            var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+            s1.async=true;
+            s1.src='https://embed.tawk.to/6a880f991e47873444f4db0f/1k0hnpsg3';
+            s1.charset='UTF-8';
+            s1.setAttribute('crossorigin','*');
+            s0.parentNode.insertBefore(s1,s0);
+            })();
+          `}
+            </Script>
           </>
         )}
         <NextIntlClientProvider locale={locale} messages={messages}>

@@ -98,9 +98,6 @@ importers:
       embla-carousel-react:
         specifier: ^8.5.2
         version: 8.6.0(react@19.2.6)
-      featurebase-js:
-        specifier: ^1.0.3
-        version: 1.0.3(react@19.2.6)
       framer-motion:
         specifier: ^12.43.0
         version: 12.43.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -3984,6 +3981,7 @@ packages:
   eslint@9.39.5:
     resolution: {integrity: sha512-DgZS62aPLXKlnxILS/AYCoRvHaZeXceIzlXPkkGGzJWSow1aEk0lbTlxUSlyjC8jcaKxAdOnTDz+o1JFSBsyjw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
+    deprecated: This version is no longer supported. Please see https://eslint.org/version-support for other options.
     hasBin: true
     peerDependencies:
       jiti: '*'
@@ -4071,14 +4069,6 @@ packages:
       picomatch: ^3 || ^4
     peerDependenciesMeta:
       picomatch:
-        optional: true
-
-  featurebase-js@1.0.3:
-    resolution: {integrity: sha512-Q52xH6KEy6mYpxBl0ZRDzCaxW8EhoUjUxLbgG5e2GIMeiaS4uhKGHPK44yTRUmD+PTBgJ79/dc1GDFSwzz/sgg==}
-    peerDependencies:
-      react: '>=17'
-    peerDependenciesMeta:
-      react:
         optional: true
 
   fflate@0.4.9:
@@ -10104,10 +10094,6 @@ snapshots:
   fdir@6.5.0(picomatch@4.0.5):
     optionalDependencies:
       picomatch: 4.0.5
-
-  featurebase-js@1.0.3(react@19.2.6):
-    optionalDependencies:
-      react: 19.2.6
 
   fflate@0.4.9: {}
 

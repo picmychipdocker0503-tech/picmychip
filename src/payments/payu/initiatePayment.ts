@@ -1,5 +1,4 @@
 import type { PaymentAdapter } from '@payloadcms/plugin-ecommerce/types'
-import type { Address } from '@/payload-types'
 import crypto from 'crypto'
 import { getServerSideURL } from '@/utilities/getURL'
 import { computeCheckoutTotal } from '@/lib/checkoutTax'
@@ -29,23 +28,14 @@ export const initiatePayment =
   async ({ data, req, transactionsSlug }) => {
     const payload = req.payload
     const { merchantKey, merchantSalt, mode } = props
-    const additionalData = (data as Record<string, unknown>).additionalData as Record<string, unknown> | undefined
-    const billingAddress = (data.billingAddress || additionalData?.billingAddress) as Partial<Address> | undefined
-    const shippingAddress = (data.shippingAddress || additionalData?.shippingAddress) as Partial<Address> | undefined
-    const customerEmail = data.customerEmail || additionalData?.customerEmail
-    const { cart, currency } = data
+    const { billingAddress, cart, currency, customerEmail, shippingAddress } = data
     // businessDetails (GSTIN/company/PAN) isn't part of the plugin's typed additionalData
     // shape — the checkout page still sends it through as an extra key.
-    const businessDetails = ((data as Record<string, unknown>).businessDetails || additionalData?.businessDetails) as
+    const businessDetails = (data as Record<string, unknown>).businessDetails as
       | { companyName?: string; gstin?: string; panNumber?: string }
       | undefined
-    const shippingAddressSnapshot = shippingAddress as
-      | (Partial<Address> & { shippingMethod?: string; shippingAmount?: number })
-      | undefined
-    const shippingMethodId = ((data as Record<string, unknown>).shippingMethod || additionalData?.shippingMethod) as
-      | string
-      | undefined
-    const shippingMethod = requireCheckoutShippingMethod(shippingMethodId || shippingAddressSnapshot?.shippingMethod)
+    const shippingMethodId = (data as Record<string, unknown>).shippingMethod as string | undefined
+    const shippingMethod = requireCheckoutShippingMethod(shippingMethodId)
 
     if (currency !== 'INR') {
       throw new Error('Card / UPI / NetBanking payment via PayU is only available for INR orders.')
@@ -69,12 +59,11 @@ export const initiatePayment =
       payload,
       items: cart.items,
       baseSubtotal: cart.subtotal ?? 0,
-      shippingAmount: shippingMethod.amount,
       businessState,
       customerState,
       defaultGstPercent,
     })
-    const amountInPaise = Math.round(finalAmount)
+    const amountInPaise = Math.round(finalAmount) + shippingMethod.amount
 
     if (!amountInPaise || typeof amountInPaise !== 'number' || amountInPaise < 100) {
       throw new Error('A valid amount of at least ₹1 is required to initiate a payment.')

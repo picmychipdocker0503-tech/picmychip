@@ -336,15 +336,15 @@ export interface Order {
   currency?: 'INR' | null;
   accessToken?: string | null;
   /**
-   * Carrier tracking number (AWB), shown to the customer on their order. Enter manually after choosing the courier.
+   * Carrier tracking number (AWB), shown to the customer on their order. Auto-filled by the Shiprocket integration once a courier is assigned — editable manually as a fallback.
    */
   trackingNumber?: string | null;
   /**
-   * Manual courier name, e.g. DTDC, Delhivery, Blue Dart, Professional Courier.
+   * Courier Shiprocket assigned to this shipment.
    */
   courierName?: string | null;
   /**
-   * Manual shipment status, e.g. Packed, Picked up, In Transit, Delivered.
+   * Latest status from Shiprocket (e.g. "Pickup Scheduled", "In Transit", "Delivered").
    */
   shipmentStatus?: string | null;
   shiprocketOrderId?: string | null;
@@ -426,26 +426,6 @@ export interface Order {
   zohoInvoiceStatus?: string | null;
   zohoInvoiceUrl?: string | null;
   zohoInvoiceCreatedAt?: string | null;
-  /**
-   * PayU payment reference copied from the successful transaction and used when recording payment in Zoho.
-   */
-  paymentReference?: string | null;
-  /**
-   * Set when the PayU payment is recorded against the Zoho invoice.
-   */
-  zohoPaymentRecordedAt?: string | null;
-  /**
-   * Set when a cancelled/refunded invoiced order has a linked Zoho Books credit note.
-   */
-  zohoCreditNoteId?: string | null;
-  zohoCreditNoteNumber?: string | null;
-  zohoCreditNoteStatus?: string | null;
-  zohoCreditNoteAmount?: number | null;
-  zohoCreditNoteUrl?: string | null;
-  zohoCreditNoteCreatedAt?: string | null;
-  /**
-   * Manual public tracking URL from the selected courier.
-   */
   shiprocketTrackingUrl?: string | null;
   shiprocketPickupStatus?: string | null;
   shiprocketDeliveryStatus?: string | null;
@@ -750,6 +730,36 @@ export interface Product {
    * Flags this as a purchasable gift card — a GiftCard document (with a redeemable code) is minted per unit automatically when an order containing it is placed. Use variants for denominations.
    */
   isGiftCard?: boolean | null;
+  /**
+   * Overrides for the Google Merchant Center product feed.
+   */
+  googleMerchant?: {
+    /**
+     * Hide this product from the Google Merchant Center feed.
+     */
+    excludeFromFeed?: boolean | null;
+    /**
+     * Optional Google product category, e.g. Electronics > Electronics Accessories.
+     */
+    googleProductCategory?: string | null;
+    /**
+     * Optional GTIN/UPC/EAN/ISBN. Leave blank if unavailable.
+     */
+    gtin?: string | null;
+    /**
+     * Optional manufacturer part number. Falls back to SKU when blank.
+     */
+    mpn?: string | null;
+    /**
+     * Google condition value: new, refurbished, or used. Defaults to new.
+     */
+    condition?: string | null;
+    customLabel0?: string | null;
+    customLabel1?: string | null;
+    customLabel2?: string | null;
+    customLabel3?: string | null;
+    customLabel4?: string | null;
+  };
   leadTimeDays?: number | null;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -3916,6 +3926,20 @@ export interface ProductsSelect<T extends boolean = true> {
   isClearance?: T;
   clearanceReason?: T;
   isGiftCard?: T;
+  googleMerchant?:
+    | T
+    | {
+        excludeFromFeed?: T;
+        googleProductCategory?: T;
+        gtin?: T;
+        mpn?: T;
+        condition?: T;
+        customLabel0?: T;
+        customLabel1?: T;
+        customLabel2?: T;
+        customLabel3?: T;
+        customLabel4?: T;
+      };
   leadTimeDays?: T;
   generateSlug?: T;
   slug?: T;
@@ -4051,14 +4075,6 @@ export interface OrdersSelect<T extends boolean = true> {
   zohoInvoiceStatus?: T;
   zohoInvoiceUrl?: T;
   zohoInvoiceCreatedAt?: T;
-  paymentReference?: T;
-  zohoPaymentRecordedAt?: T;
-  zohoCreditNoteId?: T;
-  zohoCreditNoteNumber?: T;
-  zohoCreditNoteStatus?: T;
-  zohoCreditNoteAmount?: T;
-  zohoCreditNoteUrl?: T;
-  zohoCreditNoteCreatedAt?: T;
   shiprocketTrackingUrl?: T;
   shiprocketPickupStatus?: T;
   shiprocketDeliveryStatus?: T;

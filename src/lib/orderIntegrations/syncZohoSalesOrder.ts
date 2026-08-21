@@ -1,23 +1,19 @@
 import type { Payload } from 'payload'
 
-import { invoiceReadyEmailHtml, sendMail } from '@/lib/email'
-import { IndianState, resolveIndianState } from '@/lib/indianStates'
 import { zohoIsConfigured } from '@/lib/zoho/auth'
-import { findCreditNoteForInvoice, getCreditNoteUrl } from '@/lib/zoho/creditNotes'
-import { findOrCreateZohoCustomer, getZohoGstTreatment, markZohoContactActive } from '@/lib/zoho/customers'
-import { getInvoicePdfUrl, getZohoInvoice } from '@/lib/zoho/invoices'
+import { findOrCreateZohoCustomer, markZohoContactActive } from '@/lib/zoho/customers'
 import { findOrCreateZohoItem } from '@/lib/zoho/items'
 import { getZohoOrganizationState } from '@/lib/zoho/organization'
-import { recordCustomerPayment } from '@/lib/zoho/payments'
+import { resolveTaxId } from '@/lib/zoho/taxes'
+import { getInvoicePdfUrl, getZohoInvoice } from '@/lib/zoho/invoices'
 import {
   convertSalesOrderToInvoice,
   createZohoSalesOrder,
   findExistingSalesOrderByOrderId,
   getZohoSalesOrder,
 } from '@/lib/zoho/salesOrders'
-import { resolveTaxId } from '@/lib/zoho/taxes'
 import type { ZohoAddress, ZohoLineItem, ZohoSalesOrder } from '@/lib/zoho/types'
-import { getServerSideURL } from '@/utilities/getURL'
+import { IndianState, resolveIndianState } from '@/lib/indianStates'
 import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 
 type AddressLike = {
@@ -31,18 +27,6 @@ type AddressLike = {
   postalCode?: string | null
   state?: string | null
 } | null | undefined
-
-function getErrorLogDetails(err: unknown) {
-  if (err instanceof Error) {
-    return {
-      name: err.name,
-      message: err.message,
-      stack: err.stack,
-    }
-  }
-
-  return err
-}
 
 export const toZohoAddress = (address: AddressLike, state?: IndianState): ZohoAddress | undefined => {
   if (!address) return undefined
@@ -188,6 +172,7 @@ export async function buildZohoLineItems(
       item_id: itemId,
     })
   }
+
   return lineItems
 }
 
@@ -237,32 +222,6 @@ function isInactiveZohoCustomerError(err: unknown): boolean {
   return message.includes('"code":3021') || message.toLowerCase().includes('customer is inactive')
 }
 
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
-async function findOrderForZohoSync(payload: Payload, orderId: number | string) {
-  for (let attempt = 1; attempt <= 5; attempt += 1) {
-    try {
-      return await payload.findByID({ collection: 'orders', id: orderId, depth: 1, overrideAccess: true })
-    } catch (err) {
-      if (attempt === 5) throw err
-      await sleep(1000)
-    }
-  }
-}
-
-function getInvoiceDownloadUrl(order: {
-  id: number | string
-  accessToken?: string | null
-  customerEmail?: string | null
-}): string {
-  const params = new URLSearchParams()
-  if (order.customerEmail) params.set('email', order.customerEmail)
-  if (order.accessToken) params.set('accessToken', order.accessToken)
-
-  const query = params.toString()
-  return `${getServerSideURL()}/api/orders/${order.id}/invoice-pdf${query ? `?${query}` : ''}`
-}
-
 /**
  * Writes back whatever a Zoho invoice already linked to this sales order
  * looks like — used both right after our own "accept" conversion and when
@@ -272,103 +231,21 @@ async function applyLinkedInvoice(payload: Payload, orderId: number | string, sa
   const linked = salesOrder.invoices?.[0]
   if (!linked) return
 
-  const existingOrder = await payload.findByID({ collection: 'orders', id: orderId, depth: 0, overrideAccess: true })
-  const invoiceWasAlreadyLinked = Boolean(existingOrder.zohoInvoiceId)
   const invoice = await getZohoInvoice(linked.invoice_id)
-  const paymentResult = await recordPayuPaymentAgainstInvoice(payload, orderId, invoice)
-  const updatedInvoice = paymentResult.recorded ? await getZohoInvoice(linked.invoice_id) : invoice
-  const invoiceUrl = getInvoicePdfUrl(updatedInvoice)
 
   await payload.update({
     collection: 'orders',
     id: orderId,
     data: {
-      zohoInvoiceId: updatedInvoice.invoice_id,
-      zohoInvoiceNumber: updatedInvoice.invoice_number,
-      zohoInvoiceStatus: updatedInvoice.status,
-      zohoInvoiceUrl: invoiceUrl,
+      zohoInvoiceId: invoice.invoice_id,
+      zohoInvoiceNumber: invoice.invoice_number,
+      zohoInvoiceStatus: invoice.status,
+      zohoInvoiceUrl: getInvoicePdfUrl(invoice),
       zohoInvoiceCreatedAt: new Date().toISOString(),
-      ...(paymentResult.referenceNumber ? { paymentReference: paymentResult.referenceNumber } : {}),
-      ...(paymentResult.recorded ? { zohoPaymentRecordedAt: new Date().toISOString() } : {}),
       invoiceSyncStatus: 'completed',
     },
     overrideAccess: true,
   })
-
-  const email =
-    existingOrder.customerEmail || (typeof existingOrder.customer === 'object' ? existingOrder.customer?.email : undefined)
-
-  if (email && !invoiceWasAlreadyLinked) {
-    const invoiceDownloadUrl = getInvoiceDownloadUrl(existingOrder)
-
-    await sendMail(payload, {
-      to: email,
-      subject: `Invoice ready for order #${orderId}`,
-      html: invoiceReadyEmailHtml({
-        id: orderId,
-        invoiceNumber: updatedInvoice.invoice_number,
-        invoiceUrl: invoiceDownloadUrl,
-      }),
-      emailType: 'INVOICE_READY',
-      eventId: `INVOICE_READY_${orderId}_${updatedInvoice.invoice_number || updatedInvoice.invoice_id}`,
-    })
-  }
-}
-
-async function recordPayuPaymentAgainstInvoice(
-  payload: Payload,
-  orderId: number | string,
-  invoice: { balance?: number; customer_id?: string; invoice_id: string; status?: string; total: number },
-): Promise<{ recorded: boolean; referenceNumber?: string }> {
-  if (invoice.status?.toLowerCase() === 'paid' || invoice.balance === 0) return { recorded: false }
-
-  const order = await payload.findByID({ collection: 'orders', id: orderId, depth: 1, overrideAccess: true })
-  const transactionRefs = order.transactions || []
-
-  for (const ref of transactionRefs) {
-    const transaction =
-      typeof ref === 'object' && ref
-        ? ref
-        : await payload.findByID({ collection: 'transactions', id: ref, depth: 0, overrideAccess: true })
-
-    if (!transaction || transaction.paymentMethod !== 'payu') continue
-    if (transaction.status !== 'succeeded') continue
-
-    const payu = transaction.payu
-    const referenceNumber = payu?.mihpayid || payu?.txnid
-    if (!referenceNumber) continue
-
-    const invoiceBalance = typeof invoice.balance === 'number' ? invoice.balance : invoice.total
-    const paidAmount = typeof transaction.amount === 'number' ? transaction.amount / 100 : invoiceBalance
-    const amount = Math.min(invoiceBalance, paidAmount)
-
-    if (!invoice.customer_id || amount <= 0) {
-      return { recorded: false, referenceNumber }
-    }
-
-    try {
-      await recordCustomerPayment({
-        customerId: invoice.customer_id,
-        invoiceId: invoice.invoice_id,
-        amount,
-        date: new Date(order.createdAt || Date.now()).toISOString().slice(0, 10),
-        referenceNumber,
-        paymentMode: process.env.ZOHO_PAYMENT_MODE || 'payu',
-        accountId: process.env.ZOHO_PAYMENT_ACCOUNT_ID || undefined,
-        accountName: process.env.ZOHO_PAYMENT_ACCOUNT_NAME || undefined,
-      })
-
-      return { recorded: true, referenceNumber }
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
-      if (message.toLowerCase().includes('payment') && message.toLowerCase().includes('already')) {
-        return { recorded: false, referenceNumber }
-      }
-      throw err
-    }
-  }
-
-  return { recorded: false }
 }
 
 /**
@@ -380,41 +257,19 @@ async function recordPayuPaymentAgainstInvoice(
  * Idempotent and never throws — called both by the createZohoSalesOrder
  * afterChange hook and the admin "Retry" endpoint.
  */
-export async function syncZohoSalesOrderForOrder(
-  payload: Payload,
-  orderId: number | string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  initialOrder?: any,
-): Promise<void> {
+export async function syncZohoSalesOrderForOrder(payload: Payload, orderId: number | string): Promise<void> {
   if (!zohoIsConfigured) return
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let order: any = initialOrder
+  let order: any
   try {
-    if (!order) {
-      order = await findOrderForZohoSync(payload, orderId)
-    }
+    order = await payload.findByID({ collection: 'orders', id: orderId, depth: 1, overrideAccess: true })
   } catch (err) {
     payload.logger.error({ msg: 'syncZohoSalesOrderForOrder: order not found', err, orderId })
     return
   }
 
   if (!order || order.status === 'cancelled') return
-
-  let salesOrderLogContext:
-    | {
-        customerId?: string
-        date?: string
-        gstNoProvided?: boolean
-        gstTreatment?: string
-        itemCount?: number
-        lineItems?: Pick<ZohoLineItem, 'hsn_or_sac' | 'item_id' | 'name' | 'quantity' | 'rate' | 'tax_id'>[]
-        placeOfSupply?: string
-        referenceNumber?: string
-        shippingAmount?: number
-        taxType?: 'intra-state' | 'inter-state'
-      }
-    | undefined
 
   try {
     await payload.update({
@@ -450,7 +305,6 @@ export async function syncZohoSalesOrderForOrder(
         const shippingTaxId = await resolveTaxId(defaultGstPercent, taxType)
         lineItems.push({
           name: order.shippingMethod === 'express' ? 'Express Shipping' : 'Standard Shipping',
-          hsn_or_sac: '9968',
           rate: order.shippingAmount / 100,
           quantity: 1,
           tax_id: shippingTaxId,
@@ -459,7 +313,7 @@ export async function syncZohoSalesOrderForOrder(
       if (lineItems.length === 0) throw new Error('No valid line items for a sales order.')
 
       const gstin: string | undefined = order.businessDetails?.gstin || undefined
-      const gstTreatment = getZohoGstTreatment({ companyName: order.businessDetails?.companyName, gstin })
+      const gstTreatment = gstin ? 'business_gst' : 'business_none'
 
       const salesOrderArgs = {
         customerId: contactId,
@@ -471,32 +325,6 @@ export async function syncZohoSalesOrderForOrder(
         lineItems,
       }
 
-      salesOrderLogContext = {
-        customerId: contactId,
-        referenceNumber: salesOrderArgs.referenceNumber,
-        date: salesOrderArgs.date,
-        placeOfSupply: salesOrderArgs.placeOfSupply,
-        gstTreatment,
-        gstNoProvided: Boolean(gstin),
-        taxType,
-        shippingAmount: order.shippingAmount,
-        itemCount: lineItems.length,
-        lineItems: lineItems.map((item) => ({
-          name: item.name,
-          hsn_or_sac: item.hsn_or_sac,
-          rate: item.rate,
-          quantity: item.quantity,
-          tax_id: item.tax_id,
-          item_id: item.item_id,
-        })),
-      }
-
-      payload.logger.info({
-        msg: 'Creating Zoho sales order',
-        orderId,
-        ...salesOrderLogContext,
-      })
-
       try {
         salesOrder = await createZohoSalesOrder(salesOrderArgs)
       } catch (err) {
@@ -504,14 +332,6 @@ export async function syncZohoSalesOrderForOrder(
         await markZohoContactActive(contactId)
         salesOrder = await createZohoSalesOrder(salesOrderArgs)
       }
-
-      payload.logger.info({
-        msg: 'Zoho sales order created',
-        orderId,
-        zohoSalesOrderId: salesOrder.salesorder_id,
-        zohoSalesOrderNumber: salesOrder.salesorder_number,
-        zohoSalesOrderStatus: salesOrder.status,
-      })
 
       await payload.update({
         collection: 'orders',
@@ -551,15 +371,7 @@ export async function syncZohoSalesOrderForOrder(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    payload.logger.error({
-      msg: 'Failed to sync Zoho sales order',
-      err: getErrorLogDetails(err),
-      orderId,
-      salesOrder: salesOrderLogContext,
-      orderStatus: order?.status,
-      existingZohoSalesOrderId: order?.zohoSalesOrderId,
-      existingZohoCustomerId: order?.zohoCustomerId,
-    })
+    payload.logger.error({ msg: 'Failed to sync Zoho sales order', err, orderId })
     await payload
       .update({
         collection: 'orders',
@@ -572,83 +384,6 @@ export async function syncZohoSalesOrderForOrder(
         overrideAccess: true,
       })
       .catch(() => {})
-  }
-}
-
-/**
- * Lightweight invoice refresh for customer/admin views. This never creates a
- * sales order or converts one; it only pulls back an invoice that already
- * exists in Zoho Books after staff accepted it there manually.
- */
-export async function refreshZohoInvoiceForOrder(
-  payload: Payload,
-  orderId: number | string,
-): Promise<void> {
-  if (!zohoIsConfigured) return
-
-  try {
-    const order = await payload.findByID({
-      collection: 'orders',
-      id: orderId,
-      depth: 0,
-      overrideAccess: true,
-    })
-
-    if (!order?.zohoSalesOrderId || order.zohoInvoiceId) return
-
-    const salesOrder = await getZohoSalesOrder(order.zohoSalesOrderId)
-
-    await payload.update({
-      collection: 'orders',
-      id: orderId,
-      data: { zohoSalesOrderStatus: salesOrder.status, lastSyncAt: new Date().toISOString() },
-      overrideAccess: true,
-    })
-
-    if (salesOrder.invoices?.length) {
-      await applyLinkedInvoice(payload, orderId, salesOrder)
-    }
-  } catch (err) {
-    payload.logger.error({ msg: 'Failed to refresh Zoho invoice status', err, orderId })
-  }
-}
-
-export async function refreshZohoCreditNoteForOrder(
-  payload: Payload,
-  orderId: number | string,
-): Promise<void> {
-  if (!zohoIsConfigured) return
-
-  try {
-    const order = await payload.findByID({
-      collection: 'orders',
-      id: orderId,
-      depth: 0,
-      overrideAccess: true,
-    })
-
-    if (!order?.zohoInvoiceId || order.zohoCreditNoteId) return
-    if (order.status !== 'cancelled' && order.status !== 'refunded') return
-
-    const creditNote = await findCreditNoteForInvoice(order.zohoInvoiceId)
-    if (!creditNote) return
-
-    await payload.update({
-      collection: 'orders',
-      id: orderId,
-      data: {
-        zohoCreditNoteId: creditNote.creditnote_id,
-        zohoCreditNoteNumber: creditNote.creditnote_number,
-        zohoCreditNoteStatus: creditNote.status,
-        zohoCreditNoteAmount: typeof creditNote.total === 'number' ? creditNote.total : undefined,
-        zohoCreditNoteUrl: getCreditNoteUrl(creditNote),
-        zohoCreditNoteCreatedAt: new Date().toISOString(),
-        lastSyncAt: new Date().toISOString(),
-      },
-      overrideAccess: true,
-    })
-  } catch (err) {
-    payload.logger.error({ msg: 'Failed to refresh Zoho credit note status', err, orderId })
   }
 }
 

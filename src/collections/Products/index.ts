@@ -513,6 +513,73 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       },
     },
     {
+      name: 'googleMerchant',
+      type: 'group',
+      admin: {
+        position: 'sidebar',
+        description: 'Overrides for the Google Merchant Center product feed.',
+      },
+      fields: [
+        {
+          name: 'excludeFromFeed',
+          type: 'checkbox',
+          defaultValue: false,
+          admin: {
+            description: 'Hide this product from the Google Merchant Center feed.',
+          },
+        },
+        {
+          name: 'googleProductCategory',
+          type: 'text',
+          admin: {
+            description: 'Optional Google product category, e.g. Electronics > Electronics Accessories.',
+          },
+        },
+        {
+          name: 'gtin',
+          type: 'text',
+          admin: {
+            description: 'Optional GTIN/UPC/EAN/ISBN. Leave blank if unavailable.',
+          },
+        },
+        {
+          name: 'mpn',
+          type: 'text',
+          admin: {
+            description: 'Optional manufacturer part number. Falls back to SKU when blank.',
+          },
+        },
+        {
+          name: 'condition',
+          type: 'text',
+          defaultValue: 'new',
+          admin: {
+            description: 'Google condition value: new, refurbished, or used. Defaults to new.',
+          },
+        },
+        {
+          name: 'customLabel0',
+          type: 'text',
+        },
+        {
+          name: 'customLabel1',
+          type: 'text',
+        },
+        {
+          name: 'customLabel2',
+          type: 'text',
+        },
+        {
+          name: 'customLabel3',
+          type: 'text',
+        },
+        {
+          name: 'customLabel4',
+          type: 'text',
+        },
+      ],
+    },
+    {
       name: 'leadTimeDays',
       type: 'number',
       admin: {

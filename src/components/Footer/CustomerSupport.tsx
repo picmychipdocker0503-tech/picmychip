@@ -1,7 +1,6 @@
 'use client'
 
-import { useFeaturebase } from 'featurebase-js/react'
-import { ensureFeaturebaseBooted } from '@/lib/featurebase'
+import { showTawkChat } from '@/lib/tawk'
 import { HeadphonesIcon, MailIcon, PhoneIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import React from 'react'
@@ -12,7 +11,6 @@ type Props = {
 }
 
 export const CustomerSupport: React.FC<Props> = ({ supportEmail, supportPhone }) => {
-  const { show } = useFeaturebase()
   const t = useTranslations('footer.customerSupport')
   const email = supportEmail || 'sales@Picmychip.com'
 
@@ -25,10 +23,7 @@ export const CustomerSupport: React.FC<Props> = ({ supportEmail, supportPhone })
           <div className="text-muted-foreground text-sm">{t('hereToHelp')}</div>
           <button
             className="text-primary text-sm font-semibold hover:underline"
-            onClick={() => {
-              ensureFeaturebaseBooted()
-              show()
-            }}
+            onClick={showTawkChat}
             type="button"
           >
             {t('startChat')}

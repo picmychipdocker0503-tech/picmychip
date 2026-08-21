@@ -1,7 +1,26 @@
-import type { CollectionAfterChangeHook } from 'payload'
+import configPromise from '@payload-config'
+import { getPayload, type CollectionAfterChangeHook, type Payload } from 'payload'
 
 import { syncZohoSalesOrderForOrder } from '@/lib/orderIntegrations/syncZohoSalesOrder'
+
+type SyncLoggerSource = Pick<Parameters<CollectionAfterChangeHook>[0]['req'], 'payload'>
+
 const runningOrderIds = new Set<string>()
+const orderVisibilityRetryDelaysMs = [250, 750, 1500, 3000]
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+async function waitForOrderToBeReadable(payload: Payload, orderId: number | string): Promise<void> {
+  for (let attempt = 0; attempt <= orderVisibilityRetryDelaysMs.length; attempt += 1) {
+    try {
+      await payload.findByID({ collection: 'orders', id: orderId, depth: 0, overrideAccess: true })
+      return
+    } catch (err) {
+      if (attempt === orderVisibilityRetryDelaysMs.length) throw err
+      await wait(orderVisibilityRetryDelaysMs[attempt])
+    }
+  }
+}
 
 /**
  * Runs the Zoho sync after the order create transaction has finished. Zoho
@@ -10,7 +29,7 @@ const runningOrderIds = new Set<string>()
  * idle-in-transaction timeouts.
  */
 export async function runZohoSalesOrderSync(
-  req: Parameters<CollectionAfterChangeHook>[0]['req'],
+  req: SyncLoggerSource,
   orderId: number | string,
 ): Promise<void> {
   const key = String(orderId)
@@ -18,7 +37,9 @@ export async function runZohoSalesOrderSync(
   runningOrderIds.add(key)
 
   try {
-    await syncZohoSalesOrderForOrder(req.payload, orderId)
+    const payload = await getPayload({ config: configPromise })
+    await waitForOrderToBeReadable(payload, orderId)
+    await syncZohoSalesOrderForOrder(payload, orderId)
   } catch (err) {
     req.payload.logger.error({ msg: 'Zoho sales order sync failed', err, orderId })
   } finally {
@@ -27,12 +48,10 @@ export async function runZohoSalesOrderSync(
 }
 
 /**
- * Auto-creates the Zoho Sales Order as soon as an order is created — mirrors
- * the "read doc, then payload.update()" pattern used by the other order
- * afterChange hooks (see applyOrderDiscountSideEffects). All the actual work
- * (idempotency, error capture, field writes, and detecting a sales order
- * accepted directly in Zoho) lives in syncZohoSalesOrderForOrder so the
- * admin "Retry" endpoint can reuse the exact same logic.
+ * Auto-creates the Zoho Sales Order as soon as an order is created. The actual
+ * work (idempotency, error capture, field writes, and detecting a sales order
+ * accepted directly in Zoho) lives in syncZohoSalesOrderForOrder so the admin
+ * "Retry" endpoint can reuse the same logic.
  *
  * No-ops entirely (not an error) until ZOHO_* env vars are set, same
  * convention as the SMTP/R2/Shiprocket integrations.
@@ -42,7 +61,7 @@ export const createZohoSalesOrder: CollectionAfterChangeHook = async ({ doc, ope
 
   setTimeout(() => {
     void runZohoSalesOrderSync(req, doc.id)
-  }, 0)
+  }, 250)
 
   return doc
 }

@@ -1,4 +1,4 @@
-import type { CollectionAfterChangeHook } from 'payload'
+import type { CollectionBeforeChangeHook } from 'payload'
 
 import { computeOrderTaxAddOn, type TaxLineItem } from '@/lib/taxCalculation'
 
@@ -21,8 +21,8 @@ import { computeOrderTaxAddOn, type TaxLineItem } from '@/lib/taxCalculation'
  * total shifts once tax is added. Recomputing with the same add-on formula
  * and inputs as checkout keeps this snapshot exact.
  */
-export const computeGstTaxBreakdown: CollectionAfterChangeHook = async ({ doc, operation, req }) => {
-  if (operation !== 'create') return doc
+export const computeGstTaxBreakdown: CollectionBeforeChangeHook = async ({ data, operation, req }) => {
+  if (operation !== 'create') return data
 
   try {
     const siteSettings = await req.payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
@@ -31,7 +31,7 @@ export const computeGstTaxBreakdown: CollectionAfterChangeHook = async ({ doc, o
 
     const itemsWithNominal = await Promise.all(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (doc.items || []).map(async (item: any): Promise<TaxLineItem | null> => {
+      (data.items || []).map(async (item: any): Promise<TaxLineItem | null> => {
         const productId = typeof item.product === 'object' ? item.product?.id : item.product
         const quantity = item.quantity ?? 1
         if (!productId) return null
@@ -55,36 +55,25 @@ export const computeGstTaxBreakdown: CollectionAfterChangeHook = async ({ doc, o
       }),
     )
 
-    const productItems = itemsWithNominal.filter((item): item is TaxLineItem => Boolean(item))
-    const nominalTotal = productItems.reduce((sum, item) => sum + item.nominal, 0)
+    const validItems = itemsWithNominal.filter((item): item is TaxLineItem => Boolean(item))
+    const nominalTotal = validItems.reduce((sum, item) => sum + item.nominal, 0)
     const discountedBase = Math.max(
       0,
-      nominalTotal - (doc.couponApplied?.discountAmount ?? 0) - (doc.giftCardApplied?.amountApplied ?? 0),
+      nominalTotal - (data.couponApplied?.discountAmount ?? 0) - (data.giftCardApplied?.amountApplied ?? 0),
     )
-    const shippingAmount = doc.shippingAmount ?? 0
-    const validItems =
-      shippingAmount > 0
-        ? [...productItems, { gstPercent: defaultGstPercent, nominal: shippingAmount }]
-        : productItems
 
     const taxBreakdown = computeOrderTaxAddOn({
       items: validItems,
-      amount: discountedBase + shippingAmount,
+      amount: discountedBase,
       defaultGstPercent,
       businessState: tax?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka',
-      customerState: doc.shippingAddress?.state,
+      customerState: data.shippingAddress?.state,
     })
 
-    await req.payload.update({
-      collection: 'orders',
-      id: doc.id,
-      data: { taxBreakdown },
-      overrideAccess: true,
-      req,
-    })
+    return { ...data, taxBreakdown }
   } catch (err) {
-    req.payload.logger.error({ msg: 'Failed to compute GST tax breakdown', err, orderId: doc.id })
+    req.payload.logger.error({ msg: 'Failed to compute GST tax breakdown', err })
   }
 
-  return doc
+  return data
 }

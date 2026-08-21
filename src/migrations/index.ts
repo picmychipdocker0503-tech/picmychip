@@ -58,8 +58,6 @@ import * as migration_20260820_134902_add_wishlists_collection from './20260820_
 import * as migration_20260820_183000_add_checkout_shipping_fields from './20260820_183000_add_checkout_shipping_fields';
 import * as migration_20260821_090000_add_category_sequence from './20260821_090000_add_category_sequence';
 import * as migration_20260821_093000_link_category_parents from './20260821_093000_link_category_parents';
-import * as migration_20260821_100000_add_order_payment_reference from './20260821_100000_add_order_payment_reference';
-import * as migration_20260821_110000_add_order_credit_note_fields from './20260821_110000_add_order_credit_note_fields';
 
 export const migrations = [
   {
@@ -361,15 +359,5 @@ export const migrations = [
     up: migration_20260821_093000_link_category_parents.up,
     down: migration_20260821_093000_link_category_parents.down,
     name: '20260821_093000_link_category_parents',
-  },
-  {
-    up: migration_20260821_100000_add_order_payment_reference.up,
-    down: migration_20260821_100000_add_order_payment_reference.down,
-    name: '20260821_100000_add_order_payment_reference',
-  },
-  {
-    up: migration_20260821_110000_add_order_credit_note_fields.up,
-    down: migration_20260821_110000_add_order_credit_note_fields.down,
-    name: '20260821_110000_add_order_credit_note_fields',
   },
 ];

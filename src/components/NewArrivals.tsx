@@ -29,6 +29,19 @@ async function loadNewArrivalsData() {
         { stockStatus: { not_equals: 'out-of-stock' } },
       ],
     },
+    select: {
+      id: true,
+      title: true,
+      slug: true,
+      gallery: true,
+      priceInINR: true,
+      compareAtPriceInINR: true,
+      salePriceInINR: true,
+      onSale: true,
+      saleEndDate: true,
+      isClearance: true,
+      stockStatus: true,
+    },
   })
 
   if (products.length === 0) return { products: [], ratings: new Map() }

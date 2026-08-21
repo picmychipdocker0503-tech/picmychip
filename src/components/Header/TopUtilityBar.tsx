@@ -6,9 +6,8 @@ import { AnnouncementTicker } from './AnnouncementTicker'
 import { cn } from '@/utilities/cn'
 import { CurrencySwitcher } from '@/components/CurrencySwitcher'
 import { getSocialIcon } from '@/utilities/getSocialIcon'
-import { ensureFeaturebaseBooted } from '@/lib/featurebase'
+import { showTawkChat } from '@/lib/tawk'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
-import { useFeaturebase } from 'featurebase-js/react'
 import { HelpCircleIcon, MailIcon, MessageCircleIcon, PhoneIcon, TruckIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import Link from 'next/link'
@@ -22,7 +21,6 @@ type Props = {
 
 export function TopUtilityBar({ announcementBar, socialLinks, supportEmail, supportPhone }: Props) {
   const t = useTranslations('topbar')
-  const { show: showChat } = useFeaturebase()
   const flags = useFeatureFlags()
   const hasAnnouncement = (announcementBar?.messages?.length ?? 0) > 0
 
@@ -68,10 +66,7 @@ export function TopUtilityBar({ announcementBar, socialLinks, supportEmail, supp
           <button
             aria-label="Start chat"
             className="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
-            onClick={() => {
-              ensureFeaturebaseBooted()
-              showChat()
-            }}
+            onClick={showTawkChat}
             type="button"
           >
             <MessageCircleIcon className="size-3.5" />
