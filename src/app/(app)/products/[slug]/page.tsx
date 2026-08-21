@@ -36,7 +36,8 @@ type Args = {
   }>
 }
 
-export const revalidate = 60
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 /**
  * Without this, every product page rendered dynamically on every request —

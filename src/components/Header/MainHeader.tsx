@@ -13,7 +13,7 @@ import { useAuth } from '@/providers/Auth'
 import { useCompare } from '@/providers/Compare'
 import { useTranslations } from 'next-intl'
 import { useWishlist } from '@/providers/Wishlist'
-import { HeartIcon, LogInIcon, ScaleIcon, UserIcon } from 'lucide-react'
+import { HeartIcon, LogInIcon, ReceiptTextIcon, ScaleIcon, UploadIcon, UserIcon } from 'lucide-react'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
@@ -63,6 +63,23 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
             <Suspense fallback={null}>
               <Search className="w-full" />
             </Suspense>
+          </div>
+
+          <div className="hidden shrink-0 items-center gap-3 lg:flex">
+            <Link
+              className="border-primary text-foreground hover:bg-primary hover:text-primary-foreground inline-flex h-11 min-w-28 items-center justify-center gap-2 border bg-background px-5 text-sm font-semibold transition-colors"
+              href="/rfq?upload=1"
+            >
+              <UploadIcon className="size-4" />
+              BOM
+            </Link>
+            <Link
+              className="border-primary text-foreground hover:bg-primary hover:text-primary-foreground inline-flex h-11 min-w-28 items-center justify-center gap-2 border bg-background px-5 text-sm font-semibold transition-colors"
+              href="/rfq#rfq-form"
+            >
+              <ReceiptTextIcon className="size-4" />
+              RFQ
+            </Link>
           </div>
 
           {/* Right Icons */}
