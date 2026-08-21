@@ -21,6 +21,15 @@ const StatusBadge: React.FC<{ status: SyncStatus }> = ({ status }) => {
 
 type Action = 'retry-sales-order' | 'accept-sales-order'
 
+type ActionResponse = {
+  error?: string
+  invoiceSyncStatus?: string
+  salesOrderSyncStatus?: string
+  zohoInvoiceNumber?: string
+  zohoSalesOrderId?: string
+  zohoSalesOrderNumber?: string
+}
+
 /**
  * Rendered via the Orders collection's `admin.components.edit.beforeDocumentControls`
  * (same slot CouponUsageSummary uses on Coupons). Shows the Zoho sales
@@ -35,6 +44,7 @@ export const OrderIntegrationPanel: React.FC = () => {
   const { id } = useDocumentInfo()
   const [loading, setLoading] = useState<Action | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [lastResponse, setLastResponse] = useState<ActionResponse | null>(null)
 
   const salesOrderSyncStatus = useFormFields(([fields]) => fields.salesOrderSyncStatus?.value) as SyncStatus
   const zohoSalesOrderNumber = useFormFields(([fields]) => fields.zohoSalesOrderNumber?.value) as
@@ -78,13 +88,20 @@ export const OrderIntegrationPanel: React.FC = () => {
     if (!id) return
     setLoading(action)
     setError(null)
+    setLastResponse(null)
     try {
       const res = await fetch(`/api/admin/orders/${id}/${action}`, { method: 'POST', credentials: 'include' })
-      const data = await res.json()
+      const data = (await res.json()) as ActionResponse
+      setLastResponse(data)
       if (!res.ok) throw new Error(data.error || 'Request failed.')
-      window.location.reload()
+      if (data.salesOrderSyncStatus === 'completed' || data.invoiceSyncStatus === 'completed') {
+        window.location.reload()
+        return
+      }
+      setError(data.error || 'The request finished, but Zoho did not return a completed status.')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
+    } finally {
       setLoading(null)
     }
   }
@@ -106,6 +123,15 @@ export const OrderIntegrationPanel: React.FC = () => {
         )}
         {salesOrderSyncStatus === 'failed' && salesOrderError && (
           <p className="text-error mt-1 text-xs break-words">{salesOrderError}</p>
+        )}
+        {error && <p className="text-error mt-2 text-xs break-words">{error}</p>}
+        {lastResponse && (
+          <div className="bg-base-100/70 border-base-content/10 mt-2 rounded border p-2 text-xs">
+            <p className="font-medium">Last retry result</p>
+            <p>Sales order: {lastResponse.salesOrderSyncStatus || 'unknown'}</p>
+            {lastResponse.zohoSalesOrderNumber && <p>Zoho SO: {lastResponse.zohoSalesOrderNumber}</p>}
+            {lastResponse.zohoSalesOrderId && <p>Zoho ID: {lastResponse.zohoSalesOrderId}</p>}
+          </div>
         )}
         <div className="mt-2 flex gap-2">
           <button

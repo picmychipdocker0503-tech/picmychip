@@ -7,6 +7,9 @@ import { getPayload } from 'payload'
 
 type RouteContext = { params: Promise<{ id: string }> }
 
+export const runtime = 'nodejs'
+export const maxDuration = 60
+
 /**
  * Admin-only manual retry for a failed (or not-yet-attempted) Zoho sales
  * order sync — reuses the exact same idempotent logic the
@@ -28,13 +31,20 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   await syncZohoSalesOrderForOrder(payload, id)
 
   const order = await payload.findByID({ collection: 'orders', id, depth: 0, overrideAccess: true })
+  const error = order.integrationError?.salesOrder || order.integrationError?.invoice
+  const isStillProcessing = order.salesOrderSyncStatus === 'processing' && !order.zohoSalesOrderId
 
   return NextResponse.json({
     salesOrderSyncStatus: order.salesOrderSyncStatus,
     zohoSalesOrderNumber: order.zohoSalesOrderNumber,
+    zohoSalesOrderId: order.zohoSalesOrderId,
     invoiceSyncStatus: order.invoiceSyncStatus,
     zohoInvoiceNumber: order.zohoInvoiceNumber,
     zohoInvoiceUrl: order.zohoInvoiceUrl,
-    error: order.integrationError?.salesOrder || order.integrationError?.invoice,
-  })
+    error:
+      error ||
+      (isStillProcessing
+        ? 'Zoho sync is still processing. In production this usually means the serverless function is timing out or being stopped before Zoho returns.'
+        : undefined),
+  }, { status: error || isStillProcessing ? 400 : 200 })
 }
