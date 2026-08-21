@@ -32,6 +32,18 @@ type AddressLike = {
   state?: string | null
 } | null | undefined
 
+function getErrorLogDetails(err: unknown) {
+  if (err instanceof Error) {
+    return {
+      name: err.name,
+      message: err.message,
+      stack: err.stack,
+    }
+  }
+
+  return err
+}
+
 export const toZohoAddress = (address: AddressLike, state?: IndianState): ZohoAddress | undefined => {
   if (!address) return undefined
   const zohoAddress: ZohoAddress = {
@@ -51,7 +63,6 @@ export const toZohoAddress = (address: AddressLike, state?: IndianState): ZohoAd
   delete (zohoAddress as Record<string, unknown>).email
   delete (zohoAddress as Record<string, unknown>).email_id
   delete (zohoAddress as Record<string, unknown>).customer_email
-  console.log('zohoAddress', zohoAddress)
   return zohoAddress
 }
 
@@ -177,7 +188,6 @@ export async function buildZohoLineItems(
       item_id: itemId,
     })
   }
-  console.log('lineItems', lineItems)
   return lineItems
 }
 
@@ -218,7 +228,7 @@ async function resolveCustomerForOrder(
     billingAddress: toZohoAddress(billing, billingState),
     shippingAddress: toZohoAddress(shipping, shippingState),
   })
-  console.log('contact', contact)
+
   return { contactId: contact.contact_id }
 }
 
@@ -391,6 +401,21 @@ export async function syncZohoSalesOrderForOrder(
 
   if (!order || order.status === 'cancelled') return
 
+  let salesOrderLogContext:
+    | {
+        customerId?: string
+        date?: string
+        gstNoProvided?: boolean
+        gstTreatment?: string
+        itemCount?: number
+        lineItems?: Pick<ZohoLineItem, 'hsn_or_sac' | 'item_id' | 'name' | 'quantity' | 'rate' | 'tax_id'>[]
+        placeOfSupply?: string
+        referenceNumber?: string
+        shippingAmount?: number
+        taxType?: 'intra-state' | 'inter-state'
+      }
+    | undefined
+
   try {
     await payload.update({
       collection: 'orders',
@@ -446,6 +471,32 @@ export async function syncZohoSalesOrderForOrder(
         lineItems,
       }
 
+      salesOrderLogContext = {
+        customerId: contactId,
+        referenceNumber: salesOrderArgs.referenceNumber,
+        date: salesOrderArgs.date,
+        placeOfSupply: salesOrderArgs.placeOfSupply,
+        gstTreatment,
+        gstNoProvided: Boolean(gstin),
+        taxType,
+        shippingAmount: order.shippingAmount,
+        itemCount: lineItems.length,
+        lineItems: lineItems.map((item) => ({
+          name: item.name,
+          hsn_or_sac: item.hsn_or_sac,
+          rate: item.rate,
+          quantity: item.quantity,
+          tax_id: item.tax_id,
+          item_id: item.item_id,
+        })),
+      }
+
+      payload.logger.info({
+        msg: 'Creating Zoho sales order',
+        orderId,
+        ...salesOrderLogContext,
+      })
+
       try {
         salesOrder = await createZohoSalesOrder(salesOrderArgs)
       } catch (err) {
@@ -453,7 +504,15 @@ export async function syncZohoSalesOrderForOrder(
         await markZohoContactActive(contactId)
         salesOrder = await createZohoSalesOrder(salesOrderArgs)
       }
-      console.log('salesOrder', salesOrder)
+
+      payload.logger.info({
+        msg: 'Zoho sales order created',
+        orderId,
+        zohoSalesOrderId: salesOrder.salesorder_id,
+        zohoSalesOrderNumber: salesOrder.salesorder_number,
+        zohoSalesOrderStatus: salesOrder.status,
+      })
+
       await payload.update({
         collection: 'orders',
         id: orderId,
@@ -492,7 +551,15 @@ export async function syncZohoSalesOrderForOrder(
     }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
-    payload.logger.error({ msg: 'Failed to sync Zoho sales order', err, orderId })
+    payload.logger.error({
+      msg: 'Failed to sync Zoho sales order',
+      err: getErrorLogDetails(err),
+      orderId,
+      salesOrder: salesOrderLogContext,
+      orderStatus: order?.status,
+      existingZohoSalesOrderId: order?.zohoSalesOrderId,
+      existingZohoCustomerId: order?.zohoCustomerId,
+    })
     await payload
       .update({
         collection: 'orders',
@@ -506,7 +573,6 @@ export async function syncZohoSalesOrderForOrder(
       })
       .catch(() => {})
   }
-  console.log('syncZohoSalesOrderForOrder', syncZohoSalesOrderForOrder)
 }
 
 /**
