@@ -59,24 +59,30 @@ export async function computeCheckoutTotal(args: {
   payload: Payload
   items: CartLikeItem[]
   baseSubtotal: number
+  shippingAmount?: number
   businessState?: string | null
   customerState?: string | null
   defaultGstPercent: number
 }) {
-  const { payload, items, baseSubtotal, businessState, customerState, defaultGstPercent } = args
+  const { payload, items, baseSubtotal, shippingAmount = 0, businessState, customerState, defaultGstPercent } = args
 
   const lineItems = await resolveTaxLineItems(payload, items, defaultGstPercent)
+  const taxableLineItems =
+    shippingAmount > 0
+      ? [...lineItems, { gstPercent: defaultGstPercent, nominal: shippingAmount }]
+      : lineItems
+  const taxableAmount = baseSubtotal + shippingAmount
 
   const taxBreakdown = computeOrderTaxAddOn({
-    items: lineItems,
-    amount: baseSubtotal,
+    items: taxableLineItems,
+    amount: taxableAmount,
     defaultGstPercent,
     businessState,
     customerState,
   })
 
   return {
-    finalAmount: baseSubtotal + taxBreakdown.totalTax,
+    finalAmount: taxableAmount + taxBreakdown.totalTax,
     taxBreakdown,
   }
 }

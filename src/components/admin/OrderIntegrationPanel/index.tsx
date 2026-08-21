@@ -19,7 +19,7 @@ const StatusBadge: React.FC<{ status: SyncStatus }> = ({ status }) => {
   return <span className={`text-sm font-medium ${color}`}>{label}</span>
 }
 
-type Action = 'retry-sales-order' | 'accept-sales-order' | 'retry-shipment' | 'cancel-shipment'
+type Action = 'retry-sales-order' | 'accept-sales-order'
 
 /**
  * Rendered via the Orders collection's `admin.components.edit.beforeDocumentControls`
@@ -27,7 +27,7 @@ type Action = 'retry-sales-order' | 'accept-sales-order' | 'retry-shipment' | 'c
  * order → invoice pipeline (every order becomes a sales order first; an
  * admin "Accepts" it here — or it's picked up automatically if accepted
  * directly in Zoho Books — to generate the actual invoice) and the
- * Shiprocket shipment, with manual retry actions that call the
+ * manual courier details, with retry actions that call the
  * /api/admin/orders/[id]/* routes — a full page reload afterwards keeps this
  * simple and always shows the true persisted state.
  */
@@ -50,19 +50,27 @@ export const OrderIntegrationPanel: React.FC = () => {
   const invoiceSyncStatus = useFormFields(([fields]) => fields.invoiceSyncStatus?.value) as SyncStatus
   const zohoInvoiceNumber = useFormFields(([fields]) => fields.zohoInvoiceNumber?.value) as string | undefined
   const zohoInvoiceUrl = useFormFields(([fields]) => fields.zohoInvoiceUrl?.value) as string | undefined
+  const paymentReference = useFormFields(([fields]) => fields.paymentReference?.value) as string | undefined
+  const zohoPaymentRecordedAt = useFormFields(([fields]) => fields.zohoPaymentRecordedAt?.value) as
+    | string
+    | undefined
+  const zohoCreditNoteNumber = useFormFields(([fields]) => fields.zohoCreditNoteNumber?.value) as
+    | string
+    | undefined
+  const zohoCreditNoteStatus = useFormFields(([fields]) => fields.zohoCreditNoteStatus?.value) as
+    | string
+    | undefined
+  const zohoCreditNoteUrl = useFormFields(([fields]) => fields.zohoCreditNoteUrl?.value) as
+    | string
+    | undefined
   const invoiceError = useFormFields(([fields]) => fields['integrationError.invoice']?.value) as
     | string
     | undefined
 
-  const shipmentSyncStatus = useFormFields(([fields]) => fields.shipmentSyncStatus?.value) as SyncStatus
-  const shiprocketOrderId = useFormFields(([fields]) => fields.shiprocketOrderId?.value) as string | undefined
   const trackingNumber = useFormFields(([fields]) => fields.trackingNumber?.value) as string | undefined
   const courierName = useFormFields(([fields]) => fields.courierName?.value) as string | undefined
   const shipmentStatus = useFormFields(([fields]) => fields.shipmentStatus?.value) as string | undefined
-  const shiprocketTrackingUrl = useFormFields(([fields]) => fields.shiprocketTrackingUrl?.value) as
-    | string
-    | undefined
-  const shipmentError = useFormFields(([fields]) => fields['integrationError.shipment']?.value) as
+  const trackingUrl = useFormFields(([fields]) => fields.shiprocketTrackingUrl?.value) as
     | string
     | undefined
 
@@ -119,6 +127,12 @@ export const OrderIntegrationPanel: React.FC = () => {
         {hasInvoice ? (
           <>
             <p className="text-base-content/70 text-sm">{zohoInvoiceNumber}</p>
+            {paymentReference && (
+              <p className="text-base-content/70 text-xs">
+                PayU reference {paymentReference}
+                {zohoPaymentRecordedAt ? ' · payment recorded in Zoho' : ''}
+              </p>
+            )}
             <div className="mt-2 flex gap-2">
               {zohoInvoiceUrl && (
                 <a
@@ -160,50 +174,61 @@ export const OrderIntegrationPanel: React.FC = () => {
         )}
       </div>
 
+      {zohoCreditNoteNumber && (
+        <div>
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-base-content text-sm font-medium">Zoho Credit Note</span>
+            <span className="text-base-content/60 text-sm font-medium">
+              {zohoCreditNoteStatus || 'Linked'}
+            </span>
+          </div>
+          <p className="text-base-content/70 text-sm">{zohoCreditNoteNumber}</p>
+          <div className="mt-2 flex gap-2">
+            {zohoCreditNoteUrl && (
+              <a
+                className="pmc-btn pmc-btn-xs pmc-btn-outline"
+                href={zohoCreditNoteUrl}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                View in Zoho
+              </a>
+            )}
+            {id && (
+              <a className="pmc-btn pmc-btn-xs pmc-btn-outline" href={`/api/orders/${id}/credit-note-pdf`}>
+                Download PDF
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       <div>
         <div className="mb-1 flex items-center justify-between">
-          <span className="text-base-content text-sm font-medium">Shiprocket Shipment</span>
-          <StatusBadge status={shipmentSyncStatus} />
+          <span className="text-base-content text-sm font-medium">Manual Courier</span>
         </div>
-        {shiprocketOrderId && (
+        {trackingNumber || courierName || shipmentStatus ? (
           <p className="text-base-content/70 text-sm">
-            Order {shiprocketOrderId}
-            {courierName ? ` · ${courierName}` : ''}
+            {courierName || 'Courier'}
             {trackingNumber ? ` · AWB ${trackingNumber}` : ''}
           </p>
+        ) : (
+          <p className="text-base-content/70 text-sm">
+            Choose the courier manually after invoice generation, then enter courier name, tracking number,
+            tracking URL, and shipment status in the sidebar.
+          </p>
         )}
-        {shipmentStatus && <p className="text-base-content/70 text-sm">{shipmentStatus}</p>}
-        {shipmentSyncStatus === 'failed' && shipmentError && (
-          <p className="text-error mt-1 text-xs break-words">{shipmentError}</p>
-        )}
+        {shipmentStatus && <p className="text-base-content/70 text-xs">{shipmentStatus}</p>}
         <div className="mt-2 flex gap-2">
-          {shiprocketTrackingUrl && (
+          {trackingUrl && (
             <a
               className="pmc-btn pmc-btn-xs pmc-btn-outline"
-              href={shiprocketTrackingUrl}
+              href={trackingUrl}
               rel="noopener noreferrer"
               target="_blank"
             >
               Track
             </a>
-          )}
-          <button
-            className="pmc-btn pmc-btn-xs"
-            disabled={loading !== null}
-            onClick={() => callAction('retry-shipment')}
-            type="button"
-          >
-            {loading === 'retry-shipment' ? 'Retrying…' : 'Retry Shipment'}
-          </button>
-          {shiprocketOrderId && (
-            <button
-              className="pmc-btn pmc-btn-xs pmc-btn-outline"
-              disabled={loading !== null}
-              onClick={() => callAction('cancel-shipment')}
-              type="button"
-            >
-              {loading === 'cancel-shipment' ? 'Cancelling…' : 'Cancel Shipment'}
-            </button>
           )}
         </div>
       </div>

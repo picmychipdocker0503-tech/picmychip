@@ -6,6 +6,7 @@ import { ActiveFiltersBar } from '@/components/Search/ActiveFiltersBar'
 import { CategoryResults } from '@/components/Search/CategoryResults'
 import { FacetSidebar } from '@/components/Search/FacetSidebar'
 import { getIllustration } from '@/components/illustrations'
+import { MobileFilterDrawer } from '@/components/layout/search/MobileFilterDrawer'
 import { getAverageRatings } from '@/lib/getAverageRatings'
 import { getFacetsForSchema } from '@/lib/facetConfig'
 import { parseFacetFilters } from '@/lib/facetParams'
@@ -129,9 +130,13 @@ export default async function CategoryPage({ params, searchParams }: Args) {
       {category.layout?.length ? <RenderBlocks blocks={category.layout} /> : null}
 
       <div className="container flex flex-col gap-8 md:flex-row md:items-start">
-        <Suspense fallback={null}>
-          <FacetSidebar facetDistribution={products.facetDistribution} facets={facets} />
-        </Suspense>
+        {products.facetDistribution && facets.length > 0 && (
+          <MobileFilterDrawer>
+            <Suspense fallback={null}>
+              <FacetSidebar facetDistribution={products.facetDistribution} facets={facets} />
+            </Suspense>
+          </MobileFilterDrawer>
+        )}
 
         <div className="min-h-screen w-full">
           {facets.length > 0 && (

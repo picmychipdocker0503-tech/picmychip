@@ -25,6 +25,9 @@ export const LoginForm: React.FC = () => {
   const { login } = useAuth()
   const router = useRouter()
   const [error, setError] = React.useState<null | string>(null)
+  const [success, setSuccess] = React.useState<null | string>(null)
+  const [unverifiedEmail, setUnverifiedEmail] = React.useState<null | string>(null)
+  const [resendingVerification, setResendingVerification] = React.useState(false)
 
   const {
     formState: { errors, isLoading },
@@ -36,13 +39,18 @@ export const LoginForm: React.FC = () => {
     async (data: FormData) => {
       let user
       try {
+        setSuccess(null)
+        setUnverifiedEmail(null)
         user = await login(data)
       } catch (e) {
-        setError(
+        const message =
           e instanceof Error && e.message
             ? e.message
-            : 'There was an error with the credentials provided. Please try again.',
-        )
+            : 'There was an error with the credentials provided. Please try again.'
+        setError(message)
+        if (message.toLowerCase().includes('verify your email')) {
+          setUnverifiedEmail(data.email)
+        }
         return
       }
 
@@ -61,9 +69,47 @@ export const LoginForm: React.FC = () => {
     [login, router],
   )
 
+  const resendVerificationEmail = useCallback(async () => {
+    if (!unverifiedEmail) return
+
+    setResendingVerification(true)
+    setError(null)
+    setSuccess(null)
+
+    try {
+      const response = await fetch('/api/users/resend-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: unverifiedEmail }),
+      })
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { message?: string } | null
+        setError(body?.message || 'Unable to send verification email right now.')
+        return
+      }
+
+      setSuccess('Verification email sent. Please check your inbox and spam folder.')
+    } finally {
+      setResendingVerification(false)
+    }
+  }, [unverifiedEmail])
+
   return (
     <form className="" onSubmit={handleSubmit(onSubmit)}>
-      <Message className="classes.message" error={error} />
+      <Message className="classes.message" error={error} success={success} />
+      {unverifiedEmail && (
+        <div className="-mt-4 mb-8">
+          <Button
+            disabled={resendingVerification}
+            onClick={resendVerificationEmail}
+            type="button"
+            variant="outline"
+          >
+            {resendingVerification ? 'Sending verification email...' : 'Send verification email again'}
+          </Button>
+        </div>
+      )}
       <div className="flex flex-col gap-8">
         <FormItem>
           <Label htmlFor="email">Email</Label>

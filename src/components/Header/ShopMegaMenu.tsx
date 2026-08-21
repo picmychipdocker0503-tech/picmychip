@@ -61,8 +61,8 @@ export function ShopMegaMenu({ active, groups, label, url }: Props) {
         the page. The flex layout lives on the inner wrapper instead, which
         only ever renders while the parent is actually shown.
       */}
-      <div className="dropdown-content border-border bg-popover z-30 mt-1 rounded-box border shadow-lg" tabIndex={0}>
-        <div className="flex max-h-[70vh] overflow-hidden">
+      <div className="dropdown-content z-30 pt-2" tabIndex={0}>
+        <div className="border-border bg-popover flex max-h-[70vh] overflow-hidden rounded-box border shadow-lg">
           <div className="border-border w-64 overflow-y-auto border-r p-2">
             {groups.map((group, index) => (
               <div

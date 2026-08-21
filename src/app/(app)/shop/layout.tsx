@@ -1,4 +1,5 @@
 import { Categories } from '@/components/layout/search/Categories'
+import { MobileFilterDrawer } from '@/components/layout/search/MobileFilterDrawer'
 import { PriceFacet } from '@/components/layout/search/PriceFacet'
 import { Search } from '@/components/Search'
 import { Chip, Connector, ShopBag } from '@/components/illustrations'
@@ -31,14 +32,16 @@ export default function ShopLayout({ children }: { children: React.ReactNode }) 
 
         <div className="flex flex-col md:flex-row items-start justify-between gap-8 md:gap-8">
           <div className="w-full flex-none flex flex-col gap-6 md:gap-8 basis-1/5 md:sticky md:top-24">
-            <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-              <Categories />
-            </div>
-            <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
-              <Suspense fallback={null}>
-                <PriceFacet />
-              </Suspense>
-            </div>
+            <MobileFilterDrawer>
+              <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+                <Categories />
+              </div>
+              <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+                <Suspense fallback={null}>
+                  <PriceFacet />
+                </Suspense>
+              </div>
+            </MobileFilterDrawer>
           </div>
           <div className="min-h-screen w-full flex-1">{children}</div>
         </div>

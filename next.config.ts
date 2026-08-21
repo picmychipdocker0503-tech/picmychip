@@ -1,11 +1,23 @@
 import { withPayload } from '@payloadcms/next/withPayload'
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
+import { createRequire } from 'module'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { redirects } from './redirects'
 
+const require = createRequire(import.meta.url)
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
+// `ANALYZE=true pnpm build` writes an interactive treemap of every client
+// bundle to .next/analyze/*.html instead of opening a browser tab (no
+// display in this environment) — open those files directly to inspect them.
+const withBundleAnalyzer =
+  process.env.ANALYZE === 'true'
+    ? require('@next/bundle-analyzer')({
+        enabled: true,
+        openAnalyzer: false,
+      })
+    : (config: NextConfig) => config
 
 const __filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(__filename)
@@ -44,6 +56,15 @@ const nextConfig: NextConfig = {
         protocol: 'http',
         hostname: 'localhost',
         port: '3000',
+      },
+      // Legacy R2 dev subdomain — superseded by NEXT_PUBLIC_ASSET_DOMAIN
+      // (assets.picmychip.in), but Media docs uploaded before that switch
+      // still have this domain baked into their persisted `url` field, so
+      // it has to stay allowlisted until those rows are migrated. Remove
+      // once no Media doc references pub-7c6d69d70a8d4fe29a512343fc36dd9d.r2.dev.
+      {
+        protocol: 'https',
+        hostname: 'pub-7c6d69d70a8d4fe29a512343fc36dd9d.r2.dev',
       },
       ...[NEXT_PUBLIC_SERVER_URL, NEXT_PUBLIC_ASSET_DOMAIN]
         .filter((item): item is string => Boolean(item))
@@ -138,4 +159,4 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withNextIntl(withPayload(nextConfig))
+export default withBundleAnalyzer(withNextIntl(withPayload(nextConfig)))

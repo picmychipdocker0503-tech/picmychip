@@ -13,7 +13,7 @@ import { useAuth } from '@/providers/Auth'
 import { useCompare } from '@/providers/Compare'
 import { useTranslations } from 'next-intl'
 import { useWishlist } from '@/providers/Wishlist'
-import { HeartIcon, LogInIcon, ReceiptTextIcon, ScaleIcon, UploadIcon, UserIcon } from 'lucide-react'
+import { HeartIcon, LogInIcon, ReceiptTextIcon, ScaleIcon, UploadIcon } from 'lucide-react'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
@@ -36,7 +36,7 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
   const iconButtonClass =
     'relative hidden size-10 items-center justify-center rounded-full text-muted-foreground transition-[background-color,color,transform] hover:bg-muted hover:text-foreground active:scale-95 md:inline-flex'
   const rfqActionClass =
-    'border-border bg-card hover:border-primary hover:bg-primary hover:text-primary-foreground focus-visible:ring-primary/15 inline-flex h-11 min-w-28 items-center justify-center gap-2 rounded-full border px-5 text-sm font-semibold text-foreground shadow-sm transition-all hover:shadow-md hover:shadow-primary/10 focus-visible:outline-none focus-visible:ring-4 active:scale-95'
+    'bg-muted/60 text-muted-foreground hover:bg-primary/10 hover:text-primary focus-visible:ring-primary/15 inline-flex h-10 min-w-24 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-4 active:scale-95'
 
   return (
     <>
@@ -86,9 +86,6 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
 
           {/* Right Icons */}
           <div className="flex items-center gap-1">
-            <Link aria-label="Account" className={iconButtonClass} href="/account">
-              <UserIcon className="size-5" />
-            </Link>
             <Link aria-label="Favorites" className={iconButtonClass} href="/wishlist">
               <HeartIcon className="size-5" />
               <NavIconBadge count={wishlistIds.length} />

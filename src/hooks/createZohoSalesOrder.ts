@@ -1,16 +1,13 @@
 import type { CollectionAfterChangeHook } from 'payload'
 
 import { syncZohoSalesOrderForOrder } from '@/lib/orderIntegrations/syncZohoSalesOrder'
-
 const runningOrderIds = new Set<string>()
 
 /**
- * Runs the Zoho sync in the request that created the order.
- *
- * This used to be delayed with setTimeout, but production runs on Vercel
- * serverless functions where delayed background work can be frozen after the
- * response is sent. That left orders stuck at "processing" until the admin
- * Retry button ran the exact same sync in a foreground request.
+ * Runs the Zoho sync after the order create transaction has finished. Zoho
+ * calls are external network calls and can take seconds; keeping the Payload
+ * create transaction open while waiting for them causes Postgres
+ * idle-in-transaction timeouts.
  */
 export async function runZohoSalesOrderSync(
   req: Parameters<CollectionAfterChangeHook>[0]['req'],
@@ -43,7 +40,9 @@ export async function runZohoSalesOrderSync(
 export const createZohoSalesOrder: CollectionAfterChangeHook = async ({ doc, operation, req }) => {
   if (operation !== 'create') return doc
 
-  await runZohoSalesOrderSync(req, doc.id)
+  setTimeout(() => {
+    void runZohoSalesOrderSync(req, doc.id)
+  }, 0)
 
   return doc
 }

@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     const baseSubtotal = cart.subtotal ?? 0
 
     let amount = baseSubtotal
-    if (baseSubtotal > 0) {
+    if (baseSubtotal > 0 || selectedShippingMethod.amount > 0) {
       const siteSettings = await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
       const tax = siteSettings?.taxSettings
       const defaultGstPercent = tax?.gstRatePercent ?? 18
@@ -73,14 +73,13 @@ export async function POST(request: NextRequest) {
         payload,
         items: cart.items,
         baseSubtotal,
+        shippingAmount: selectedShippingMethod.amount,
         businessState,
         customerState,
         defaultGstPercent,
       })
       amount = Math.round(finalAmount)
     }
-
-    amount += selectedShippingMethod.amount
 
     const paymentMethod: 'cod' | 'gift-card' = amount <= 0 ? 'gift-card' : 'cod'
 

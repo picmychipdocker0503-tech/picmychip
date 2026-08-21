@@ -168,7 +168,14 @@ export const confirmOrder =
       await payload.update({
         id: cartID,
         collection: cartsSlug as 'carts',
-        data: { purchasedAt: new Date().toISOString() },
+        data: {
+          items: [],
+          purchasedAt: new Date().toISOString(),
+          appliedCouponCode: null,
+          appliedGiftCardCode: null,
+          couponDiscountAmount: null,
+          giftCardAmountApplied: null,
+        },
         req,
       })
     }

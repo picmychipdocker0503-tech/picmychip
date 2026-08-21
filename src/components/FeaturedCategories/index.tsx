@@ -67,10 +67,10 @@ export async function FeaturedCategories() {
             <ScrollReveal index={index} key={category.id} staggerMs={50}>
               <Link
                 href={`/category/${category.slug}`}
-                className="group relative flex flex-col items-center gap-2 sm:gap-4 rounded-3xl border border-border/80 bg-card/60 backdrop-blur-md px-3 py-5 sm:px-6 sm:py-8 text-center transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:bg-card hover:shadow-lg overflow-hidden"
+                className="group relative flex flex-col items-center gap-2 sm:gap-4 rounded-3xl border border-transparent px-1 py-2 text-center transition-all duration-300 sm:border-border/80 sm:bg-card/60 sm:px-6 sm:py-8 sm:backdrop-blur-md sm:hover:-translate-y-1 sm:hover:border-primary/50 sm:hover:bg-card sm:hover:shadow-lg overflow-hidden"
               >
-                <div className="flex size-11 sm:size-14 shrink-0 items-center justify-center rounded-2xl bg-muted/60 text-muted-foreground border border-border/80 group-hover:border-primary/30 group-hover:bg-primary/10 group-hover:text-primary group-hover:scale-110 transition-all duration-300 shadow-sm">
-                  <Icon className="size-5 sm:size-7" />
+                <div className="flex size-14 shrink-0 items-center justify-center rounded-full border border-transparent bg-muted/60 text-muted-foreground transition-all duration-300 sm:size-14 sm:rounded-2xl sm:border-border/80 sm:shadow-sm group-hover:text-primary sm:group-hover:border-primary/30 sm:group-hover:bg-primary/10 sm:group-hover:scale-110">
+                  <Icon className="size-6 sm:size-7" />
                 </div>
 
                 <div>

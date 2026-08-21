@@ -55,16 +55,21 @@ export const computeGstTaxBreakdown: CollectionAfterChangeHook = async ({ doc, o
       }),
     )
 
-    const validItems = itemsWithNominal.filter((item): item is TaxLineItem => Boolean(item))
-    const nominalTotal = validItems.reduce((sum, item) => sum + item.nominal, 0)
+    const productItems = itemsWithNominal.filter((item): item is TaxLineItem => Boolean(item))
+    const nominalTotal = productItems.reduce((sum, item) => sum + item.nominal, 0)
     const discountedBase = Math.max(
       0,
       nominalTotal - (doc.couponApplied?.discountAmount ?? 0) - (doc.giftCardApplied?.amountApplied ?? 0),
     )
+    const shippingAmount = doc.shippingAmount ?? 0
+    const validItems =
+      shippingAmount > 0
+        ? [...productItems, { gstPercent: defaultGstPercent, nominal: shippingAmount }]
+        : productItems
 
     const taxBreakdown = computeOrderTaxAddOn({
       items: validItems,
-      amount: discountedBase,
+      amount: discountedBase + shippingAmount,
       defaultGstPercent,
       businessState: tax?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka',
       customerState: doc.shippingAddress?.state,
@@ -75,6 +80,7 @@ export const computeGstTaxBreakdown: CollectionAfterChangeHook = async ({ doc, o
       id: doc.id,
       data: { taxBreakdown },
       overrideAccess: true,
+      req,
     })
   } catch (err) {
     req.payload.logger.error({ msg: 'Failed to compute GST tax breakdown', err, orderId: doc.id })

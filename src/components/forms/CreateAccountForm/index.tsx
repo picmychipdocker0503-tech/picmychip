@@ -19,6 +19,26 @@ type FormData = {
   passwordConfirm: string
 }
 
+type PayloadErrorResponse = {
+  errors?: {
+    message?: string
+    data?: {
+      errors?: { message?: string; path?: string }[]
+    }
+  }[]
+}
+
+function getCreateAccountErrorMessage(data: PayloadErrorResponse | null, fallback: string): string {
+  const fieldError = data?.errors?.flatMap((error) => error.data?.errors ?? []).find(Boolean)
+  const message = fieldError?.message || data?.errors?.[0]?.message || fallback
+
+  if (fieldError?.path === 'email' && message.toLowerCase().includes('already')) {
+    return 'This email is already registered. Please log in, or reset your password if you forgot it.'
+  }
+
+  return message || 'There was an error creating the account.'
+}
+
 export const CreateAccountForm: React.FC = () => {
   const searchParams = useSearchParams()
   const allParams = searchParams.toString() ? `?${searchParams.toString()}` : ''
@@ -50,8 +70,13 @@ export const CreateAccountForm: React.FC = () => {
       })
 
       if (!response.ok) {
-        const message = response.statusText || 'There was an error creating the account.'
-        setError(message)
+        const responseBody = (await response.json().catch(() => null)) as PayloadErrorResponse | null
+        setError(
+          getCreateAccountErrorMessage(
+            responseBody,
+            response.statusText || 'There was an error creating the account.',
+          ),
+        )
         return
       }
 

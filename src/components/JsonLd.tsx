@@ -1,3 +1,4 @@
+import Script from 'next/script'
 import React from 'react'
 
 type Props = {
@@ -14,6 +15,23 @@ type Props = {
  */
 const toSafeJsonLd = (data: object): string => JSON.stringify(data).replace(/</g, '\\u003c')
 
-export const JsonLd: React.FC<Props> = ({ data }) => (
-  <script dangerouslySetInnerHTML={{ __html: toSafeJsonLd(data) }} type="application/ld+json" />
-)
+const toScriptId = (json: string): string => {
+  let hash = 0
+  for (let index = 0; index < json.length; index += 1) {
+    hash = (hash * 31 + json.charCodeAt(index)) | 0
+  }
+  return `json-ld-${Math.abs(hash)}`
+}
+
+export const JsonLd: React.FC<Props> = ({ data }) => {
+  const json = toSafeJsonLd(data)
+
+  return (
+    <Script
+      dangerouslySetInnerHTML={{ __html: json }}
+      id={toScriptId(json)}
+      strategy="afterInteractive"
+      type="application/ld+json"
+    />
+  )
+}

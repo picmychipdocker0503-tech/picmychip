@@ -16,7 +16,13 @@ async function loadTrendingNowData() {
   // shared query — an out-of-stock item defeats the point of a "buy this"
   // section here, but the CMS-configurable trending block should still be
   // free to show one if a merchandiser pins it deliberately.
-  const candidates = await getTrendingProducts({ payload, limit: isDevelopment ? 8 : 24 })
+  let candidates: Awaited<ReturnType<typeof getTrendingProducts>> = []
+  try {
+    candidates = await getTrendingProducts({ payload, limit: isDevelopment ? 8 : 24 })
+  } catch (error) {
+    payload.logger.warn({ err: error }, 'Unable to load trending products; hiding Trending Now section.')
+  }
+
   const products = candidates.filter((product) => product.stockStatus !== 'out-of-stock').slice(0, isDevelopment ? 4 : 8)
 
   const ratings = isDevelopment

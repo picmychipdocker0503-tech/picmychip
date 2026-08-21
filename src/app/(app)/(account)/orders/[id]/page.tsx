@@ -15,6 +15,10 @@ import { getPayload } from 'payload'
 import { OrderStatus } from '@/components/OrderStatus'
 import { OrderTrackingTimeline } from '@/components/OrderTrackingTimeline'
 import { AddressItem } from '@/components/addresses/AddressItem'
+import {
+  refreshZohoCreditNoteForOrder,
+  refreshZohoInvoiceForOrder,
+} from '@/lib/orderIntegrations/syncZohoSalesOrder'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,6 +26,33 @@ type PageProps = {
   params: Promise<{ id: string }>
   searchParams: Promise<{ email?: string; accessToken?: string }>
 }
+
+const orderSelect = {
+  amount: true,
+  currency: true,
+  items: true,
+  customerEmail: true,
+  customer: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+  shippingAddress: true,
+  trackingNumber: true,
+  courierName: true,
+  shipmentStatus: true,
+  paymentMethod: true,
+  shippingAmount: true,
+  taxBreakdown: true,
+  couponApplied: true,
+  giftCardApplied: true,
+  zohoSalesOrderId: true,
+  zohoInvoiceId: true,
+  zohoCreditNoteId: true,
+  zohoCreditNoteNumber: true,
+  zohoCreditNoteStatus: true,
+  zohoCreditNoteAmount: true,
+  invoiceSyncStatus: true,
+} as const
 
 export default async function Order({ params, searchParams }: PageProps) {
   const headers = await getHeaders()
@@ -74,25 +105,7 @@ export default async function Order({ params, searchParams }: PageProps) {
               ]),
         ],
       },
-      select: {
-        amount: true,
-        currency: true,
-        items: true,
-        customerEmail: true,
-        customer: true,
-        status: true,
-        createdAt: true,
-        updatedAt: true,
-        shippingAddress: true,
-        trackingNumber: true,
-        courierName: true,
-        shipmentStatus: true,
-        paymentMethod: true,
-        couponApplied: true,
-        giftCardApplied: true,
-        zohoInvoiceId: true,
-        invoiceSyncStatus: true,
-      },
+      select: orderSelect,
     })
 
     const canAccessAsGuest =
@@ -120,6 +133,49 @@ export default async function Order({ params, searchParams }: PageProps) {
   if (!order) {
     notFound()
   }
+
+  if (order.zohoSalesOrderId && !order.zohoInvoiceId) {
+    await refreshZohoInvoiceForOrder(payload, order.id)
+
+    order = await payload.findByID({
+      collection: 'orders',
+      id: order.id,
+      depth: 2,
+      overrideAccess: true,
+      select: orderSelect,
+    })
+  }
+
+  if (
+    order.zohoInvoiceId &&
+    !order.zohoCreditNoteId &&
+    (order.status === 'cancelled' || order.status === 'refunded')
+  ) {
+    await refreshZohoCreditNoteForOrder(payload, order.id)
+
+    order = await payload.findByID({
+      collection: 'orders',
+      id: order.id,
+      depth: 2,
+      overrideAccess: true,
+      select: orderSelect,
+    })
+  }
+
+  // Order-time snapshot fields (amount/tax/shipping/discounts) are all
+  // captured at checkout and never retroactively recomputed — see
+  // taxBreakdown's own field comment — so subtotal is derived by reversing
+  // that same arithmetic rather than re-pricing items at today's prices.
+  const totalTax = order.taxBreakdown?.totalTax ?? 0
+  const shippingAmount = order.shippingAmount ?? 0
+  const couponDiscount = order.couponApplied?.discountAmount ?? 0
+  const giftCardAmount = order.giftCardApplied?.amountApplied ?? 0
+  const subtotal = (order.amount ?? 0) + couponDiscount + giftCardAmount - totalTax - shippingAmount
+  const documentAccessParams = new URLSearchParams()
+  if (!user && email) documentAccessParams.set('email', email)
+  if (!user && accessToken) documentAccessParams.set('accessToken', accessToken)
+  const documentAccessQuery = documentAccessParams.toString()
+  const creditNotePdfHref = `/api/orders/${order.id}/credit-note-pdf${documentAccessQuery ? `?${documentAccessQuery}` : ''}`
 
   return (
     <div className="">
@@ -174,6 +230,55 @@ export default async function Order({ params, searchParams }: PageProps) {
                   ? 'Gift Card'
                   : 'Card / UPI'}
             </p>
+          </div>
+        </div>
+
+        {/* Mobile-only itemized cost summary — desktop keeps the single Total
+            field above unchanged. Uses the order's own snapshotted amounts,
+            not current product pricing. */}
+        <div className="lg:hidden">
+          <h2 className="text-muted-foreground font-semibold tracking-wide mb-3 uppercase text-sm">Order Summary</h2>
+          <div className="bg-muted/40 divide-border/60 divide-y overflow-hidden rounded-2xl">
+            <div className="flex items-center justify-between px-4 py-3 text-sm">
+              <span className="text-muted-foreground">Subtotal</span>
+              <Price amount={subtotal} as="span" />
+            </div>
+            {totalTax > 0 && (
+              <div className="flex items-center justify-between px-4 py-3 text-sm">
+                <span className="text-muted-foreground">Tax</span>
+                <Price amount={totalTax} as="span" />
+              </div>
+            )}
+            <div className="flex items-center justify-between px-4 py-3 text-sm">
+              <span className="text-muted-foreground">Shipping</span>
+              {shippingAmount > 0 ? (
+                <Price amount={shippingAmount} as="span" />
+              ) : (
+                <span className="text-success font-medium">FREE</span>
+              )}
+            </div>
+            {couponDiscount > 0 && (
+              <div className="flex items-center justify-between px-4 py-3 text-sm">
+                <span className="text-muted-foreground">Coupon ({order.couponApplied?.code})</span>
+                <span className="text-success flex items-center gap-0.5">
+                  <span>&minus;</span>
+                  <Price amount={couponDiscount} as="span" />
+                </span>
+              </div>
+            )}
+            {giftCardAmount > 0 && (
+              <div className="flex items-center justify-between px-4 py-3 text-sm">
+                <span className="text-muted-foreground">Gift card ({order.giftCardApplied?.code})</span>
+                <span className="text-success flex items-center gap-0.5">
+                  <span>&minus;</span>
+                  <Price amount={giftCardAmount} as="span" />
+                </span>
+              </div>
+            )}
+            <div className="bg-card flex items-center justify-between px-4 py-4 text-base font-bold">
+              <span>Total</span>
+              {order.amount != null && <Price amount={order.amount} as="span" />}
+            </div>
           </div>
         </div>
 
@@ -258,7 +363,40 @@ export default async function Order({ params, searchParams }: PageProps) {
               Invoice pending
             </Button>
           )}
+          {order.zohoCreditNoteId && (
+            <Button asChild variant="outline">
+              <Link href={creditNotePdfHref}>Download credit note</Link>
+            </Button>
+          )}
         </div>
+
+        {order.zohoCreditNoteId && (
+          <div className="border-t pt-5">
+            <h2 className="text-muted-foreground font-semibold tracking-wide mb-2 uppercase text-sm">
+              Credit Note
+            </h2>
+            <div className="text-sm flex flex-wrap gap-x-6 gap-y-2">
+              {order.zohoCreditNoteNumber && (
+                <p>
+                  Number: <span className="font-medium">{order.zohoCreditNoteNumber}</span>
+                </p>
+              )}
+              {order.zohoCreditNoteStatus && (
+                <p>
+                  Status: <span className="font-medium capitalize">{order.zohoCreditNoteStatus}</span>
+                </p>
+              )}
+              {typeof order.zohoCreditNoteAmount === 'number' && (
+                <p>
+                  Amount:{' '}
+                  <span className="font-medium">
+                    ₹{order.zohoCreditNoteAmount.toLocaleString('en-IN', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}
+                  </span>
+                </p>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

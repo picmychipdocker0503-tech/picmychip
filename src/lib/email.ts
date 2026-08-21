@@ -67,6 +67,27 @@ export function shippingUpdateEmailHtml(order: {
   )
 }
 
+export function invoiceReadyEmailHtml(order: {
+  id: string | number
+  invoiceNumber?: string | null
+  invoiceUrl?: string | null
+}): string {
+  const invoiceHtml = order.invoiceUrl
+    ? `<p>
+         <a href="${order.invoiceUrl}" style="display: inline-block; background: #111; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none;">
+           Download official tax invoice
+         </a>
+       </p>`
+    : ''
+
+  return wrapper(
+    `Invoice ready for order #${order.id}`,
+    `<p>Your order has been accepted and the official tax invoice${order.invoiceNumber ? ` ${order.invoiceNumber}` : ''} is ready.</p>
+     <p>We are preparing your items now and will dispatch them shortly. You will receive another update once the shipment details are available.</p>
+     ${invoiceHtml}`,
+  )
+}
+
 export function backInStockEmailHtml(product: { title?: string | null; slug?: string | null }): string {
   return wrapper(
     `${product.title} is back in stock`,

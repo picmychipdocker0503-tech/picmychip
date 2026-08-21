@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { ActiveFiltersBar } from '@/components/Search/ActiveFiltersBar'
 import { FacetSidebar } from '@/components/Search/FacetSidebar'
 import { ShopResults } from '@/components/Search/ShopResults'
+import { MobileFilterDrawer } from '@/components/layout/search/MobileFilterDrawer'
 import { EmptyState } from '@/components/illustrations'
 import { getAverageRatings } from '@/lib/getAverageRatings'
 import { getFacetsForSchema } from '@/lib/facetConfig'
@@ -79,9 +80,13 @@ export default async function ShopPage({ searchParams }: Props) {
 
   return (
     <div className="flex flex-col gap-8 md:flex-row md:items-start">
-      <Suspense fallback={null}>
-        <FacetSidebar facetDistribution={products.facetDistribution} facets={facets} />
-      </Suspense>
+      {products.facetDistribution && facets.length > 0 && (
+        <MobileFilterDrawer>
+          <Suspense fallback={null}>
+            <FacetSidebar facetDistribution={products.facetDistribution} facets={facets} />
+          </Suspense>
+        </MobileFilterDrawer>
+      )}
 
       <div className="min-h-screen w-full flex-1">
         {facets.length > 0 && (

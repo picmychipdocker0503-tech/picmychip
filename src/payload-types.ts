@@ -336,15 +336,15 @@ export interface Order {
   currency?: 'INR' | null;
   accessToken?: string | null;
   /**
-   * Carrier tracking number (AWB), shown to the customer on their order. Auto-filled by the Shiprocket integration once a courier is assigned — editable manually as a fallback.
+   * Carrier tracking number (AWB), shown to the customer on their order. Enter manually after choosing the courier.
    */
   trackingNumber?: string | null;
   /**
-   * Courier Shiprocket assigned to this shipment.
+   * Manual courier name, e.g. DTDC, Delhivery, Blue Dart, Professional Courier.
    */
   courierName?: string | null;
   /**
-   * Latest status from Shiprocket (e.g. "Pickup Scheduled", "In Transit", "Delivered").
+   * Manual shipment status, e.g. Packed, Picked up, In Transit, Delivered.
    */
   shipmentStatus?: string | null;
   shiprocketOrderId?: string | null;
@@ -426,6 +426,26 @@ export interface Order {
   zohoInvoiceStatus?: string | null;
   zohoInvoiceUrl?: string | null;
   zohoInvoiceCreatedAt?: string | null;
+  /**
+   * PayU payment reference copied from the successful transaction and used when recording payment in Zoho.
+   */
+  paymentReference?: string | null;
+  /**
+   * Set when the PayU payment is recorded against the Zoho invoice.
+   */
+  zohoPaymentRecordedAt?: string | null;
+  /**
+   * Set when a cancelled/refunded invoiced order has a linked Zoho Books credit note.
+   */
+  zohoCreditNoteId?: string | null;
+  zohoCreditNoteNumber?: string | null;
+  zohoCreditNoteStatus?: string | null;
+  zohoCreditNoteAmount?: number | null;
+  zohoCreditNoteUrl?: string | null;
+  zohoCreditNoteCreatedAt?: string | null;
+  /**
+   * Manual public tracking URL from the selected courier.
+   */
   shiprocketTrackingUrl?: string | null;
   shiprocketPickupStatus?: string | null;
   shiprocketDeliveryStatus?: string | null;
@@ -4031,6 +4051,14 @@ export interface OrdersSelect<T extends boolean = true> {
   zohoInvoiceStatus?: T;
   zohoInvoiceUrl?: T;
   zohoInvoiceCreatedAt?: T;
+  paymentReference?: T;
+  zohoPaymentRecordedAt?: T;
+  zohoCreditNoteId?: T;
+  zohoCreditNoteNumber?: T;
+  zohoCreditNoteStatus?: T;
+  zohoCreditNoteAmount?: T;
+  zohoCreditNoteUrl?: T;
+  zohoCreditNoteCreatedAt?: T;
   shiprocketTrackingUrl?: T;
   shiprocketPickupStatus?: T;
   shiprocketDeliveryStatus?: T;

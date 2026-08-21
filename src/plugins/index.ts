@@ -23,10 +23,10 @@ import { applyCartDiscounts } from '@/hooks/applyCartDiscounts'
 import { applyOrderDiscountSideEffects } from '@/hooks/applyOrderDiscountSideEffects'
 import { computeGstTaxBreakdown } from '@/hooks/computeGstTaxBreakdown'
 import { createZohoSalesOrder } from '@/hooks/createZohoSalesOrder'
-import { createShiprocketShipment } from '@/hooks/createShiprocketShipment'
 import { flagPotentialFraud } from '@/hooks/flagPotentialFraud'
 import { issueGiftCardsForOrder } from '@/hooks/issueGiftCardsForOrder'
 import { sendOrderLifecycleEmails } from '@/hooks/sendOrderLifecycleEmails'
+import { trackZohoCreditNote } from '@/hooks/trackZohoCreditNote'
 import { billingDetailsAddressFields, businessDetailsGroup } from '@/fields/businessDetails'
 
 const generateTitle: GenerateTitle<Product | Page | Category | Guide> = ({ doc }) => {
@@ -150,7 +150,7 @@ export const plugins: Plugin[] = [
             issueGiftCardsForOrder,
             computeGstTaxBreakdown,
             createZohoSalesOrder,
-            createShiprocketShipment,
+            trackZohoCreditNote,
             sendOrderLifecycleEmails,
             flagPotentialFraud,
           ],
@@ -197,7 +197,7 @@ export const plugins: Plugin[] = [
             admin: {
               position: 'sidebar',
               description:
-                'Carrier tracking number (AWB), shown to the customer on their order. Auto-filled by the Shiprocket integration once a courier is assigned — editable manually as a fallback.',
+                'Carrier tracking number (AWB), shown to the customer on their order. Enter manually after choosing the courier.',
             },
           },
           {
@@ -205,8 +205,7 @@ export const plugins: Plugin[] = [
             type: 'text',
             admin: {
               position: 'sidebar',
-              readOnly: true,
-              description: 'Courier Shiprocket assigned to this shipment.',
+              description: 'Manual courier name, e.g. DTDC, Delhivery, Blue Dart, Professional Courier.',
             },
           },
           {
@@ -214,15 +213,14 @@ export const plugins: Plugin[] = [
             type: 'text',
             admin: {
               position: 'sidebar',
-              readOnly: true,
-              description: 'Latest status from Shiprocket (e.g. "Pickup Scheduled", "In Transit", "Delivered").',
+              description: 'Manual shipment status, e.g. Packed, Picked up, In Transit, Delivered.',
             },
           },
           {
             name: 'shiprocketOrderId',
             type: 'text',
             admin: {
-              position: 'sidebar',
+              hidden: true,
               readOnly: true,
             },
           },
@@ -230,7 +228,7 @@ export const plugins: Plugin[] = [
             name: 'shiprocketShipmentId',
             type: 'text',
             admin: {
-              position: 'sidebar',
+              hidden: true,
               readOnly: true,
             },
           },
@@ -416,32 +414,87 @@ export const plugins: Plugin[] = [
             type: 'date',
             admin: { position: 'sidebar', readOnly: true },
           },
-          // Shiprocket (shiprocketOrderId, shiprocketShipmentId, trackingNumber,
-          // courierName, shipmentStatus already exist above)
+          {
+            name: 'paymentReference',
+            type: 'text',
+            admin: {
+              position: 'sidebar',
+              readOnly: true,
+              description: 'PayU payment reference copied from the successful transaction and used when recording payment in Zoho.',
+            },
+          },
+          {
+            name: 'zohoPaymentRecordedAt',
+            type: 'date',
+            admin: {
+              position: 'sidebar',
+              readOnly: true,
+              description: 'Set when the PayU payment is recorded against the Zoho invoice.',
+            },
+          },
+          {
+            name: 'zohoCreditNoteId',
+            type: 'text',
+            admin: {
+              position: 'sidebar',
+              readOnly: true,
+              description: 'Set when a cancelled/refunded invoiced order has a linked Zoho Books credit note.',
+            },
+          },
+          {
+            name: 'zohoCreditNoteNumber',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoCreditNoteStatus',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoCreditNoteAmount',
+            type: 'number',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoCreditNoteUrl',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoCreditNoteCreatedAt',
+            type: 'date',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          // Manual courier details (trackingNumber, courierName, shipmentStatus above)
           {
             name: 'shiprocketTrackingUrl',
             type: 'text',
-            admin: { position: 'sidebar', readOnly: true },
+            label: 'Tracking URL',
+            admin: {
+              position: 'sidebar',
+              description: 'Manual public tracking URL from the selected courier.',
+            },
           },
           {
             name: 'shiprocketPickupStatus',
             type: 'text',
-            admin: { position: 'sidebar', readOnly: true },
+            admin: { hidden: true, readOnly: true },
           },
           {
             name: 'shiprocketDeliveryStatus',
             type: 'text',
-            admin: { position: 'sidebar', readOnly: true },
+            admin: { hidden: true, readOnly: true },
           },
           {
             name: 'shiprocketEstimatedDeliveryDate',
             type: 'text',
-            admin: { position: 'sidebar', readOnly: true },
+            admin: { hidden: true, readOnly: true },
           },
           {
             name: 'shiprocketCreatedAt',
             type: 'date',
-            admin: { position: 'sidebar', readOnly: true },
+            admin: { hidden: true, readOnly: true },
           },
           // Integration sync bookkeeping
           {
@@ -454,7 +507,7 @@ export const plugins: Plugin[] = [
               { label: 'Completed', value: 'completed' },
               { label: 'Failed', value: 'failed' },
             ],
-            admin: { position: 'sidebar', readOnly: true },
+            admin: { hidden: true, readOnly: true },
           },
           {
             name: 'invoiceSyncStatus',

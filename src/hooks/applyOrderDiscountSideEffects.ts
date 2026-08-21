@@ -63,6 +63,7 @@ export const applyOrderDiscountSideEffects: CollectionAfterChangeHook = async ({
       id: doc.id,
       data: updates,
       overrideAccess: true,
+      req,
     })
   } catch (err) {
     req.payload.logger.error({ msg: 'Failed to apply order discount side effects', err })
