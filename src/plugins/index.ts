@@ -416,6 +416,36 @@ export const plugins: Plugin[] = [
             type: 'date',
             admin: { position: 'sidebar', readOnly: true },
           },
+          {
+            name: 'zohoCreditNoteId',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoCreditNoteNumber',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoCreditNoteStatus',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoCreditNoteAmount',
+            type: 'number',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoCreditNoteUrl',
+            type: 'text',
+            admin: { position: 'sidebar', readOnly: true },
+          },
+          {
+            name: 'zohoCreditNoteCreatedAt',
+            type: 'date',
+            admin: { position: 'sidebar', readOnly: true },
+          },
           // Shiprocket (shiprocketOrderId, shiprocketShipmentId, trackingNumber,
           // courierName, shipmentStatus already exist above)
           {

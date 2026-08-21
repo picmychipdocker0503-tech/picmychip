@@ -6,6 +6,7 @@ import { findOrCreateZohoItem } from '@/lib/zoho/items'
 import { getZohoOrganizationState } from '@/lib/zoho/organization'
 import { resolveTaxId } from '@/lib/zoho/taxes'
 import { getInvoicePdfUrl, getZohoInvoice } from '@/lib/zoho/invoices'
+import { findCreditNoteForInvoice, getCreditNoteUrl } from '@/lib/zoho/creditNotes'
 import {
   convertSalesOrderToInvoice,
   createZohoSalesOrder,
@@ -387,6 +388,30 @@ export async function syncZohoSalesOrderForOrder(payload: Payload, orderId: numb
   }
 }
 
+export async function refreshZohoCreditNoteForOrder(payload: Payload, orderId: number | string): Promise<void> {
+  if (!zohoIsConfigured) return
+
+  const order = await payload.findByID({ collection: 'orders', id: orderId, depth: 0, overrideAccess: true })
+  if (!order?.zohoInvoiceId) return
+
+  const creditNote = await findCreditNoteForInvoice(order.zohoInvoiceId)
+  if (!creditNote) return
+
+  await payload.update({
+    collection: 'orders',
+    id: orderId,
+    data: {
+      zohoCreditNoteId: creditNote.creditnote_id,
+      zohoCreditNoteNumber: creditNote.creditnote_number,
+      zohoCreditNoteStatus: creditNote.status,
+      zohoCreditNoteAmount: creditNote.total,
+      zohoCreditNoteUrl: getCreditNoteUrl(creditNote),
+      zohoCreditNoteCreatedAt: new Date().toISOString(),
+      lastSyncAt: new Date().toISOString(),
+    },
+    overrideAccess: true,
+  })
+}
 /**
  * The "Accept" action: converts the order's sales order into an invoice —
  * called from the admin panel once stock/availability has been confirmed.

@@ -426,6 +426,12 @@ export interface Order {
   zohoInvoiceStatus?: string | null;
   zohoInvoiceUrl?: string | null;
   zohoInvoiceCreatedAt?: string | null;
+  zohoCreditNoteId?: string | null;
+  zohoCreditNoteNumber?: string | null;
+  zohoCreditNoteStatus?: string | null;
+  zohoCreditNoteAmount?: number | null;
+  zohoCreditNoteUrl?: string | null;
+  zohoCreditNoteCreatedAt?: string | null;
   shiprocketTrackingUrl?: string | null;
   shiprocketPickupStatus?: string | null;
   shiprocketDeliveryStatus?: string | null;
@@ -4075,6 +4081,12 @@ export interface OrdersSelect<T extends boolean = true> {
   zohoInvoiceStatus?: T;
   zohoInvoiceUrl?: T;
   zohoInvoiceCreatedAt?: T;
+  zohoCreditNoteId?: T;
+  zohoCreditNoteNumber?: T;
+  zohoCreditNoteStatus?: T;
+  zohoCreditNoteAmount?: T;
+  zohoCreditNoteUrl?: T;
+  zohoCreditNoteCreatedAt?: T;
   shiprocketTrackingUrl?: T;
   shiprocketPickupStatus?: T;
   shiprocketDeliveryStatus?: T;
