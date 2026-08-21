@@ -51,6 +51,7 @@ export const toZohoAddress = (address: AddressLike, state?: IndianState): ZohoAd
   delete (zohoAddress as Record<string, unknown>).email
   delete (zohoAddress as Record<string, unknown>).email_id
   delete (zohoAddress as Record<string, unknown>).customer_email
+  console.log('zohoAddress', zohoAddress)
   return zohoAddress
 }
 
@@ -176,7 +177,7 @@ export async function buildZohoLineItems(
       item_id: itemId,
     })
   }
-
+  console.log('lineItems', lineItems)
   return lineItems
 }
 
@@ -217,7 +218,7 @@ async function resolveCustomerForOrder(
     billingAddress: toZohoAddress(billing, billingState),
     shippingAddress: toZohoAddress(shipping, shippingState),
   })
-
+  console.log('contact', contact)
   return { contactId: contact.contact_id }
 }
 
@@ -452,7 +453,7 @@ export async function syncZohoSalesOrderForOrder(
         await markZohoContactActive(contactId)
         salesOrder = await createZohoSalesOrder(salesOrderArgs)
       }
-
+      console.log('salesOrder', salesOrder)
       await payload.update({
         collection: 'orders',
         id: orderId,
@@ -505,6 +506,7 @@ export async function syncZohoSalesOrderForOrder(
       })
       .catch(() => {})
   }
+  console.log('syncZohoSalesOrderForOrder', syncZohoSalesOrderForOrder)
 }
 
 /**
