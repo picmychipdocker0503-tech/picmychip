@@ -5,11 +5,24 @@ export const PRODUCTS_INDEX = 'products'
 let client: Meilisearch | undefined
 let clientHost: string | undefined
 
+const isLocalhostMeiliHost = (host: string): boolean => {
+  try {
+    const hostname = new URL(host).hostname
+    return hostname === '127.0.0.1' || hostname === 'localhost' || hostname === '::1'
+  } catch {
+    return false
+  }
+}
+
 export const getMeiliHost = (): string => {
   const host = process.env.MEILI_HOST?.trim()
 
   if (!host) {
     throw new Error('MEILI_HOST is not configured')
+  }
+
+  if (process.env.NODE_ENV === 'production' && isLocalhostMeiliHost(host)) {
+    throw new Error('MEILI_HOST points to localhost in production')
   }
 
   return host
@@ -41,6 +54,11 @@ export const getMeiliClient = (): Meilisearch => {
   }
 
   return client
+}
+
+export const shouldUseMeilisearch = (): boolean => {
+  const host = process.env.MEILI_HOST?.trim()
+  return Boolean(host && !(process.env.NODE_ENV === 'production' && isLocalhostMeiliHost(host)))
 }
 
 export const verifyMeiliConnection = async (): Promise<{ host: string; healthStatus: string }> => {

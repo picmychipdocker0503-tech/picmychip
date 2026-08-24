@@ -192,18 +192,25 @@ async function resolveCustomerForOrder(
   const customerName =
     `${billing?.firstName || ''} ${billing?.lastName || ''}`.trim() || order.customerEmail || 'Customer'
 
-  // Matched on THIS order's own email/GSTIN/phone only — deliberately does
-  // NOT check a cached zohoCustomerId on the logged-in account. That
-  // shortcut used to force every order from the same account onto one
-  // shared Zoho contact regardless of what billing name/phone was actually
-  // entered — confirmed live: a logged-in account placing orders under two
-  // different real names ("Keerthan Kumar P" vs "Praveen kumar.D") had them
-  // collapse into a single contact, and each re-sync flipped its name to
-  // whichever order ran last, showing the wrong customer on the others'
-  // sales orders. One Zoho contact per distinct set of order details is what
-  // a repeat customer naturally gets anyway, since they'd enter the same
-  // details each time; this only diverges — correctly — when they don't.
+  // Account identity, not order details, decides the Zoho contact: two
+  // logins can legitimately share a name/address/phone without being the
+  // same customer, so dedup never keys on address, and two orders from the
+  // same account must always land on the same contact. The account's own
+  // stored zohoCustomerId (order fetched at depth: 1, so this is the full
+  // customer doc when set) is checked first and trusted outright; failing
+  // that, findOrCreateZohoCustomer falls back to an exact email match. Only
+  // a brand-new account with no match at all reaches contact creation, where
+  // localCustomerId makes the Display Name collision-proof (see
+  // getUniqueDisplayName) instead of the old email/phone suffix, which used
+  // to let concurrent first orders from the same new account race into two
+  // contacts.
+  const customer = order.customer && typeof order.customer === 'object' ? order.customer : undefined
+  const customerId = customer?.id as string | number | undefined
+  const existingContactId = (customer?.zohoCustomerId as string | undefined) || undefined
+
   const { contact } = await findOrCreateZohoCustomer({
+    existingContactId,
+    localCustomerId: customerId,
     contactName: customerName,
     firstName: billing?.firstName || undefined,
     lastName: billing?.lastName || undefined,
@@ -214,6 +221,20 @@ async function resolveCustomerForOrder(
     billingAddress: toZohoAddress(billing, billingState),
     shippingAddress: toZohoAddress(shipping, shippingState),
   })
+
+  if (customerId && existingContactId !== contact.contact_id) {
+    await payload
+      .update({
+        collection: 'users',
+        id: customerId,
+        data: { zohoCustomerId: contact.contact_id },
+        overrideAccess: true,
+        context: { disableRevalidate: true },
+      })
+      .catch((err) => {
+        payload.logger.error({ msg: 'Failed to persist zohoCustomerId on customer', err, customerId })
+      })
+  }
 
   return { contactId: contact.contact_id }
 }
@@ -249,6 +270,17 @@ async function applyLinkedInvoice(payload: Payload, orderId: number | string, sa
   })
 }
 
+// Guards against two concurrent syncs for the same order creating two Zoho
+// Sales Orders — findExistingSalesOrderByOrderId only protects against a
+// sync that starts *after* a previous one finished; two overlapping calls
+// (confirmed live: the automatic createZohoSalesOrder hook racing the admin
+// "Retry" endpoint, order 65 ended up with both SO-00039 and SO-00040 under
+// the same reference_number) can both pass that check before either has
+// actually created anything. Centralized here, not in the hook, so every
+// caller — the hook, the retry endpoint, the resync script — is covered by
+// the same guard instead of each needing its own.
+const syncsInFlight = new Set<string>()
+
 /**
  * Creates the Zoho Sales Order for an order (the first step — every order
  * becomes a sales order, not an invoice, so stock/availability can be
@@ -261,6 +293,18 @@ async function applyLinkedInvoice(payload: Payload, orderId: number | string, sa
 export async function syncZohoSalesOrderForOrder(payload: Payload, orderId: number | string): Promise<void> {
   if (!zohoIsConfigured) return
 
+  const key = String(orderId)
+  if (syncsInFlight.has(key)) return
+  syncsInFlight.add(key)
+
+  try {
+    await syncZohoSalesOrderForOrderUnguarded(payload, orderId)
+  } finally {
+    syncsInFlight.delete(key)
+  }
+}
+
+async function syncZohoSalesOrderForOrderUnguarded(payload: Payload, orderId: number | string): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let order: any
   try {

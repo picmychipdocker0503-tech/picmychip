@@ -121,7 +121,38 @@ export const AddressForm: React.FC<Props> = ({
     let cancelled = false
     setLoadingDistricts(true)
     findStateSlug(stateName)
-      .then((slug) => (slug ? fetchDistricts(slug) : Promise.resolve([])))
+      .then(async (slug) => {
+        if (!slug) return []
+        const districtList = await fetchDistricts(slug)
+
+        // Editing an existing address: city/pincode are already on file, but
+        // the Address collection has no district field to restore, so the
+        // District select (and, disabled behind it, City) would otherwise
+        // stay empty forever — there's no reverse pincode/city -> district
+        // lookup in this API, so every district's office list is checked for
+        // a match instead. One-time cost on first load only, never on a
+        // manual state change.
+        const existingCity = initialData?.city
+        const existingPostalCode = initialData?.postalCode
+        if (keepExistingSelection && !selectedDistrictSlug && (existingCity || existingPostalCode)) {
+          const matches = await Promise.all(
+            districtList.map(async (district) => ({
+              district,
+              offices: await fetchOffices(slug, district.slug).catch(() => []),
+            })),
+          )
+          const found = matches.find(({ offices }) =>
+            offices.some(
+              (office) =>
+                (existingPostalCode && office.pincode === existingPostalCode) ||
+                (existingCity && office.officeName === existingCity),
+            ),
+          )
+          if (found && !cancelled) setSelectedDistrictSlug(found.district.slug)
+        }
+
+        return districtList
+      })
       .then((result) => {
         if (!cancelled) setDistricts(result)
       })

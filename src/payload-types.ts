@@ -2014,9 +2014,41 @@ export interface Address {
     | 'CH';
   phone?: string | null;
   /**
+   * How this address appears in the customer's address book.
+   */
+  label?: ('Home' | 'Office' | 'Warehouse' | 'Other') | null;
+  /**
+   * Default billing address for this customer.
+   */
+  isDefaultBilling?: boolean | null;
+  /**
+   * Default shipping address for this customer.
+   */
+  isDefaultShipping?: boolean | null;
+  /**
+   * Deactivated addresses are hidden from the address book but kept for historical order snapshots.
+   */
+  isActive?: boolean | null;
+  /**
    * Optional — used to generate a GST tax invoice for orders billed to this address.
    */
   gstin?: string | null;
+  /**
+   * Whether this address belongs to a GST-registered business.
+   */
+  gstRegistered?: boolean | null;
+  /**
+   * Legal name on record for the GSTIN, as returned by GST verification.
+   */
+  gstLegalName?: string | null;
+  /**
+   * Trade name on record for the GSTIN, as returned by GST verification.
+   */
+  gstTradeName?: string | null;
+  /**
+   * GST regime for this registration — independent of whether it is currently active.
+   */
+  gstRegistrationType?: ('NORMAL' | 'COMPOSITION') | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3715,7 +3747,15 @@ export interface AddressesSelect<T extends boolean = true> {
   postalCode?: T;
   country?: T;
   phone?: T;
+  label?: T;
+  isDefaultBilling?: T;
+  isDefaultShipping?: T;
+  isActive?: T;
   gstin?: T;
+  gstRegistered?: T;
+  gstLegalName?: T;
+  gstTradeName?: T;
+  gstRegistrationType?: T;
   updatedAt?: T;
   createdAt?: T;
 }

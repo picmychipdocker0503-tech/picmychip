@@ -19,9 +19,11 @@ import { Suspense } from 'react'
 const { COMPANY_NAME, SITE_NAME } = process.env
 
 export async function Footer() {
-  const t = await getTranslations('footer')
-  const footer: Footer = await getCachedGlobal('footer', 1)()
-  const siteSettings: SiteSetting = await getCachedGlobal('site-settings', 1)()
+  const [t, footer, siteSettings]: [Awaited<ReturnType<typeof getTranslations>>, Footer, SiteSetting] = await Promise.all([
+    getTranslations('footer'),
+    getCachedGlobal('footer', 1)(),
+    getCachedGlobal('site-settings', 1)(),
+  ])
   const menu = footer.navItems || []
   const socialLinks = siteSettings?.sameAs ?? []
 

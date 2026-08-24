@@ -73,9 +73,11 @@ const twitterSite = TWITTER_SITE ? ensureStartsWith(TWITTER_SITE, 'https://') : 
 } */
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const siteSettings = await getCachedGlobal('site-settings', 0)()
-  const locale = await getLocale()
-  const messages = await getMessages()
+  const [siteSettings, locale, messages] = await Promise.all([
+    getCachedGlobal('site-settings', 0)(),
+    getLocale(),
+    getMessages(),
+  ])
 
   return (
     <html

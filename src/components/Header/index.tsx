@@ -11,11 +11,13 @@ import { HeaderClient } from './index.client'
 const CATEGORY_URL_PATTERN = /^\/category\/([^/?#]+)\/?$/
 
 export async function Header() {
-  const header = await getCachedGlobal('header', 1)()
-  const siteSettings = await getCachedGlobal('site-settings', 1)()
-
   const payload = await getPayload({ config: configPromise })
-  const categoryTree = await getCategoryTreeSafe(payload)
+
+  const [header, siteSettings, categoryTree] = await Promise.all([
+    getCachedGlobal('header', 1)(),
+    getCachedGlobal('site-settings', 1)(),
+    getCategoryTreeSafe(payload),
+  ])
 
   const navItems = (header?.navItems ?? []).map((item) => {
     if (item.children?.length) return item

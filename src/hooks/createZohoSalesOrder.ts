@@ -5,7 +5,6 @@ import { syncZohoSalesOrderForOrder } from '@/lib/orderIntegrations/syncZohoSale
 
 type SyncLoggerSource = Pick<Parameters<CollectionAfterChangeHook>[0]['req'], 'payload'>
 
-const runningOrderIds = new Set<string>()
 const orderVisibilityRetryDelaysMs = [250, 750, 1500, 3000]
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -32,18 +31,12 @@ export async function runZohoSalesOrderSync(
   req: SyncLoggerSource,
   orderId: number | string,
 ): Promise<void> {
-  const key = String(orderId)
-  if (runningOrderIds.has(key)) return
-  runningOrderIds.add(key)
-
   try {
     const payload = await getPayload({ config: configPromise })
     await waitForOrderToBeReadable(payload, orderId)
     await syncZohoSalesOrderForOrder(payload, orderId)
   } catch (err) {
     req.payload.logger.error({ msg: 'Zoho sales order sync failed', err, orderId })
-  } finally {
-    runningOrderIds.delete(key)
   }
 }
 

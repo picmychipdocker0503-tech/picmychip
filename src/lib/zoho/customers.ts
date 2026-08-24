@@ -4,6 +4,17 @@ import type { ZohoAddress, ZohoContact } from './types'
 export type FindOrCreateZohoCustomerArgs = {
   /** Zoho customer id already stored against this ecommerce customer, if any — checked first. */
   existingContactId?: string
+  /**
+   * The local PICMYCHIP Customer/User id, when this order was placed by a
+   * logged-in account. Used two ways: (1) as a guaranteed-unique Display
+   * Name suffix on collision-retry create, since it's our own primary key
+   * rather than something Zoho could ever also assign to someone else; (2)
+   * as a signal that identity is already pinned to this account, so an
+   * email-matched Zoho contact is reused as-is even if its GSTIN differs
+   * from this particular order's — the account, not the order's billing
+   * details, is the source of truth once one is known.
+   */
+  localCustomerId?: string | number
   /** The primary contact person's full name (e.g. "Keerthan Kumar P") — never itself the Display Name; see getZohoDisplayName. */
   contactName: string
   firstName?: string
@@ -186,8 +197,16 @@ function contactPhoneMatches(contact: ZohoContact, phone?: string): boolean {
   return Boolean(normalizedPhone && contactPhones(contact).includes(normalizedPhone))
 }
 
+/**
+ * Preferred suffix is the local customer id — deterministic, human-readable,
+ * and unique by construction since it's our own primary key. Falls back to
+ * email/phone only for orders with no account behind them (guest checkout).
+ */
 function getUniqueDisplayName(args: FindOrCreateZohoCustomerArgs): string | undefined {
   const base = getZohoDisplayName(args)
+  if (args.localCustomerId !== undefined && args.localCustomerId !== null) {
+    return `${base} (Cust #${args.localCustomerId})`
+  }
   if (args.email) return `${base} (${args.email.trim().toLowerCase()})`
   const phone = normalizePhone(args.phone)
   return phone ? `${base} (${phone})` : undefined
@@ -202,10 +221,35 @@ async function findByContactId(contactId: string): Promise<ZohoContact | undefin
   }
 }
 
-async function findByEmail(email: string): Promise<ZohoContact | undefined> {
+/**
+ * Zoho's `/contacts` list endpoint does not reliably filter by its own
+ * `email` query param — confirmed live, it can return the org's entire
+ * contact list (sorted by contact_name) regardless of the email queried.
+ * Blindly trusting contacts[0] here is exactly how two real accounts ended
+ * up sharing "ABC Electronics" (alphabetically first) as their Zoho contact.
+ * Same client-side verification findByGstinOrPhone already does for
+ * GSTIN/phone, applied to email too — never trust the API's filtering.
+ *
+ * `preferNoCompany` handles a second, separate problem: pre-existing
+ * duplicate contacts genuinely sharing one email (real data contamination
+ * from before this dedup fix existed, not something this fetch causes) —
+ * confirmed live, an individual customer's account got pinned to a
+ * company-named duplicate ("ABC Electronics") that happened to sort first,
+ * even though the order itself carried no company name. When the current
+ * order has no company name, a matching contact that also has none is
+ * preferred over one that does, since the latter represents a distinct
+ * registered-business identity, not this order's plain individual one.
+ */
+async function findByEmail(email: string, preferNoCompany: boolean): Promise<ZohoContact | undefined> {
   const params = new URLSearchParams({ email, filter_by: 'Status.All' })
   const data = await zohoFetch<{ contacts: ZohoContact[] }>(`/contacts?${params.toString()}`)
-  return data.contacts?.[0]
+  const matches = (data.contacts ?? []).filter((c) => contactEmailMatches(c, email))
+  if (matches.length <= 1) return matches[0]
+  if (preferNoCompany) {
+    const withoutCompany = matches.find((c) => !c.company_name)
+    if (withoutCompany) return withoutCompany
+  }
+  return matches[0]
 }
 
 async function findByGstinOrPhone(gstin?: string, phone?: string): Promise<ZohoContact | undefined> {
@@ -234,7 +278,7 @@ async function findDuplicateContact(args: FindOrCreateZohoCustomerArgs, duplicat
   const candidates: ZohoContact[] = []
 
   if (args.email) {
-    const byEmail = await findByEmail(args.email)
+    const byEmail = await findByEmail(args.email, !args.companyName)
     if (byEmail) return byEmail
   }
 
@@ -316,14 +360,20 @@ async function updateContact(
  * contact when any of those already resolve to one — updates it in place instead
  * when its GST/company/address/Display Name details have drifted.
  *
- * An email match specifically gets a second check: two orders can share one
- * login email while billing genuinely different identities (a personal
- * address vs. a registered business address with its own GSTIN) — confirmed
- * live, where a shared contact's GSTIN survived onto an order for an address
- * that had none. When the email-matched contact's GST/company conflicts with
- * this order's own details, it's treated as a different identity: matched
- * further only by GSTIN/phone (not reused outright), so the two identities
- * get their own contacts instead of overwriting each other.
+ * When `localCustomerId` is supplied (order placed by a logged-in account),
+ * an email match is trusted as-is: the account is the identity, full stop —
+ * every order from the same account resolves to the same contact, and a
+ * differing GSTIN across orders is treated as that account's GST details
+ * changing, not a different customer. Without `localCustomerId` (guest
+ * checkout, no account to pin identity to), an email match specifically gets
+ * a second check: two guest orders can share one email while billing
+ * genuinely different identities (a personal address vs. a registered
+ * business address with its own GSTIN) — confirmed live, where a shared
+ * contact's GSTIN survived onto an order for an address that had none. When
+ * the email-matched contact's GST/company conflicts with this order's own
+ * details, it's treated as a different identity: matched further only by
+ * GSTIN/phone (not reused outright), so the two identities get their own
+ * contacts instead of overwriting each other.
  */
 export async function findOrCreateZohoCustomer(
   args: FindOrCreateZohoCustomerArgs,
@@ -332,13 +382,21 @@ export async function findOrCreateZohoCustomer(
 
   if (args.existingContactId) existing = await findByContactId(args.existingContactId)
 
+  // Once we know which local account placed this order, that account IS the
+  // identity — an email match is trusted outright even if this order's GSTIN
+  // differs from what's on file (the account's GST details simply changed;
+  // contactNeedsUpdate below syncs it). Without a known account (guest
+  // checkout), a GSTIN mismatch on an email match still means "different
+  // real customer sharing a login" and is treated as a non-match.
+  const identityPinnedToAccount = args.localCustomerId !== undefined && args.localCustomerId !== null
+
   let matchedByEmailOnly = false
   if (!existing && args.email) {
-    existing = await findByEmail(args.email)
+    existing = await findByEmail(args.email, !args.companyName)
     matchedByEmailOnly = Boolean(existing)
   }
 
-  if (existing && matchedByEmailOnly && identityConflicts(existing, args)) {
+  if (existing && matchedByEmailOnly && !identityPinnedToAccount && identityConflicts(existing, args)) {
     const rematched = await findByGstinOrPhone(args.gstin, args.phone)
     existing = rematched && rematched.contact_id !== existing.contact_id ? rematched : undefined
   } else if (!existing) {
@@ -347,7 +405,7 @@ export async function findOrCreateZohoCustomer(
 
   if (!existing && args.email) {
     const duplicate = await findDuplicateContact(args, `${getZohoDisplayName(args)} (${args.email})`)
-    existing = duplicate && !identityConflicts(duplicate, args) ? duplicate : undefined
+    existing = duplicate && (identityPinnedToAccount || !identityConflicts(duplicate, args)) ? duplicate : undefined
   }
 
   if (existing) {
@@ -372,7 +430,7 @@ export async function findOrCreateZohoCustomer(
     const duplicateName = extractDuplicateCustomerName(err)
     const matched = await findDuplicateContact(args, duplicateName)
 
-    if (matched && !identityConflicts(matched, args)) {
+    if (matched && (identityPinnedToAccount || !identityConflicts(matched, args))) {
       const active = await ensureContactActive(matched)
       const updated = contactNeedsUpdate(active, args)
         ? await updateContact(active.contact_id, args)

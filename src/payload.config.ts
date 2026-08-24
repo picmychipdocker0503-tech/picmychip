@@ -42,6 +42,7 @@ import { FeatureFlags } from '@/globals/FeatureFlags'
 import { Footer } from '@/globals/Footer'
 import { Header } from '@/globals/Header'
 import { SiteSettings } from '@/globals/SiteSettings'
+import { shouldUseMeilisearch } from '@/lib/meilisearch'
 import { configureProductsIndex } from '@/lib/searchIndex'
 import { plugins } from './plugins'
 
@@ -209,6 +210,11 @@ export default buildConfig({
   endpoints: [],
   globals: [Header, Footer, SiteSettings, FeatureFlags],
   onInit: async (payload) => {
+    if (!shouldUseMeilisearch()) {
+      payload.logger.info('Meilisearch disabled, search will use the database fallback')
+      return
+    }
+
     try {
       const status = await configureProductsIndex()
       payload.logger.info({

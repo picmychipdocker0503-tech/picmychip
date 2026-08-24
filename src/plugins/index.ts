@@ -24,6 +24,7 @@ import { applyOrderDiscountSideEffects } from '@/hooks/applyOrderDiscountSideEff
 import { computeGstTaxBreakdown } from '@/hooks/computeGstTaxBreakdown'
 import { createZohoSalesOrder } from '@/hooks/createZohoSalesOrder'
 import { createShiprocketShipment } from '@/hooks/createShiprocketShipment'
+import { enforceSingleDefaultAddress } from '@/hooks/enforceSingleDefaultAddress'
 import { flagPotentialFraud } from '@/hooks/flagPotentialFraud'
 import { issueGiftCardsForOrder } from '@/hooks/issueGiftCardsForOrder'
 import { sendOrderLifecycleEmails } from '@/hooks/sendOrderLifecycleEmails'
@@ -559,14 +560,92 @@ export const plugins: Plugin[] = [
           ...defaultCollection.access,
           read: isStrictDocumentOwner,
         },
+        hooks: {
+          ...defaultCollection.hooks,
+          beforeChange: [...(defaultCollection.hooks?.beforeChange ?? []), enforceSingleDefaultAddress],
+        },
         fields: [
           ...defaultCollection.fields,
+          {
+            name: 'label',
+            type: 'select',
+            defaultValue: 'Home',
+            options: [
+              { label: 'Home', value: 'Home' },
+              { label: 'Office', value: 'Office' },
+              { label: 'Warehouse', value: 'Warehouse' },
+              { label: 'Other', value: 'Other' },
+            ],
+            admin: {
+              description: 'How this address appears in the customer\'s address book.',
+            },
+          },
+          {
+            name: 'isDefaultBilling',
+            type: 'checkbox',
+            defaultValue: false,
+            admin: {
+              description: 'Default billing address for this customer.',
+            },
+          },
+          {
+            name: 'isDefaultShipping',
+            type: 'checkbox',
+            defaultValue: false,
+            admin: {
+              description: 'Default shipping address for this customer.',
+            },
+          },
+          {
+            name: 'isActive',
+            type: 'checkbox',
+            defaultValue: true,
+            admin: {
+              description: 'Deactivated addresses are hidden from the address book but kept for historical order snapshots.',
+            },
+          },
           {
             name: 'gstin',
             type: 'text',
             label: 'GSTIN',
             admin: {
               description: 'Optional — used to generate a GST tax invoice for orders billed to this address.',
+            },
+          },
+          {
+            name: 'gstRegistered',
+            type: 'checkbox',
+            defaultValue: false,
+            admin: {
+              description: 'Whether this address belongs to a GST-registered business.',
+            },
+          },
+          {
+            name: 'gstLegalName',
+            type: 'text',
+            admin: {
+              description: 'Legal name on record for the GSTIN, as returned by GST verification.',
+              condition: (_, siblingData) => Boolean(siblingData?.gstRegistered),
+            },
+          },
+          {
+            name: 'gstTradeName',
+            type: 'text',
+            admin: {
+              description: 'Trade name on record for the GSTIN, as returned by GST verification.',
+              condition: (_, siblingData) => Boolean(siblingData?.gstRegistered),
+            },
+          },
+          {
+            name: 'gstRegistrationType',
+            type: 'select',
+            options: [
+              { label: 'Normal', value: 'NORMAL' },
+              { label: 'Composition', value: 'COMPOSITION' },
+            ],
+            admin: {
+              description: 'GST regime for this registration — independent of whether it is currently active.',
+              condition: (_, siblingData) => Boolean(siblingData?.gstRegistered),
             },
           },
         ],
