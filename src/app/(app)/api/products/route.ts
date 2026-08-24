@@ -4,10 +4,24 @@ import { parseFacetFilters } from '@/lib/facetParams'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import { searchProducts } from '@/lib/searchProducts'
 import configPromise from '@payload-config'
+import { REST_DELETE, REST_PATCH, REST_POST } from '@payloadcms/next/routes'
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 
 const PRODUCTS_PER_PAGE = 12
+
+// This file's GET override shadows Payload's generated `[...slug]` REST route
+// for the exact path `/api/products` (Next.js matches the more specific
+// static route first). Without these, the admin panel's bulk edit/publish/
+// unpublish/delete actions and "create new product" all PATCH/DELETE/POST
+// this same path and get a 405 — only single-doc routes like
+// `/api/products/:id` still hit the catch-all and work. Payload's REST
+// handlers read the collection slug from the dynamic route's `params.slug`,
+// which doesn't exist on this static route, so it's supplied manually.
+const restParams = { params: Promise.resolve({ slug: ['products'] }) }
+export const POST = (request: NextRequest) => REST_POST(configPromise)(request, restParams)
+export const PATCH = (request: NextRequest) => REST_PATCH(configPromise)(request, restParams)
+export const DELETE = (request: NextRequest) => REST_DELETE(configPromise)(request, restParams)
 
 export async function GET(request: NextRequest) {
   const ip = getClientIp(request.headers)
