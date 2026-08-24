@@ -86,6 +86,7 @@ export default async function Order({ params, searchParams }: PageProps) {
         shippingAddress: true,
         trackingNumber: true,
         courierName: true,
+        courierTrackingUrl: true,
         shipmentStatus: true,
         paymentMethod: true,
         shippingAmount: true,
@@ -244,6 +245,7 @@ export default async function Order({ params, searchParams }: PageProps) {
             status={order.status}
             trackingNumber={order.trackingNumber}
             courierName={order.courierName}
+            courierTrackingUrl={order.courierTrackingUrl}
           />
         </div>
 

@@ -2,7 +2,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { useAddresses } from '@payloadcms/plugin-ecommerce/client/react'
 import { defaultCountries as supportedCountries } from '@payloadcms/plugin-ecommerce/client/react'
 import { Address, Config } from '@/payload-types'
@@ -18,15 +17,17 @@ import {
 } from '@/lib/indiaPincodeApi'
 import { titles } from './constants'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { deepMergeSimple } from 'payload/shared'
-import { FormError } from '@/components/forms/FormError'
-import { FormItem } from '@/components/forms/FormItem'
+import { FloatingField, floatingFieldInputClassName } from '@/components/forms/FloatingField'
+import { useAuth } from '@/providers/Auth'
 
 type AddressFormValues = {
   title?: string | null
   firstName?: string | null
   lastName?: string | null
   company?: string | null
+  email?: string | null
   addressLine1?: string | null
   addressLine2?: string | null
   city?: string | null
@@ -36,16 +37,20 @@ type AddressFormValues = {
   phone?: string | null
   /** Not part of the Address collection — carried through to the parent (see CheckoutPage) for the order's GST invoice. */
   gstin?: string | null
+  /** Local-only: maps to both isDefaultBilling and isDefaultShipping on submit — see onSubmit. */
+  isDefaultAddress?: boolean
 }
 
 type Props = {
   addressID?: Config['db']['defaultIDType']
-  initialData?: Omit<Address, 'country' | 'id' | 'updatedAt' | 'createdAt'> & { country?: string }
+  initialData?: Partial<Omit<Address, 'country' | 'id' | 'updatedAt' | 'createdAt'>> & { country?: string }
   callback?: (data: Partial<Address>) => void
   /**
    * If true, the form will not submit to the API.
    */
   skipSubmission?: boolean
+  /** Renders a Cancel button next to Save that calls this instead of submitting. */
+  onCancel?: () => void
 }
 
 const GSTIN_PATTERN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/
@@ -55,6 +60,7 @@ export const AddressForm: React.FC<Props> = ({
   initialData,
   callback,
   skipSubmission,
+  onCancel,
 }) => {
   const {
     register,
@@ -63,10 +69,28 @@ export const AddressForm: React.FC<Props> = ({
     formState: { errors },
     setValue,
   } = useForm<AddressFormValues>({
-    defaultValues: { country: 'IN', ...initialData },
+    defaultValues: {
+      country: 'IN',
+      ...initialData,
+      isDefaultAddress: Boolean(initialData?.isDefaultBilling || initialData?.isDefaultShipping),
+    },
   })
 
   const { createAddress, updateAddress } = useAddresses()
+  const { user } = useAuth()
+
+  // Defaults the address's email to the account's login email so it's never
+  // left blank — editable below for the (less common) case where order
+  // updates for this specific address should go to someone else, e.g. a
+  // different contact at a business address. Only fires when this address
+  // has no email of its own yet (a brand-new address, no initialData.email)
+  // and never overwrites something the user already typed.
+  useEffect(() => {
+    if (!initialData?.email && user?.email && !watch('email')) {
+      setValue('email', user.email)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.email])
 
   const stateName = watch('state')
   const [districts, setDistricts] = useState<PincodeApiDistrict[]>([])
@@ -137,8 +161,19 @@ export const AddressForm: React.FC<Props> = ({
     setLoadingDistricts(true)
     findStateSlug(stateName)
       .then(async (slug) => {
-        if (!slug) return []
+        if (!slug) {
+          if (!cancelled) setDistricts([])
+          return
+        }
         const districtList = await fetchDistricts(slug)
+        if (cancelled) return
+        // Set the district options before ever pointing `selectedDistrictSlug`
+        // at one of them (below) — the District <Select> is controlled by
+        // that slug, and Radix resets a controlled value that doesn't match
+        // any of its current options back to empty. Setting the list first
+        // means a match found below always lands on a Select that already
+        // recognizes it.
+        setDistricts(districtList)
 
         // Editing an existing address: city/pincode are already on file, but
         // the Address collection has no district field to restore, so the
@@ -165,11 +200,6 @@ export const AddressForm: React.FC<Props> = ({
           )
           if (found && !cancelled) setSelectedDistrictSlug(found.district.slug)
         }
-
-        return districtList
-      })
-      .then((result) => {
-        if (!cancelled) setDistricts(result)
       })
       .catch(() => {
         if (!cancelled) setDistricts([])
@@ -311,7 +341,12 @@ export const AddressForm: React.FC<Props> = ({
 
   const onSubmit = useCallback(
     async (data: AddressFormValues) => {
-      const newData = deepMergeSimple(initialData || {}, data)
+      const { isDefaultAddress, ...rest } = data
+      const newData = deepMergeSimple(initialData || {}, {
+        ...rest,
+        isDefaultBilling: Boolean(isDefaultAddress),
+        isDefaultShipping: Boolean(isDefaultAddress),
+      })
 
       if (!skipSubmission) {
         if (addressID) {
@@ -330,162 +365,203 @@ export const AddressForm: React.FC<Props> = ({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="flex flex-col gap-4 mb-8">
-        <div className="flex flex-col md:flex-row gap-4">
-          <FormItem className="shrink">
-            <Label htmlFor="title">Title</Label>
-            <input type="hidden" {...register('title')} />
-            <SearchableSelect
-              id="title"
-              options={titles.map((title) => ({ value: title, label: title }))}
-              value={watch('title') || undefined}
-              onValueChange={(value) => setValue('title', value, { shouldValidate: true })}
-              placeholder="Title"
-            />
-            {errors.title && <FormError message={errors.title.message} />}
-          </FormItem>
-
-          <FormItem>
-            <Label htmlFor="firstName">First name*</Label>
-            <Input
-              id="firstName"
-              autoComplete="given-name"
-              {...register('firstName', { required: 'First name is required.' })}
-            />
-            {errors.firstName && <FormError message={errors.firstName.message} />}
-          </FormItem>
-
-          <FormItem>
-            <Label htmlFor="lastName">Last name*</Label>
-            <Input
-              autoComplete="family-name"
-              id="lastName"
-              {...register('lastName', { required: 'Last name is required.' })}
-            />
-            {errors.lastName && <FormError message={errors.lastName.message} />}
-          </FormItem>
-        </div>
-
-        <FormItem>
-          <Label htmlFor="phone">Phone</Label>
-          <Input type="tel" id="phone" autoComplete="mobile tel" {...register('phone')} />
-          {errors.phone && <FormError message={errors.phone.message} />}
-        </FormItem>
-
-        <FormItem>
-          <Label htmlFor="company">Company</Label>
-          <Input id="company" autoComplete="organization" {...register('company')} />
-          {errors.company && <FormError message={errors.company.message} />}
-        </FormItem>
-
-        <FormItem>
-          <Label htmlFor="gstin">GSTIN (optional)</Label>
-          <Input
-            id="gstin"
-            maxLength={15}
-            placeholder="For a GST tax invoice"
-            {...register('gstin')}
-            onChange={(e) => handleGstinChange(e.target.value)}
-          />
-          <p className="text-muted-foreground text-xs">State is auto-selected once a valid GSTIN is entered.</p>
-        </FormItem>
-
-        <FormItem>
-          <Label htmlFor="addressLine1">Address line 1*</Label>
-          <Input
-            id="addressLine1"
-            autoComplete="address-line1"
-            {...register('addressLine1', { required: 'Address line 1 is required.' })}
-          />
-          {errors.addressLine1 && <FormError message={errors.addressLine1.message} />}
-        </FormItem>
-
-        <FormItem>
-          <Label htmlFor="addressLine2">Address line 2</Label>
-          <Input id="addressLine2" autoComplete="address-line2" {...register('addressLine2')} />
-          {errors.addressLine2 && <FormError message={errors.addressLine2.message} />}
-        </FormItem>
-
-        <FormItem>
-          <Label htmlFor="state">State</Label>
-          <input type="hidden" {...register('state')} />
-          <SearchableSelect
-            id="state"
-            className="w-full"
-            options={INDIAN_STATES.map((state) => ({ value: state.name, label: state.name }))}
-            value={stateName || undefined}
-            onValueChange={(value) => setValue('state', value, { shouldValidate: true })}
-            placeholder="State"
-            searchPlaceholder="Search states…"
-          />
-          {errors.state && <FormError message={errors.state.message} />}
-        </FormItem>
-
-        <FormItem>
-          <Label htmlFor="district">District</Label>
-          <SearchableSelect
-            id="district"
-            className="w-full"
-            disabled={!stateName || loadingDistricts}
-            options={sortedDistricts.map((district) => ({ value: district.slug, label: district.name }))}
-            value={selectedDistrictSlug || undefined}
-            onValueChange={setSelectedDistrictSlug}
-            placeholder={!stateName ? 'Select a state first' : loadingDistricts ? 'Loading…' : 'District'}
-            searchPlaceholder="Search districts…"
-          />
-        </FormItem>
-
-        <FormItem>
-          <Label htmlFor="city">City*</Label>
-          <input type="hidden" {...register('city', { required: 'City is required.' })} />
-          <SearchableSelect
-            id="city"
-            className="w-full"
-            disabled={!selectedDistrictSlug || loadingOffices}
-            options={sortedCityOptions}
-            value={selectedCity || undefined}
-            onValueChange={handleCitySelect}
-            placeholder={!selectedDistrictSlug ? 'Select a district first' : loadingOffices ? 'Loading…' : 'City'}
-            searchPlaceholder="Search cities…"
-          />
-          {errors.city && <FormError message={errors.city.message} />}
-        </FormItem>
-
-        <FormItem>
-          <Label htmlFor="postalCode">Zip Code*</Label>
-          <Input
-            id="postalCode"
-            maxLength={6}
-            {...register('postalCode', { required: 'Postal code is required.' })}
-            onChange={(e) => {
-              const value = e.target.value
-              setValue('postalCode', value, { shouldValidate: true })
-              if (value.length === 6) void handlePostalCodeLookup(value)
-            }}
-          />
-          <p className="text-muted-foreground text-xs">
-            Auto-filled from the selected city, or type a pincode to auto-fill State/District/City.
-          </p>
-          {errors.postalCode && <FormError message={errors.postalCode.message} />}
-        </FormItem>
-
-        <FormItem>
-          <Label htmlFor="country">Country*</Label>
+      <div className="flex flex-col gap-3 mb-6">
+        <FloatingField label="Country/region" htmlFor="country" required error={errors.country?.message}>
           <input type="hidden" {...register('country', { required: 'Country is required.' })} />
           <SearchableSelect
             id="country"
-            className="w-full"
+            className={floatingFieldInputClassName}
             options={countryOptions}
             value={watch('country') || 'IN'}
             onValueChange={(value) => setValue('country', value, { shouldValidate: true })}
             placeholder="Country"
             searchPlaceholder="Search countries…"
           />
-          {errors.country && <FormError message={errors.country.message} />}
-        </FormItem>
+        </FloatingField>
+
+        <div className="flex gap-3">
+          <FloatingField label="Title" htmlFor="title" className="max-w-28 shrink-0">
+            <input type="hidden" {...register('title')} />
+            <SearchableSelect
+              id="title"
+              className={floatingFieldInputClassName}
+              options={titles.map((title) => ({ value: title, label: title }))}
+              value={watch('title') || undefined}
+              onValueChange={(value) => setValue('title', value, { shouldValidate: true })}
+              placeholder="Title"
+            />
+          </FloatingField>
+
+          <FloatingField label="First name" htmlFor="firstName" required error={errors.firstName?.message}>
+            <Input
+              id="firstName"
+              autoComplete="given-name"
+              className={floatingFieldInputClassName}
+              {...register('firstName', { required: 'First name is required.' })}
+            />
+          </FloatingField>
+
+          <FloatingField label="Last name" htmlFor="lastName" required error={errors.lastName?.message}>
+            <Input
+              autoComplete="family-name"
+              id="lastName"
+              className={floatingFieldInputClassName}
+              {...register('lastName', { required: 'Last name is required.' })}
+            />
+          </FloatingField>
+        </div>
+
+        <FloatingField label="Company (optional)" htmlFor="company">
+          <Input
+            id="company"
+            autoComplete="organization"
+            className={floatingFieldInputClassName}
+            {...register('company')}
+          />
+        </FloatingField>
+
+        <div>
+          <FloatingField label="Email" htmlFor="email" required error={errors.email?.message}>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              className={floatingFieldInputClassName}
+              {...register('email', { required: 'Email is required.' })}
+            />
+          </FloatingField>
+          <p className="text-muted-foreground text-xs mt-1">
+            Order updates for this address go here — defaults to your account email, editable if this address has a different contact.
+          </p>
+        </div>
+
+        <div>
+          <FloatingField label="GSTIN (optional)" htmlFor="gstin">
+            <Input
+              id="gstin"
+              maxLength={15}
+              className={floatingFieldInputClassName}
+              {...register('gstin')}
+              onChange={(e) => handleGstinChange(e.target.value)}
+            />
+          </FloatingField>
+          <p className="text-muted-foreground text-xs mt-1">State is auto-selected once a valid GSTIN is entered.</p>
+        </div>
+
+        <FloatingField label="Address" htmlFor="addressLine1" required error={errors.addressLine1?.message}>
+          <Input
+            id="addressLine1"
+            autoComplete="address-line1"
+            className={floatingFieldInputClassName}
+            {...register('addressLine1', { required: 'Address line 1 is required.' })}
+          />
+        </FloatingField>
+
+        <FloatingField label="Apartment, suite, etc (optional)" htmlFor="addressLine2">
+          <Input
+            id="addressLine2"
+            autoComplete="address-line2"
+            className={floatingFieldInputClassName}
+            {...register('addressLine2')}
+          />
+        </FloatingField>
+
+        <div className="flex flex-col md:flex-row gap-3">
+          <FloatingField label="State" htmlFor="state" required error={errors.state?.message} className="md:w-1/3">
+            <input type="hidden" {...register('state')} />
+            <SearchableSelect
+              id="state"
+              className={floatingFieldInputClassName}
+              options={INDIAN_STATES.map((state) => ({ value: state.name, label: state.name }))}
+              value={stateName || undefined}
+              onValueChange={(value) => setValue('state', value, { shouldValidate: true })}
+              placeholder="State"
+              searchPlaceholder="Search states…"
+            />
+          </FloatingField>
+
+          <FloatingField label="District" htmlFor="district" className="md:w-1/3">
+            <SearchableSelect
+              id="district"
+              className={floatingFieldInputClassName}
+              disabled={!stateName || loadingDistricts}
+              options={sortedDistricts.map((district) => ({ value: district.slug, label: district.name }))}
+              value={selectedDistrictSlug || undefined}
+              onValueChange={setSelectedDistrictSlug}
+              placeholder={!stateName ? 'Select a state first' : loadingDistricts ? 'Loading…' : 'District'}
+              searchPlaceholder="Search districts…"
+            />
+          </FloatingField>
+
+          <FloatingField label="City" htmlFor="city" required error={errors.city?.message} className="md:w-1/3">
+            <input type="hidden" {...register('city', { required: 'City is required.' })} />
+            <SearchableSelect
+              id="city"
+              className={floatingFieldInputClassName}
+              disabled={!selectedDistrictSlug || loadingOffices}
+              options={sortedCityOptions}
+              value={selectedCity || undefined}
+              onValueChange={handleCitySelect}
+              placeholder={!selectedDistrictSlug ? 'Select a district first' : loadingOffices ? 'Loading…' : 'City'}
+              searchPlaceholder="Search cities…"
+            />
+          </FloatingField>
+        </div>
+
+        <div>
+          <FloatingField
+            label="PIN code"
+            htmlFor="postalCode"
+            required
+            error={errors.postalCode?.message}
+            className="md:w-1/3"
+          >
+            <Input
+              id="postalCode"
+              maxLength={6}
+              className={floatingFieldInputClassName}
+              {...register('postalCode', { required: 'Postal code is required.' })}
+              onChange={(e) => {
+                const value = e.target.value
+                setValue('postalCode', value, { shouldValidate: true })
+                if (value.length === 6) void handlePostalCodeLookup(value)
+              }}
+            />
+          </FloatingField>
+          <p className="text-muted-foreground text-xs mt-1">
+            Auto-filled from the selected city, or type a pincode to auto-fill State/District/City.
+          </p>
+        </div>
+
+        <FloatingField label="Phone" htmlFor="phone" error={errors.phone?.message}>
+          <Input
+            type="tel"
+            id="phone"
+            autoComplete="mobile tel"
+            className={floatingFieldInputClassName}
+            {...register('phone')}
+          />
+        </FloatingField>
+
+        <label className="flex items-center gap-2 text-sm cursor-pointer select-none pt-1">
+          <Checkbox
+            checked={Boolean(watch('isDefaultAddress'))}
+            onCheckedChange={(checked) => setValue('isDefaultAddress', checked === true)}
+          />
+          This is my default address
+        </label>
       </div>
 
-      <Button type="submit">Submit</Button>
+      <div className="flex justify-end gap-4 items-center">
+        {onCancel && (
+          <Button type="button" variant="link" onClick={onCancel}>
+            Cancel
+          </Button>
+        )}
+        <Button type="submit" variant="outline">
+          Save
+        </Button>
+      </div>
     </form>
   )
 }

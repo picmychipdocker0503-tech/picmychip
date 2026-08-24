@@ -3,6 +3,7 @@ import type { Address } from '@/payload-types'
 import { incrementCouponRedemption, redeemGiftCard } from '@/lib/discounts'
 import { computeCheckoutTotal } from '@/lib/checkoutTax'
 import { requireCheckoutShippingMethod } from '@/lib/checkoutShipping'
+import { decrementInventoryForOrderItems } from '@/lib/inventory'
 import { runZohoSalesOrderSync } from '@/hooks/createZohoSalesOrder'
 import { getPostHogClient } from '@/lib/posthog-server'
 import configPromise from '@payload-config'
@@ -129,6 +130,8 @@ export async function POST(request: NextRequest) {
       },
       overrideAccess: true,
     })
+
+    await decrementInventoryForOrderItems(payload, items)
 
     if (cart.appliedCouponCode && cart.couponDiscountAmount) {
       await incrementCouponRedemption(payload, cart.appliedCouponCode)

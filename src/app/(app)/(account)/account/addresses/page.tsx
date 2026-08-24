@@ -47,13 +47,12 @@ export default async function AddressesPage() {
   return (
     <>
       <div className="border p-8 rounded-lg bg-primary-foreground">
-        <h1 className="text-3xl font-medium mb-8">Addresses</h1>
-
-        <div className="mb-8">
-          <AddressListing />
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-3xl font-medium">Addresses</h1>
+          <CreateAddressModal buttonText="Add" />
         </div>
 
-        <CreateAddressModal />
+        <AddressListing />
       </div>
     </>
   )

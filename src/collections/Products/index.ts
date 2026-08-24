@@ -377,7 +377,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       admin: {
         position: 'sidebar',
         description:
-          'Per-unit shipping weight in grams. Used for Shiprocket rate checks and shipment creation — defaults to 50g, a reasonable estimate for small electronic components.',
+          'Per-unit shipping weight in grams — defaults to 50g, a reasonable estimate for small electronic components.',
       },
     },
     {
@@ -386,8 +386,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       index: true,
       admin: {
         position: 'sidebar',
-        description:
-          'Stock-keeping unit sent to Shiprocket and Zoho Books. Falls back to the product slug when left blank.',
+        description: 'Stock-keeping unit sent to Zoho Books. Falls back to the product slug when left blank.',
       },
     },
     {

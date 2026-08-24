@@ -23,10 +23,10 @@ import { applyCartDiscounts } from '@/hooks/applyCartDiscounts'
 import { applyOrderDiscountSideEffects } from '@/hooks/applyOrderDiscountSideEffects'
 import { computeGstTaxBreakdown } from '@/hooks/computeGstTaxBreakdown'
 import { createZohoSalesOrder } from '@/hooks/createZohoSalesOrder'
-import { createShiprocketShipment } from '@/hooks/createShiprocketShipment'
 import { enforceSingleDefaultAddress } from '@/hooks/enforceSingleDefaultAddress'
 import { flagPotentialFraud } from '@/hooks/flagPotentialFraud'
 import { issueGiftCardsForOrder } from '@/hooks/issueGiftCardsForOrder'
+import { restoreInventoryOnCancellation } from '@/hooks/restoreInventoryOnCancellation'
 import { sendOrderLifecycleEmails } from '@/hooks/sendOrderLifecycleEmails'
 import { billingDetailsAddressFields, businessDetailsGroup } from '@/fields/businessDetails'
 
@@ -151,9 +151,9 @@ export const plugins: Plugin[] = [
             applyOrderDiscountSideEffects,
             issueGiftCardsForOrder,
             createZohoSalesOrder,
-            createShiprocketShipment,
             sendOrderLifecycleEmails,
             flagPotentialFraud,
+            restoreInventoryOnCancellation,
           ],
         },
         fields: [
@@ -197,8 +197,7 @@ export const plugins: Plugin[] = [
             type: 'text',
             admin: {
               position: 'sidebar',
-              description:
-                'Carrier tracking number (AWB), shown to the customer on their order. Auto-filled by the Shiprocket integration once a courier is assigned — editable manually as a fallback.',
+              description: 'Carrier tracking number (AWB), shown to the customer on their order. Entered manually once a courier picks up the shipment.',
             },
           },
           {
@@ -206,8 +205,15 @@ export const plugins: Plugin[] = [
             type: 'text',
             admin: {
               position: 'sidebar',
-              readOnly: true,
-              description: 'Courier Shiprocket assigned to this shipment.',
+              description: 'Courier handling this shipment, entered manually (e.g. "Delhivery", "Blue Dart").',
+            },
+          },
+          {
+            name: 'courierTrackingUrl',
+            type: 'text',
+            admin: {
+              position: 'sidebar',
+              description: "The courier's own tracking page for this shipment — shown to the customer as a link on the courier name.",
             },
           },
           {
@@ -215,24 +221,7 @@ export const plugins: Plugin[] = [
             type: 'text',
             admin: {
               position: 'sidebar',
-              readOnly: true,
-              description: 'Latest status from Shiprocket (e.g. "Pickup Scheduled", "In Transit", "Delivered").',
-            },
-          },
-          {
-            name: 'shiprocketOrderId',
-            type: 'text',
-            admin: {
-              position: 'sidebar',
-              readOnly: true,
-            },
-          },
-          {
-            name: 'shiprocketShipmentId',
-            type: 'text',
-            admin: {
-              position: 'sidebar',
-              readOnly: true,
+              description: 'Current shipment status, entered manually (e.g. "Picked Up", "In Transit", "Delivered").',
             },
           },
           {
@@ -447,33 +436,6 @@ export const plugins: Plugin[] = [
             type: 'date',
             admin: { position: 'sidebar', readOnly: true },
           },
-          // Shiprocket (shiprocketOrderId, shiprocketShipmentId, trackingNumber,
-          // courierName, shipmentStatus already exist above)
-          {
-            name: 'shiprocketTrackingUrl',
-            type: 'text',
-            admin: { position: 'sidebar', readOnly: true },
-          },
-          {
-            name: 'shiprocketPickupStatus',
-            type: 'text',
-            admin: { position: 'sidebar', readOnly: true },
-          },
-          {
-            name: 'shiprocketDeliveryStatus',
-            type: 'text',
-            admin: { position: 'sidebar', readOnly: true },
-          },
-          {
-            name: 'shiprocketEstimatedDeliveryDate',
-            type: 'text',
-            admin: { position: 'sidebar', readOnly: true },
-          },
-          {
-            name: 'shiprocketCreatedAt',
-            type: 'date',
-            admin: { position: 'sidebar', readOnly: true },
-          },
           // Integration sync bookkeeping
           {
             name: 'salesOrderSyncStatus',
@@ -500,18 +462,6 @@ export const plugins: Plugin[] = [
             admin: { position: 'sidebar', readOnly: true },
           },
           {
-            name: 'shipmentSyncStatus',
-            type: 'select',
-            defaultValue: 'pending',
-            options: [
-              { label: 'Pending', value: 'pending' },
-              { label: 'Processing', value: 'processing' },
-              { label: 'Completed', value: 'completed' },
-              { label: 'Failed', value: 'failed' },
-            ],
-            admin: { position: 'sidebar', readOnly: true },
-          },
-          {
             name: 'integrationError',
             type: 'group',
             admin: {
@@ -521,7 +471,6 @@ export const plugins: Plugin[] = [
             fields: [
               { name: 'salesOrder', type: 'text', admin: { readOnly: true } },
               { name: 'invoice', type: 'text', admin: { readOnly: true } },
-              { name: 'shipment', type: 'text', admin: { readOnly: true } },
             ],
           },
           {
@@ -566,6 +515,15 @@ export const plugins: Plugin[] = [
         },
         fields: [
           ...defaultCollection.fields,
+          {
+            name: 'email',
+            type: 'email',
+            required: true,
+            admin: {
+              description:
+                "Defaults to the account's login email — change it if order updates for this address should go elsewhere (e.g. a different contact for a business address).",
+            },
+          },
           {
             name: 'label',
             type: 'select',

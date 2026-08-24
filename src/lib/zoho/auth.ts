@@ -5,8 +5,7 @@ export const zohoIsConfigured = Boolean(
     process.env.ZOHO_ORGANIZATION_ID,
 )
 
-// Read live rather than cached into module-level constants (same convention as
-// src/lib/shiprocket.ts, which reads process.env.SHIPROCKET_* inline per call) —
+// Read live rather than cached into module-level constants —
 // a module-level `const X = process.env.X` would freeze in whatever value was
 // set at first import, which is wrong the moment env vars are reloaded/changed
 // without a process restart (and made a real test bug obvious: caching
@@ -16,8 +15,8 @@ export const getZohoApiDomain = (): string => process.env.ZOHO_API_DOMAIN || 'ht
 const getZohoAccountsDomain = (): string => process.env.ZOHO_ACCOUNTS_DOMAIN || 'https://accounts.zoho.in'
 export const getZohoOrganizationId = (): string => process.env.ZOHO_ORGANIZATION_ID || ''
 
-// Zoho access tokens are valid ~1 hour. Caching in module scope (same pattern as
-// src/lib/shiprocket.ts's cachedToken) avoids a refresh round-trip on every request.
+// Zoho access tokens are valid ~1 hour. Caching in module scope avoids a
+// refresh round-trip on every request.
 let cachedToken: { expiresAt: number; token: string } | null = null
 
 export async function getZohoAccessToken(): Promise<string> {

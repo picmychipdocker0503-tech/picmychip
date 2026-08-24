@@ -17,7 +17,6 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { redirectToPayU, type PayuRedirectFields } from '@/lib/redirectToPayU'
 import { useAddresses, useCart, usePayments } from '@payloadcms/plugin-ecommerce/client/react'
 import { CheckoutAddresses } from '@/components/checkout/CheckoutAddresses'
-import { DeliveryEstimate } from '@/components/checkout/DeliveryEstimate'
 import { CreateAddressModal } from '@/components/addresses/CreateAddressModal'
 import { getClientSideURL } from '@/utilities/getURL'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
@@ -409,6 +408,7 @@ export const CheckoutPage: React.FC<{
       ) : (
         <CreateAddressModal
           disabled={!email || Boolean(emailEditable)}
+          initialData={{ email }}
           callback={(address) => {
             setBillingAddress(address)
           }}
@@ -460,16 +460,12 @@ export const CheckoutPage: React.FC<{
                 setShippingAddress(address)
               }}
               disabled={!email || Boolean(emailEditable)}
+              initialData={{ email }}
               skipSubmission={true}
             />
           )}
         </>
       )}
-
-      <DeliveryEstimate
-        cartId={cart?.id}
-        pincode={(billingAddressSameAsShipping ? billingAddress : shippingAddress)?.postalCode ?? undefined}
-      />
 
       <div className="flex flex-col gap-6">
         <div>

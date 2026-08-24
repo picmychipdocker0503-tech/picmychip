@@ -35,6 +35,9 @@ export function orderConfirmationEmailHtml(order: {
   id: string | number
   amount?: number | null
   currency?: string | null
+  orderedByEmail?: string | null
+  billingContactName?: string | null
+  billingContactEmail?: string | null
 }): string {
   const amount =
     typeof order.amount === 'number'
@@ -43,10 +46,33 @@ export function orderConfirmationEmailHtml(order: {
           maximumFractionDigits: 2,
         }).format(order.amount / 100)
       : '—'
+
+  // Shown whenever the billing address's own email differs from the account
+  // that placed the order (e.g. a business address with a different
+  // contact) — both this order confirmation and the shipping-update email
+  // go to both addresses (see sendOrderLifecycleEmails), so it must be
+  // obvious to each recipient who actually placed the order versus who the
+  // billing contact is.
+  const billingDiffers =
+    order.billingContactEmail &&
+    order.orderedByEmail &&
+    order.billingContactEmail.trim().toLowerCase() !== order.orderedByEmail.trim().toLowerCase()
+
+  const whoHtml = `
+     <p style="font-size: 13px; color: #555;">
+       ${order.orderedByEmail ? `<strong>Ordered by:</strong> ${order.orderedByEmail}` : ''}
+       ${
+         billingDiffers
+           ? `<br/><strong>Billing contact:</strong> ${order.billingContactName ? `${order.billingContactName} — ` : ''}${order.billingContactEmail}`
+           : ''
+       }
+     </p>`
+
   return wrapper(
     `Order confirmed — #${order.id}`,
     `<p>Thanks for your order! We've received it and it's now being processed.</p>
      <p><strong>Order total:</strong> ${order.currency || ''} ${amount}</p>
+     ${whoHtml}
      <p>You can view your order status anytime from your account.</p>`,
   )
 }
@@ -55,15 +81,32 @@ export function shippingUpdateEmailHtml(order: {
   id: string | number
   trackingNumber?: string | null
   status?: string | null
+  orderedByEmail?: string | null
+  billingContactName?: string | null
+  billingContactEmail?: string | null
 }): string {
   const trackingHtml = order.trackingNumber
     ? `<p><strong>Tracking number:</strong> ${order.trackingNumber}</p>`
     : ''
+
+  const billingDiffers =
+    order.billingContactEmail &&
+    order.orderedByEmail &&
+    order.billingContactEmail.trim().toLowerCase() !== order.orderedByEmail.trim().toLowerCase()
+
+  const whoHtml = billingDiffers
+    ? `<p style="font-size: 13px; color: #555;">
+         <strong>Ordered by:</strong> ${order.orderedByEmail}<br/>
+         <strong>Billing contact:</strong> ${order.billingContactName ? `${order.billingContactName} — ` : ''}${order.billingContactEmail}
+       </p>`
+    : ''
+
   return wrapper(
     `Your order #${order.id} has shipped`,
     `<p>Good news — there's an update on your order.</p>
      ${trackingHtml}
-     <p><strong>Status:</strong> ${order.status || 'processing'}</p>`,
+     <p><strong>Status:</strong> ${order.status || 'processing'}</p>
+     ${whoHtml}`,
   )
 }
 

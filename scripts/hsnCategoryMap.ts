@@ -19,6 +19,7 @@ export const CATEGORY_HSN: Record<string, string> = {
   'Drone Parts': '8501', // predominantly motors/ESCs — most heterogeneous category
   'FFC Cables': '8544',
   Fuse: '8536',
+  'Home Audio': '8518', // loudspeakers, amplifiers, sound systems
   IC: '8542',
   Inductor: '8504',
   'JST Cables': '8544',

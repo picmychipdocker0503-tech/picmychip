@@ -16,6 +16,7 @@ export const billingDetailsAddressFields = (): Field[] => [
   { name: 'firstName', type: 'text' },
   { name: 'lastName', type: 'text' },
   { name: 'company', type: 'text' },
+  { name: 'email', type: 'email' },
   { name: 'addressLine1', type: 'text' },
   { name: 'addressLine2', type: 'text' },
   { name: 'city', type: 'text' },

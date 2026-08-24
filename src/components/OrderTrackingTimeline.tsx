@@ -5,11 +5,17 @@ import { cn } from '@/utilities/cn'
 
 type Props = {
   courierName?: string | null
+  courierTrackingUrl?: string | null
   status?: string | null
   trackingNumber?: string | null
 }
 
-export const OrderTrackingTimeline: React.FC<Props> = ({ status, trackingNumber, courierName }) => {
+export const OrderTrackingTimeline: React.FC<Props> = ({
+  status,
+  trackingNumber,
+  courierName,
+  courierTrackingUrl,
+}) => {
   if (status === 'cancelled' || status === 'refunded') {
     return (
       <p className="text-muted-foreground text-sm capitalize">
@@ -58,7 +64,25 @@ export const OrderTrackingTimeline: React.FC<Props> = ({ status, trackingNumber,
       {trackingNumber && (
         <p className="text-sm">
           <span className="text-muted-foreground">
-            {courierName ? `${courierName} tracking number: ` : 'Tracking number: '}
+            {courierName ? (
+              <>
+                {courierTrackingUrl ? (
+                  <a
+                    className="text-primary underline underline-offset-2"
+                    href={courierTrackingUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    {courierName}
+                  </a>
+                ) : (
+                  courierName
+                )}
+                {' tracking number: '}
+              </>
+            ) : (
+              'Tracking number: '
+            )}
           </span>
           <span className="font-medium">{trackingNumber}</span>
         </p>

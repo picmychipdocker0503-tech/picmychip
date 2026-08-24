@@ -2,25 +2,49 @@ import type { CollectionAfterChangeHook } from 'payload'
 
 import { orderConfirmationEmailHtml, sendMail, shippingUpdateEmailHtml } from '@/lib/email'
 
+const normalize = (value?: string | null) => (value || '').trim().toLowerCase()
+
 export const sendOrderLifecycleEmails: CollectionAfterChangeHook = async ({
   doc,
   previousDoc,
   operation,
   req,
 }) => {
-  const email =
+  const orderedByEmail: string | undefined =
     doc.customerEmail || (typeof doc.customer === 'object' ? doc.customer?.email : undefined)
 
-  if (!email) return doc
+  if (!orderedByEmail) return doc
+
+  // The billing address's own email (see AddressForm — defaults to the
+  // account's login email, but is editable for a different contact) is a
+  // second, independent recipient whenever it's actually different — e.g. a
+  // business account ordering on behalf of a colleague whose own email
+  // should also see order updates. Both emails clearly label who placed the
+  // order versus who the billing contact is (see orderConfirmationEmailHtml)
+  // so neither recipient is left guessing.
+  const billingContactEmail: string | undefined = doc.billingAddress?.email || undefined
+  const billingContactName: string | undefined =
+    [doc.billingAddress?.firstName, doc.billingAddress?.lastName].filter(Boolean).join(' ') || undefined
+  const sendToBillingToo = Boolean(
+    billingContactEmail && normalize(billingContactEmail) !== normalize(orderedByEmail),
+  )
+
+  const recipients: { email: string; eventSuffix: string }[] = [{ email: orderedByEmail, eventSuffix: 'ACCOUNT' }]
+  if (sendToBillingToo && billingContactEmail) {
+    recipients.push({ email: billingContactEmail, eventSuffix: 'BILLING' })
+  }
 
   if (operation === 'create') {
-    await sendMail(req.payload, {
-      to: email,
-      subject: `Order confirmed — #${doc.id}`,
-      html: orderConfirmationEmailHtml(doc),
-      emailType: 'ORDER_CONFIRMATION',
-      eventId: `ORDER_CONFIRMATION_${doc.id}`,
-    })
+    const html = orderConfirmationEmailHtml({ ...doc, orderedByEmail, billingContactName, billingContactEmail })
+    for (const recipient of recipients) {
+      await sendMail(req.payload, {
+        to: recipient.email,
+        subject: `Order confirmed — #${doc.id}`,
+        html,
+        emailType: 'ORDER_CONFIRMATION',
+        eventId: `ORDER_CONFIRMATION_${doc.id}_${recipient.eventSuffix}`,
+      })
+    }
     return doc
   }
 
@@ -28,13 +52,16 @@ export const sendOrderLifecycleEmails: CollectionAfterChangeHook = async ({
   const justCompleted = doc.status === 'completed' && previousDoc?.status !== 'completed'
 
   if (trackingJustAdded || justCompleted) {
-    await sendMail(req.payload, {
-      to: email,
-      subject: `Shipping update for order #${doc.id}`,
-      html: shippingUpdateEmailHtml(doc),
-      emailType: 'SHIPPING_UPDATE',
-      eventId: `SHIPPING_UPDATE_${doc.id}_${doc.trackingNumber || 'completed'}`,
-    })
+    const html = shippingUpdateEmailHtml({ ...doc, orderedByEmail, billingContactName, billingContactEmail })
+    for (const recipient of recipients) {
+      await sendMail(req.payload, {
+        to: recipient.email,
+        subject: `Shipping update for order #${doc.id}`,
+        html,
+        emailType: 'SHIPPING_UPDATE',
+        eventId: `SHIPPING_UPDATE_${doc.id}_${doc.trackingNumber || 'completed'}_${recipient.eventSuffix}`,
+      })
+    }
   }
 
   return doc

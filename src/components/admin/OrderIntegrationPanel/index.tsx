@@ -95,9 +95,7 @@ export const OrderIntegrationPanel: React.FC = () => {
   const trackingNumber = useFormFields(([fields]) => fields.trackingNumber?.value) as string | undefined
   const courierName = useFormFields(([fields]) => fields.courierName?.value) as string | undefined
   const shipmentStatus = useFormFields(([fields]) => fields.shipmentStatus?.value) as string | undefined
-  const trackingUrl = useFormFields(([fields]) => fields.shiprocketTrackingUrl?.value) as
-    | string
-    | undefined
+  const trackingUrl = useFormFields(([fields]) => fields.courierTrackingUrl?.value) as string | undefined
 
   const callAction = async (action: Action) => {
     if (!id) return

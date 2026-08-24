@@ -1,6 +1,7 @@
 import type { PaymentAdapter } from '@payloadcms/plugin-ecommerce/types'
 import type { Endpoint, PayloadRequest } from 'payload'
 import { getServerSideURL } from '@/utilities/getURL'
+import { decrementInventoryForOrderItems } from '@/lib/inventory'
 
 type CallbackEndpointProps = {
   confirmOrder: PaymentAdapter['confirmOrder']
@@ -44,25 +45,7 @@ export const callbackEndpoint = (props: CallbackEndpointProps): Endpoint => {
           select: { id: true, items: true },
         })
 
-        if (transaction && Array.isArray(transaction.items)) {
-          for (const item of transaction.items) {
-            if (item.variant) {
-              const id = typeof item.variant === 'object' ? item.variant.id : item.variant
-              await req.payload.db.updateOne({
-                id,
-                collection: 'variants',
-                data: { inventory: { $inc: item.quantity * -1 } },
-              })
-            } else if (item.product) {
-              const id = typeof item.product === 'object' ? item.product.id : item.product
-              await req.payload.db.updateOne({
-                id,
-                collection: 'products',
-                data: { inventory: { $inc: item.quantity * -1 } },
-              })
-            }
-          }
-        }
+        await decrementInventoryForOrderItems(req.payload, transaction?.items)
       }
 
       const query = new URLSearchParams()

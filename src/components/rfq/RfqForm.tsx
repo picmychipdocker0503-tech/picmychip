@@ -110,21 +110,22 @@ export const RfqForm: React.FC<Props> = ({ file, onRemoveFile }) => {
           <p className="text-muted-foreground mt-2 text-sm">
             {"We've logged your RFQ and will get back to you within 12 hours with pricing and availability."}
           </p>
-          {ticketId && (
-            <p className="border-border bg-muted/40 text-foreground mt-4 inline-block rounded-lg border px-4 py-2 text-sm font-medium">
-              Reference ID: <span className="font-mono">{ticketId}</span>
-            </p>
-          )}
-          <Button
-            className="mt-6"
-            onClick={() => {
-              setSuccess(false)
-              setTicketId(null)
-            }}
-            variant="outline"
-          >
-            Submit another request
-          </Button>
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            {ticketId && (
+              <p className="border-border bg-muted/40 text-foreground flex h-9 items-center rounded-lg border px-4 text-sm font-medium">
+                Reference ID: <span className="font-mono ml-1">{ticketId}</span>
+              </p>
+            )}
+            <Button
+              onClick={() => {
+                setSuccess(false)
+                setTicketId(null)
+              }}
+              variant="outline"
+            >
+              Submit another request
+            </Button>
+          </div>
         </div>
       </section>
     )

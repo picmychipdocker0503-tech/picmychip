@@ -1,4 +1,5 @@
 import type { Payload } from 'payload'
+import { sql } from '@payloadcms/db-postgres'
 
 import { zohoIsConfigured } from '@/lib/zoho/auth'
 import { findOrCreateZohoCustomer, markZohoContactActive } from '@/lib/zoho/customers'
@@ -279,7 +280,38 @@ async function applyLinkedInvoice(payload: Payload, orderId: number | string, sa
 // actually created anything. Centralized here, not in the hook, so every
 // caller — the hook, the retry endpoint, the resync script — is covered by
 // the same guard instead of each needing its own.
+//
+// This in-memory Set only protects a single process, though — Vercel can run
+// multiple concurrent serverless instances for the same order, each with its
+// own empty Set (confirmed live: order 70 got two Sales Orders, SO-00046 and
+// SO-00047, six seconds apart, from what were evidently two separate
+// invocations this guard never saw each other). claimSyncSlot below is the
+// cross-process version of the same guard, backing this one up.
 const syncsInFlight = new Set<string>()
+
+/**
+ * Cross-process mutex substitute via an atomic conditional UPDATE — the
+ * database, not process memory, is the only thing every concurrent
+ * serverless invocation actually shares. Only the invocation whose UPDATE
+ * actually flips the row (i.e. the query returns a row) wins the claim; a
+ * concurrent invocation sees 0 rows affected and backs off instead of also
+ * creating a Sales Order. The staleness window lets a genuinely stuck
+ * "processing" status (e.g. an invocation that crashed mid-sync) be
+ * reclaimed by a later attempt rather than wedging every future sync for
+ * that order forever.
+ */
+async function claimSyncSlot(payload: Payload, orderId: number | string): Promise<boolean> {
+  const db = (payload.db as unknown as { drizzle: { execute: (query: unknown) => Promise<{ rows?: unknown[] }> } })
+    .drizzle
+  const result = await db.execute(sql`
+    UPDATE orders
+    SET sales_order_sync_status = 'processing'
+    WHERE id = ${orderId}
+      AND (sales_order_sync_status IS DISTINCT FROM 'processing' OR updated_at < now() - interval '3 minutes')
+    RETURNING id
+  `)
+  return (result.rows?.length ?? 0) > 0
+}
 
 /**
  * Creates the Zoho Sales Order for an order (the first step — every order
@@ -316,14 +348,13 @@ async function syncZohoSalesOrderForOrderUnguarded(payload: Payload, orderId: nu
 
   if (!order || order.status === 'cancelled') return
 
-  try {
-    await payload.update({
-      collection: 'orders',
-      id: orderId,
-      data: { salesOrderSyncStatus: 'processing' },
-      overrideAccess: true,
-    })
+  const claimed = await claimSyncSlot(payload, orderId)
+  if (!claimed) {
+    payload.logger.info({ msg: 'Zoho sales order sync already in progress elsewhere, skipping', orderId })
+    return
+  }
 
+  try {
     // Idempotency guard — checks Zoho directly, not just our local flag, so
     // a retried hook or manual retry never produces a duplicate sales order.
     let salesOrder = await findExistingSalesOrderByOrderId(orderId)

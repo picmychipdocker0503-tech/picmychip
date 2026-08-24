@@ -43,10 +43,21 @@ export type FindOrCreateZohoCustomerResult = {
  * every caller (create, update, sales-order sync) computes it identically —
  * never duplicate this ternary elsewhere.
  */
+// Title-cases every word — checkout doesn't enforce casing on name/company
+// input, so "keerthan kumar p" or "SRI SAKTHI INDUSTRIES" would otherwise
+// show up as typed on the Zoho Sales Order and Invoice PDFs instead of as
+// "Keerthan Kumar P" / "Sri Sakthi Industries".
+const toTitleCase = (value: string): string =>
+  value
+    .toLowerCase()
+    .split(' ')
+    .map((word) => (word ? word.charAt(0).toUpperCase() + word.slice(1) : word))
+    .join(' ')
+
 export function getZohoDisplayName(args: { companyName?: string | null; contactName: string }): string {
   const company = (args.companyName || '').trim()
-  if (company) return company
-  return (args.contactName || '').trim()
+  if (company) return toTitleCase(company)
+  return toTitleCase((args.contactName || '').trim())
 }
 
 // Contacts follow the storefront billing identity: GSTIN means a registered

@@ -1,5 +1,6 @@
 import configPromise from '@payload-config'
 import { getPayload, type CollectionAfterChangeHook, type Payload } from 'payload'
+import { after } from 'next/server'
 
 import { syncZohoSalesOrderForOrder } from '@/lib/orderIntegrations/syncZohoSalesOrder'
 
@@ -47,14 +48,29 @@ export async function runZohoSalesOrderSync(
  * "Retry" endpoint can reuse the same logic.
  *
  * No-ops entirely (not an error) until ZOHO_* env vars are set, same
- * convention as the SMTP/R2/Shiprocket integrations.
+ * convention as the SMTP/R2 integrations.
  */
 export const createZohoSalesOrder: CollectionAfterChangeHook = async ({ doc, operation, req }) => {
   if (operation !== 'create') return doc
 
-  setTimeout(() => {
-    void runZohoSalesOrderSync(req, doc.id)
-  }, 250)
+  // after() is the platform-correct way to defer work past the response on
+  // Vercel: a bare setTimeout has no guarantee of firing at all once the
+  // response is sent, since the function's execution environment can be
+  // frozen immediately after — and a frozen timer can resume unpredictably
+  // during a *later*, unrelated invocation of the same function instance.
+  // That's a plausible source of the exact bug this whole guard chain exists
+  // for (order 70 got two Sales Orders from what were evidently two separate
+  // invocations). after() requires an active Next.js request scope, same
+  // requirement as revalidatePath — falls back to the old timer for any
+  // caller outside one (e.g. a Local API script creating an order directly).
+  try {
+    after(() => runZohoSalesOrderSync(req, doc.id))
+  } catch (err) {
+    req.payload.logger.warn({ msg: 'after() unavailable, falling back to setTimeout', err, orderId: doc.id })
+    setTimeout(() => {
+      void runZohoSalesOrderSync(req, doc.id)
+    }, 250)
+  }
 
   return doc
 }

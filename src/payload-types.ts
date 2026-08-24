@@ -336,19 +336,21 @@ export interface Order {
   currency?: 'INR' | null;
   accessToken?: string | null;
   /**
-   * Carrier tracking number (AWB), shown to the customer on their order. Auto-filled by the Shiprocket integration once a courier is assigned — editable manually as a fallback.
+   * Carrier tracking number (AWB), shown to the customer on their order. Entered manually once a courier picks up the shipment.
    */
   trackingNumber?: string | null;
   /**
-   * Courier Shiprocket assigned to this shipment.
+   * Courier handling this shipment, entered manually (e.g. "Delhivery", "Blue Dart").
    */
   courierName?: string | null;
   /**
-   * Latest status from Shiprocket (e.g. "Pickup Scheduled", "In Transit", "Delivered").
+   * The courier's own tracking page for this shipment — shown to the customer as a link on the courier name.
+   */
+  courierTrackingUrl?: string | null;
+  /**
+   * Current shipment status, entered manually (e.g. "Picked Up", "In Transit", "Delivered").
    */
   shipmentStatus?: string | null;
-  shiprocketOrderId?: string | null;
-  shiprocketShipmentId?: string | null;
   paymentMethod?: ('card' | 'cod' | 'gift-card') | null;
   shippingMethod?: ('express' | 'standard') | null;
   /**
@@ -392,6 +394,7 @@ export interface Order {
     firstName?: string | null;
     lastName?: string | null;
     company?: string | null;
+    email?: string | null;
     addressLine1?: string | null;
     addressLine2?: string | null;
     city?: string | null;
@@ -432,21 +435,14 @@ export interface Order {
   zohoCreditNoteAmount?: number | null;
   zohoCreditNoteUrl?: string | null;
   zohoCreditNoteCreatedAt?: string | null;
-  shiprocketTrackingUrl?: string | null;
-  shiprocketPickupStatus?: string | null;
-  shiprocketDeliveryStatus?: string | null;
-  shiprocketEstimatedDeliveryDate?: string | null;
-  shiprocketCreatedAt?: string | null;
   salesOrderSyncStatus?: ('pending' | 'processing' | 'completed' | 'failed') | null;
   invoiceSyncStatus?: ('pending' | 'processing' | 'completed' | 'failed') | null;
-  shipmentSyncStatus?: ('pending' | 'processing' | 'completed' | 'failed') | null;
   /**
    * Last error message from each integration, if any — cleared on the next successful sync.
    */
   integrationError?: {
     salesOrder?: string | null;
     invoice?: string | null;
-    shipment?: string | null;
   };
   lastSyncAt?: string | null;
   /**
@@ -684,11 +680,11 @@ export interface Product {
    */
   lowStockThreshold?: number | null;
   /**
-   * Per-unit shipping weight in grams. Used for Shiprocket rate checks and shipment creation — defaults to 50g, a reasonable estimate for small electronic components.
+   * Per-unit shipping weight in grams — defaults to 50g, a reasonable estimate for small electronic components.
    */
   weightInGrams?: number | null;
   /**
-   * Stock-keeping unit sent to Shiprocket and Zoho Books. Falls back to the product slug when left blank.
+   * Stock-keeping unit sent to Zoho Books. Falls back to the product slug when left blank.
    */
   sku?: string | null;
   /**
@@ -2013,6 +2009,10 @@ export interface Address {
     | 'SE'
     | 'CH';
   phone?: string | null;
+  /**
+   * Defaults to the account's login email — change it if order updates for this address should go elsewhere (e.g. a different contact for a business address).
+   */
+  email: string;
   /**
    * How this address appears in the customer's address book.
    */
@@ -3747,6 +3747,7 @@ export interface AddressesSelect<T extends boolean = true> {
   postalCode?: T;
   country?: T;
   phone?: T;
+  email?: T;
   label?: T;
   isDefaultBilling?: T;
   isDefaultShipping?: T;
@@ -4058,9 +4059,8 @@ export interface OrdersSelect<T extends boolean = true> {
   accessToken?: T;
   trackingNumber?: T;
   courierName?: T;
+  courierTrackingUrl?: T;
   shipmentStatus?: T;
-  shiprocketOrderId?: T;
-  shiprocketShipmentId?: T;
   paymentMethod?: T;
   shippingMethod?: T;
   shippingAmount?: T;
@@ -4097,6 +4097,7 @@ export interface OrdersSelect<T extends boolean = true> {
         firstName?: T;
         lastName?: T;
         company?: T;
+        email?: T;
         addressLine1?: T;
         addressLine2?: T;
         city?: T;
@@ -4127,20 +4128,13 @@ export interface OrdersSelect<T extends boolean = true> {
   zohoCreditNoteAmount?: T;
   zohoCreditNoteUrl?: T;
   zohoCreditNoteCreatedAt?: T;
-  shiprocketTrackingUrl?: T;
-  shiprocketPickupStatus?: T;
-  shiprocketDeliveryStatus?: T;
-  shiprocketEstimatedDeliveryDate?: T;
-  shiprocketCreatedAt?: T;
   salesOrderSyncStatus?: T;
   invoiceSyncStatus?: T;
-  shipmentSyncStatus?: T;
   integrationError?:
     | T
     | {
         salesOrder?: T;
         invoice?: T;
-        shipment?: T;
       };
   lastSyncAt?: T;
   reviewRequestSentAt?: T;
