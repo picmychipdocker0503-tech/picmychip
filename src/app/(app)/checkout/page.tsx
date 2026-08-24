@@ -5,10 +5,12 @@ import { getCachedGlobal } from '@/utilities/getGlobals'
 import React, { Fragment, Suspense } from 'react'
 
 import { CheckoutPage } from '@/components/checkout/CheckoutPage'
+import { getCheckoutShippingMethods } from '@/lib/checkoutShipping'
 
 export default async function Checkout() {
   const siteSettings = await getCachedGlobal('site-settings', 0)()
   const tax = siteSettings?.taxSettings
+  const shippingMethods = getCheckoutShippingMethods(siteSettings?.shippingSettings ?? undefined)
 
   return (
     <div className="container min-h-[90vh] flex">
@@ -42,6 +44,7 @@ export default async function Checkout() {
         <CheckoutPage
           businessState={tax?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka'}
           defaultGstPercent={tax?.gstRatePercent ?? 18}
+          shippingMethods={shippingMethods}
         />
       </Suspense>
     </div>

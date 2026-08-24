@@ -8,7 +8,7 @@ import { defaultCountries as supportedCountries } from '@payloadcms/plugin-ecomm
 import { Address, Config } from '@/payload-types'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 
-import { INDIAN_STATES, resolveStateByGstin } from '@/lib/indianStates'
+import { INDIAN_STATES, resolveIndianState, resolveStateByGstin } from '@/lib/indianStates'
 import {
   fetchDistricts,
   fetchOffices,
@@ -75,7 +75,20 @@ export const AddressForm: React.FC<Props> = ({
   const [selectedCity, setSelectedCity] = useState(initialData?.city || '')
   const [loadingDistricts, setLoadingDistricts] = useState(false)
   const [loadingOffices, setLoadingOffices] = useState(false)
-  const isFirstStateLoad = useRef(true)
+  // Tracks the actual value seen last, not "has this run before" — a plain
+  // has-it-run-once boolean breaks under React Strict Mode's dev-only
+  // double-invocation of effects on mount: the first pass flips it, so the
+  // second pass (same stateName, nothing really changed) would wrongly read
+  // "this is a real state change" and wipe the city/postalCode this effect
+  // had just restored. Comparing against the previous value instead means
+  // the second pass sees an unchanged value and correctly no-ops.
+  const previousStateNameRef = useRef<string | undefined>(undefined)
+  // Set by handlePostalCodeLookup right before it changes the district — the
+  // District -> City effect below is the *only* place that sets `offices`
+  // (a live pincode lookup used to also set it directly, racing this same
+  // effect's own redundant re-fetch for the same district and losing
+  // unpredictably). Consulted once that effect's own fetch resolves.
+  const pendingPincodeMatchRef = useRef<string | null>(null)
 
   const sortedDistricts = React.useMemo(
     () => [...districts].sort((a, b) => a.name.localeCompare(b.name)),
@@ -107,8 +120,10 @@ export const AddressForm: React.FC<Props> = ({
       return
     }
 
-    const keepExistingSelection = isFirstStateLoad.current
-    isFirstStateLoad.current = false
+    const isRealStateChange =
+      previousStateNameRef.current !== undefined && previousStateNameRef.current !== stateName
+    const keepExistingSelection = !isRealStateChange
+    previousStateNameRef.current = stateName
 
     if (!keepExistingSelection) {
       setSelectedDistrictSlug('')
@@ -181,7 +196,26 @@ export const AddressForm: React.FC<Props> = ({
     findStateSlug(stateName)
       .then((slug) => (slug ? fetchOffices(slug, selectedDistrictSlug) : Promise.resolve([])))
       .then((result) => {
-        if (!cancelled) setOffices(result)
+        if (cancelled) return
+
+        // A pincode lookup just landed us on this district — narrow the
+        // City options down to only the offices that actually carry that
+        // pincode (a pincode commonly maps to several named offices; showing
+        // the district's full, mostly-unrelated list would bury them),
+        // and auto-select the first one as a convenient default.
+        const pendingPincode = pendingPincodeMatchRef.current
+        if (pendingPincode) {
+          pendingPincodeMatchRef.current = null
+          const matchingOffices = result.filter((office) => office.pincode === pendingPincode)
+          if (matchingOffices.length > 0) {
+            setOffices(matchingOffices)
+            setSelectedCity(matchingOffices[0].officeName)
+            setValue('city', matchingOffices[0].officeName, { shouldValidate: true })
+            return
+          }
+        }
+
+        setOffices(result)
       })
       .catch(() => {
         if (!cancelled) setOffices([])
@@ -204,6 +238,62 @@ export const AddressForm: React.FC<Props> = ({
       if (upper.length === 15 && GSTIN_PATTERN.test(upper)) {
         const matchedState = resolveStateByGstin(upper)
         if (matchedState) setValue('state', matchedState.name, { shouldValidate: true })
+      }
+    },
+    [setValue],
+  )
+
+  // Reverse direction of the State -> District -> City cascade above: typing
+  // a complete pincode looks it up via India Post's own official pincode API
+  // (the one source that actually goes pincode -> state/district, unlike the
+  // static dataset the forward cascade uses) and auto-fills State, then finds
+  // the matching district/office in that same static dataset so the selected
+  // city stays a value the District/City selects actually recognize.
+  const handlePostalCodeLookup = useCallback(
+    async (pincode: string) => {
+      if (!/^[0-9]{6}$/.test(pincode)) return
+
+      try {
+        const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`)
+        if (!res.ok) return
+        const data = (await res.json()) as { PostOffice?: { State?: string }[] }[]
+        const postOffice = data?.[0]?.PostOffice?.[0]
+        const matchedState = resolveIndianState(postOffice?.State)
+        if (!matchedState) return
+
+        // Pre-seed the "previous state" tracker to this value before setValue
+        // triggers the State -> Districts effect above — otherwise that
+        // effect would treat this as a manual state change and reset the
+        // postalCode/city this lookup is in the middle of filling in.
+        previousStateNameRef.current = matchedState.name
+        setValue('state', matchedState.name, { shouldValidate: true })
+        // Force-reset first, even if the target district turns out to be the
+        // one already selected — otherwise setSelectedDistrictSlug below
+        // wouldn't register as a change and the District -> City effect
+        // (which actually loads/filters the offices) would never re-fire.
+        setSelectedDistrictSlug('')
+        setSelectedCity('')
+        setOffices([])
+
+        const stateSlug = await findStateSlug(matchedState.name)
+        if (!stateSlug) return
+
+        const districtList = await fetchDistricts(stateSlug)
+        setDistricts(districtList)
+
+        const matches = await Promise.all(
+          districtList.map(async (district) => ({
+            district,
+            offices: await fetchOffices(stateSlug, district.slug).catch(() => []),
+          })),
+        )
+        const found = matches.find(({ offices }) => offices.some((office) => office.pincode === pincode))
+        if (!found) return
+
+        pendingPincodeMatchRef.current = pincode
+        setSelectedDistrictSlug(found.district.slug)
+      } catch {
+        // Silent — pincode auto-fill is a convenience; the user can still pick State/District/City manually.
       }
     },
     [setValue],
@@ -365,9 +455,17 @@ export const AddressForm: React.FC<Props> = ({
           <Label htmlFor="postalCode">Zip Code*</Label>
           <Input
             id="postalCode"
+            maxLength={6}
             {...register('postalCode', { required: 'Postal code is required.' })}
+            onChange={(e) => {
+              const value = e.target.value
+              setValue('postalCode', value, { shouldValidate: true })
+              if (value.length === 6) void handlePostalCodeLookup(value)
+            }}
           />
-          <p className="text-muted-foreground text-xs">Auto-filled from the selected city — editable if needed.</p>
+          <p className="text-muted-foreground text-xs">
+            Auto-filled from the selected city, or type a pincode to auto-fill State/District/City.
+          </p>
           {errors.postalCode && <FormError message={errors.postalCode.message} />}
         </FormItem>
 

@@ -170,6 +170,12 @@ export const emptyCandidateFields = (): CandidateFields => ({
 })
 
 let candidatePoolCache: { fetchedAt: number; data: Candidate[] } | null = null
+// Without this, every concurrent request that lands while the cache is
+// cold/expired independently fires its own 2000-row query — confirmed live,
+// a burst of requests around the same moment intermittently failed /shop
+// (the heaviest caller of this) while lighter pages succeeded. Sharing one
+// in-flight promise means a burst pays for exactly one query, not N.
+let candidatePoolInFlight: Promise<Candidate[]> | null = null
 const CANDIDATE_POOL_TTL_MS = 60 * 1000
 
 const buildCategoryTitleMap = async (payload: Awaited<ReturnType<typeof getPayload>>) => {
@@ -200,63 +206,73 @@ const loadCandidatePool = async (): Promise<Candidate[]> => {
     return candidatePoolCache.data
   }
 
-  const payload = await getPayload({ config: configPromise })
-  const { titleWithParent } = await buildCategoryTitleMap(payload)
+  if (candidatePoolInFlight) return candidatePoolInFlight
 
-  const { docs } = await payload.find({
-    collection: 'products',
-    draft: false,
-    overrideAccess: false,
-    limit: 2000,
-    depth: 1,
-    pagination: false,
-    where: {
-      and: [{ _status: { equals: 'published' } }, { isGiftCard: { not_equals: true } }],
-    },
-    select: {
-      title: true,
-      slug: true,
-      gallery: true,
-      categories: true,
-      priceInINR: true,
-      compareAtPriceInINR: true,
-      onSale: true,
-      salePriceInINR: true,
-      saleEndDate: true,
-      isClearance: true,
-      clearanceReason: true,
-      stockStatus: true,
-      createdAt: true,
-      sku: true,
-      tags: true,
-      brand: true,
-      description: true,
-      specs: true,
-    },
-  })
+  candidatePoolInFlight = (async () => {
+    const payload = await getPayload({ config: configPromise })
+    const { titleWithParent } = await buildCategoryTitleMap(payload)
 
-  const data: Candidate[] = docs.map((product) => {
-    const categoryIds = (product.categories ?? [])
-      .map((c) => (typeof c === 'object' ? c?.id : c))
-      .filter((id): id is number => typeof id === 'number')
+    const { docs } = await payload.find({
+      collection: 'products',
+      draft: false,
+      overrideAccess: false,
+      limit: 2000,
+      depth: 1,
+      pagination: false,
+      where: {
+        and: [{ _status: { equals: 'published' } }, { isGiftCard: { not_equals: true } }],
+      },
+      select: {
+        title: true,
+        slug: true,
+        gallery: true,
+        categories: true,
+        priceInINR: true,
+        compareAtPriceInINR: true,
+        onSale: true,
+        salePriceInINR: true,
+        saleEndDate: true,
+        isClearance: true,
+        clearanceReason: true,
+        stockStatus: true,
+        createdAt: true,
+        sku: true,
+        tags: true,
+        brand: true,
+        description: true,
+        specs: true,
+      },
+    })
 
-    const brandTitle = typeof product.brand === 'object' ? (product.brand?.title ?? '') : ''
+    const data: Candidate[] = docs.map((product) => {
+      const categoryIds = (product.categories ?? [])
+        .map((c) => (typeof c === 'object' ? c?.id : c))
+        .filter((id): id is number => typeof id === 'number')
 
-    const fields: CandidateFields = {
-      title: (product.title ?? '').toLowerCase(),
-      specs: flattenToSearchText(product.specs).toLowerCase(),
-      sku: (product.sku ?? '').toLowerCase(),
-      brand: brandTitle.toLowerCase(),
-      category: categoryIds.map(titleWithParent).join(' ').toLowerCase(),
-      tags: (product.tags?.filter((t): t is string => Boolean(t)) ?? []).join(' ').toLowerCase(),
-      description: richTextToPlainText(product.description).toLowerCase(),
-    }
+      const brandTitle = typeof product.brand === 'object' ? (product.brand?.title ?? '') : ''
 
-    return { product, fields }
-  })
+      const fields: CandidateFields = {
+        title: (product.title ?? '').toLowerCase(),
+        specs: flattenToSearchText(product.specs).toLowerCase(),
+        sku: (product.sku ?? '').toLowerCase(),
+        brand: brandTitle.toLowerCase(),
+        category: categoryIds.map(titleWithParent).join(' ').toLowerCase(),
+        tags: (product.tags?.filter((t): t is string => Boolean(t)) ?? []).join(' ').toLowerCase(),
+        description: richTextToPlainText(product.description).toLowerCase(),
+      }
 
-  candidatePoolCache = { fetchedAt: Date.now(), data }
-  return data
+      return { product, fields }
+    })
+
+    candidatePoolCache = { fetchedAt: Date.now(), data }
+    return data
+  })()
+
+  try {
+    return await candidatePoolInFlight
+  } finally {
+    candidatePoolInFlight = null
+  }
 }
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

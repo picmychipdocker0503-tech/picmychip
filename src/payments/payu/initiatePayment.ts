@@ -35,7 +35,6 @@ export const initiatePayment =
       | { companyName?: string; gstin?: string; panNumber?: string }
       | undefined
     const shippingMethodId = (data as Record<string, unknown>).shippingMethod as string | undefined
-    const shippingMethod = requireCheckoutShippingMethod(shippingMethodId)
 
     if (currency !== 'INR') {
       throw new Error('Card / UPI / NetBanking payment via PayU is only available for INR orders.')
@@ -54,6 +53,7 @@ export const initiatePayment =
     const defaultGstPercent = tax?.gstRatePercent ?? 18
     const businessState = tax?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka'
     const customerState = shippingAddress?.state || billingAddress?.state
+    const shippingMethod = requireCheckoutShippingMethod(shippingMethodId, siteSettings?.shippingSettings ?? undefined)
 
     const { finalAmount } = await computeCheckoutTotal({
       payload,

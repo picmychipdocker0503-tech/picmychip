@@ -90,7 +90,11 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
               <HeartIcon className="size-5" />
               <NavIconBadge count={wishlistIds.length} />
             </Link>
-            <Link aria-label="Compare" className={iconButtonClass} href="/compare">
+            <Link
+              aria-label="Compare"
+              className={iconButtonClass}
+              href={ids.length > 0 ? `/compare?ids=${ids.join(',')}` : '/compare'}
+            >
               <ScaleIcon className="size-5" />
               <NavIconBadge count={ids.length} />
             </Link>

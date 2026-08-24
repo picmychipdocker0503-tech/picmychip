@@ -4443,6 +4443,19 @@ export interface SiteSetting {
      */
     gstRatePercent?: number | null;
   };
+  /**
+   * Flat rates charged at checkout for each dispatch option.
+   */
+  shippingSettings?: {
+    /**
+     * Amount in rupees, e.g. 200 for ₹200.00.
+     */
+    standardShippingRate?: number | null;
+    /**
+     * Amount in rupees, e.g. 300 for ₹300.00.
+     */
+    expressShippingRate?: number | null;
+  };
   sameAs?:
     | {
         url: string;
@@ -4595,6 +4608,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         businessState?: T;
         businessPan?: T;
         gstRatePercent?: T;
+      };
+  shippingSettings?:
+    | T
+    | {
+        standardShippingRate?: T;
+        expressShippingRate?: T;
       };
   sameAs?:
     | T

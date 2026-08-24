@@ -26,17 +26,32 @@ import {
 // revalidation hook, so a category added, renamed, or deleted in the CMS
 // wouldn't show up (or drop out of) the storefront menu until the next full
 // deploy. Revalidating the layout busts that cache for every route at once.
+// revalidatePath requires an active Next.js request-scoped context to run —
+// it throws "Invariant: static generation store missing" outside one, and
+// since afterChange hooks run inside the same DB transaction as the write,
+// that throw rolls back the entire update (confirmed live: a Products bulk
+// edit's category change silently never persisted because of exactly this).
+// Revalidation is a cache-freshness nicety, never something allowed to undo
+// a real write.
+function safeRevalidatePath(path: string, type: 'layout' | undefined, logger: { warn: (obj: unknown) => void }): void {
+  try {
+    revalidatePath(path, type)
+  } catch (err) {
+    logger.warn({ msg: 'revalidatePath failed (non-fatal)', path, err })
+  }
+}
+
 const revalidateCategoryNav: CollectionAfterChangeHook = ({ req: { payload, context } }) => {
   if (!context.disableRevalidate) {
     payload.logger.info('Revalidating layout after category change')
-    revalidatePath('/', 'layout')
+    safeRevalidatePath('/', 'layout', payload.logger)
   }
 }
 
 const revalidateCategoryNavOnDelete: CollectionAfterDeleteHook = ({ req: { payload, context } }) => {
   if (!context.disableRevalidate) {
     payload.logger.info('Revalidating layout after category delete')
-    revalidatePath('/', 'layout')
+    safeRevalidatePath('/', 'layout', payload.logger)
   }
 }
 

@@ -136,6 +136,36 @@ export const SiteSettings: GlobalConfig = {
       ],
     },
     {
+      name: 'shippingSettings',
+      type: 'group',
+      label: 'Shipping Charges',
+      admin: {
+        description: 'Flat rates charged at checkout for each dispatch option.',
+      },
+      fields: [
+        {
+          name: 'standardShippingRate',
+          type: 'number',
+          label: 'Standard Shipping (₹)',
+          defaultValue: 200,
+          min: 0,
+          admin: {
+            description: 'Amount in rupees, e.g. 200 for ₹200.00.',
+          },
+        },
+        {
+          name: 'expressShippingRate',
+          type: 'number',
+          label: 'Express Shipping (₹)',
+          defaultValue: 300,
+          min: 0,
+          admin: {
+            description: 'Amount in rupees, e.g. 300 for ₹300.00.',
+          },
+        },
+      ],
+    },
+    {
       name: 'sameAs',
       type: 'array',
       label: 'Social / Profile Links',

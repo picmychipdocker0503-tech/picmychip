@@ -21,7 +21,7 @@ import { DeliveryEstimate } from '@/components/checkout/DeliveryEstimate'
 import { CreateAddressModal } from '@/components/addresses/CreateAddressModal'
 import { getClientSideURL } from '@/utilities/getURL'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
-import { checkoutShippingMethods, type CheckoutShippingMethodId } from '@/lib/checkoutShipping'
+import type { CheckoutShippingMethod, CheckoutShippingMethodId } from '@/lib/checkoutShipping'
 import { computeOrderTaxAddOn, type TaxLineItem } from '@/lib/taxCalculation'
 import { Address, Product, Variant } from '@/payload-types'
 
@@ -32,11 +32,13 @@ import { AddressItem } from '@/components/addresses/AddressItem'
 import { FormItem } from '@/components/forms/FormItem'
 import { toast } from 'sonner'
 import { LoadingSpinner } from '@/components/LoadingSpinner'
+import { DeleteItemButton } from '@/components/Cart/DeleteItemButton'
 
-export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: number }> = ({
-  businessState,
-  defaultGstPercent,
-}) => {
+export const CheckoutPage: React.FC<{
+  businessState: string
+  defaultGstPercent: number
+  shippingMethods: CheckoutShippingMethod[]
+}> = ({ businessState, defaultGstPercent, shippingMethods }) => {
   const { user } = useAuth()
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -75,7 +77,7 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
 
   const cartIsEmpty = !cart || !cart.items || !cart.items.length
   const subtotalAfterDiscounts = cart?.subtotal ?? 0
-  const selectedShippingMethod = checkoutShippingMethods.find((method) => method.id === shippingMethodId)
+  const selectedShippingMethod = shippingMethods.find((method) => method.id === shippingMethodId)
   const shippingAmount = selectedShippingMethod?.amount ?? 0
   // PayU only settles in INR — USD carts fall back to Cash on Delivery.
   const cardPaymentAvailable = cart?.currency === 'INR'
@@ -297,327 +299,326 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
   return (
     <div className="flex flex-col items-stretch justify-stretch my-8 md:flex-row grow gap-10 md:gap-6 lg:gap-8">
       <div className="basis-full lg:basis-2/3 flex flex-col gap-8 justify-stretch">
-        <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
-          {[
-            { id: 'address', label: 'Address' },
-            { id: 'dispatch', label: 'Dispatch' },
-            { id: 'review', label: 'Review Order & Make Payment' },
-          ].map((step, index, steps) => {
-            const isActive = checkoutStep === step.id
-            return (
-              <React.Fragment key={step.id}>
-                <button
-                  className={`border-b px-2 py-2 ${
-                    isActive ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
-                  }`}
-                  onClick={() => {
-                    if (step.id === 'dispatch' && !canGoToDispatch) return
-                    if (step.id === 'review' && !canGoToPayment) return
-                    setCheckoutStep(step.id as 'address' | 'dispatch' | 'review')
-                  }}
-                  type="button"
-                >
-                  {step.label}
-                </button>
-                {index < steps.length - 1 && <span className="text-muted-foreground">----</span>}
-              </React.Fragment>
-            )
-          })}
-        </div>
-
-        <h2 className="font-medium text-3xl">{t('contact.heading')}</h2>
-        {!user && (
-          <div className=" bg-accent dark:bg-black rounded-lg p-4 w-full flex items-center">
-            <div className="prose dark:prose-invert">
-              <Button asChild className="no-underline text-inherit" variant="outline">
-                <Link href="/login">{t('contact.logIn')}</Link>
-              </Button>
-              <p className="mt-0">
-                <span className="mx-2">{t('contact.or')}</span>
-                <Link href="/create-account">{t('contact.createAccount')}</Link>
-              </p>
-            </div>
-          </div>
-        )}
-        {user ? (
-          <div className="bg-accent dark:bg-card rounded-lg p-4 ">
-            <div>
-              <p>{user.email}</p>{' '}
-              <p>
-                {t('contact.notYou')}{' '}
-                <Link className="underline" href="/logout">
-                  {t('contact.logOut')}
-                </Link>
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-accent dark:bg-black rounded-lg p-4 ">
-            <div>
-              <p className="mb-4">{t('contact.guestEmailPrompt')}</p>
-
-              <FormItem className="mb-6">
-                <Label htmlFor="email">{t('contact.emailAddress')}</Label>
-                <Input
-                  disabled={!emailEditable}
-                  id="email"
-                  name="email"
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  type="email"
-                />
-              </FormItem>
-
-              <Button
-                disabled={!email || !emailEditable}
-                onClick={(e) => {
-                  e.preventDefault()
-                  setEmailEditable(false)
-                }}
-                variant="default"
-              >
-                {t('contact.continueAsGuest')}
-              </Button>
-            </div>
-          </div>
-        )}
-
-        <h2 className="font-medium text-3xl">{t('address.heading')}</h2>
-
-        {billingAddress ? (
-          <div>
-            <AddressItem
-              actions={
-                <Button
-                  variant={'outline'}
-                  disabled={isInitiatingPayment}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setBillingAddress(undefined)
-                  }}
-                >
-                  {tCart('remove')}
-                </Button>
-              }
-              address={billingAddress}
-            />
-          </div>
-        ) : user ? (
-          <CheckoutAddresses heading={t('address.billingAddress')} setAddress={setBillingAddress} />
-        ) : (
-          <CreateAddressModal
-            disabled={!email || Boolean(emailEditable)}
-            callback={(address) => {
-              setBillingAddress(address)
-            }}
-            skipSubmission={true}
-          />
-        )}
-
-        <div className="flex gap-4 items-center">
-          <Checkbox
-            id="shippingTheSameAsBilling"
-            checked={billingAddressSameAsShipping}
-            disabled={Boolean(isInitiatingPayment || (!user && (!email || Boolean(emailEditable))))}
-            onCheckedChange={(state) => {
-              setBillingAddressSameAsShipping(state as boolean)
-            }}
-          />
-          <Label htmlFor="shippingTheSameAsBilling">{t('address.shippingSameAsBilling')}</Label>
-        </div>
-
-        {!billingAddressSameAsShipping && (
-          <>
-            {shippingAddress ? (
-              <div>
-                <AddressItem
-                  actions={
-                    <Button
-                      variant={'outline'}
-                      disabled={isInitiatingPayment}
-                      onClick={(e) => {
-                        e.preventDefault()
-                        setShippingAddress(undefined)
-                      }}
-                    >
-                      {tCart('remove')}
-                    </Button>
-                  }
-                  address={shippingAddress}
-                />
-              </div>
-            ) : user ? (
-              <CheckoutAddresses
-                heading={t('address.shippingAddress')}
-                description={t('address.shippingAddressDescription')}
-                setAddress={setShippingAddress}
-              />
-            ) : (
-              <CreateAddressModal
-                callback={(address) => {
-                  setShippingAddress(address)
-                }}
-                disabled={!email || Boolean(emailEditable)}
-                skipSubmission={true}
-              />
-            )}
-          </>
-        )}
-
-        <DeliveryEstimate
-          cartId={cart?.id}
-          pincode={(billingAddressSameAsShipping ? billingAddress : shippingAddress)?.postalCode ?? undefined}
-        />
-
-        <div className="flex flex-col gap-6">
-          <div>
-            <h2 className="font-medium text-3xl">Dispatch</h2>
-            <p className="text-muted-foreground mt-2 text-sm">Select a shipping method before payment.</p>
-          </div>
-          <div className="divide-y rounded-lg border">
-            {checkoutShippingMethods.map((method) => (
-              <label
-                className={`flex cursor-pointer items-start gap-4 p-5 ${
-                  shippingMethodId === method.id ? 'bg-primary/5' : ''
+      <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+        {[
+          { id: 'address', label: 'Address' },
+          { id: 'dispatch', label: 'Dispatch' },
+          { id: 'review', label: 'Review Order & Make Payment' },
+        ].map((step, index, steps) => {
+          const isActive = checkoutStep === step.id
+          return (
+            <React.Fragment key={step.id}>
+              <button
+                className={`border-b px-2 py-2 ${
+                  isActive ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground'
                 }`}
-                key={method.id}
+                onClick={() => {
+                  if (step.id === 'dispatch' && !canGoToDispatch) return
+                  if (step.id === 'review' && !canGoToPayment) return
+                  setCheckoutStep(step.id as 'address' | 'dispatch' | 'review')
+                }}
+                type="button"
               >
-                <input
-                  checked={shippingMethodId === method.id}
-                  className="mt-1"
-                  disabled={!canGoToDispatch}
-                  onChange={() => {
-                    setShippingMethodId(method.id)
-                    setCheckoutStep('review')
-                  }}
-                  type="radio"
-                />
-                <span className="flex flex-1 flex-col gap-1">
-                  <span className="font-medium">{method.label}</span>
-                  <span className="text-muted-foreground text-sm">{method.eta}</span>
-                </span>
-                <Price amount={method.amount} as="span" />
-              </label>
-            ))}
+                {step.label}
+              </button>
+              {index < steps.length - 1 && <span className="text-muted-foreground">----</span>}
+            </React.Fragment>
+          )
+        })}
+      </div>
+
+      <h2 className="font-medium text-3xl">{t('contact.heading')}</h2>
+      {!user && (
+        <div className=" bg-accent dark:bg-black rounded-lg p-4 w-full flex items-center">
+          <div className="prose dark:prose-invert">
+            <Button asChild className="no-underline text-inherit" variant="outline">
+              <Link href="/login">{t('contact.logIn')}</Link>
+            </Button>
+            <p className="mt-0">
+              <span className="mx-2">{t('contact.or')}</span>
+              <Link href="/create-account">{t('contact.createAccount')}</Link>
+            </p>
           </div>
         </div>
-
-        {shippingMethodId && fullyCoveredByGiftCard && (
-          <div className="flex flex-col gap-4">
-            <div className="bg-success/5 border-success/30 text-success rounded-lg border p-4 text-sm">
-              {t('giftCardCovered')}
-            </div>
-            <Button
-              className="self-start"
-              disabled={!canGoToPayment || isPlacingOrder}
-              onClick={(e) => {
-                e.preventDefault()
-                posthog.capture('checkout_started', {
-                  payment_method: 'gift-card',
-                  cart_total: cart?.subtotal ?? 0,
-                  item_count: cart?.items?.length ?? 0,
-                })
-                void placeDirectOrder()
-              }}
-            >
-              {isPlacingOrder ? t('placingOrder') : t('placeOrder')}
-            </Button>
-
-            <SecureCheckoutBadge />
+      )}
+      {user ? (
+        <div className="bg-accent dark:bg-card rounded-lg p-4 ">
+          <div>
+            <p>{user.email}</p>{' '}
+            <p>
+              {t('contact.notYou')}{' '}
+              <Link className="underline" href="/logout">
+                {t('contact.logOut')}
+              </Link>
+            </p>
           </div>
-        )}
+        </div>
+      ) : (
+        <div className="bg-accent dark:bg-black rounded-lg p-4 ">
+          <div>
+            <p className="mb-4">{t('contact.guestEmailPrompt')}</p>
 
-        {shippingMethodId && !fullyCoveredByGiftCard && (
-          <div className="flex flex-col gap-4">
-            <h2 className="font-medium text-3xl">{t('paymentMethod.heading')}</h2>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <label
-                className={`flex flex-1 items-center gap-3 rounded-lg border p-4 ${!cardPaymentAvailable ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-border'}`}
-              >
-                <input
-                  checked={paymentMethod === 'card'}
-                  disabled={!cardPaymentAvailable}
-                  onChange={() => setPaymentMethod('card')}
-                  type="radio"
-                />
-                <span>{t('paymentMethod.cardUpiNetbanking')}</span>
-              </label>
-              {flags.cashOnDelivery && (
-                <label
-                  className={`flex flex-1 cursor-pointer items-center gap-3 rounded-lg border p-4 ${paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-border'}`}
-                >
-                  <input
-                    checked={paymentMethod === 'cod'}
-                    onChange={() => setPaymentMethod('cod')}
-                    type="radio"
-                  />
-                  <span>{t('paymentMethod.cashOnDelivery')}</span>
-                </label>
-              )}
-            </div>
-
-            {!cardPaymentAvailable && (
-              <p className="text-muted-foreground text-sm">
-                {t('paymentMethod.cardUnavailable', { currency: cart?.currency ?? '' })}
-              </p>
-            )}
+            <FormItem className="mb-6">
+              <Label htmlFor="email">{t('contact.emailAddress')}</Label>
+              <Input
+                disabled={!emailEditable}
+                id="email"
+                name="email"
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                type="email"
+              />
+            </FormItem>
 
             <Button
-              className="self-start"
-              disabled={!canGoToPayment || isPlacingOrder || isInitiatingPayment}
+              disabled={!email || !emailEditable}
               onClick={(e) => {
                 e.preventDefault()
-                posthog.capture('checkout_started', {
-                  payment_method: paymentMethod,
-                  cart_total: cart?.subtotal ?? 0,
-                  item_count: cart?.items?.length ?? 0,
-                })
-                if (paymentMethod === 'cod') {
-                  void placeDirectOrder()
-                } else {
-                  void payWithPayu()
-                }
-              }}
-            >
-              {paymentMethod === 'cod'
-                ? isPlacingOrder
-                  ? t('placingOrder')
-                  : t('paymentMethod.placeOrderCod')
-                : isInitiatingPayment
-                  ? t('paymentMethod.loading')
-                  : t('paymentMethod.goToPayment')}
-            </Button>
-
-            <SecureCheckoutBadge />
-          </div>
-        )}
-
-        {error && (
-          <div className="my-8">
-            <Message error={error} />
-
-            <Button
-              onClick={(e) => {
-                e.preventDefault()
-                router.refresh()
+                setEmailEditable(false)
               }}
               variant="default"
             >
-              {t('tryAgain')}
+              {t('contact.continueAsGuest')}
             </Button>
           </div>
-        )}
+        </div>
+      )}
 
+      <h2 className="font-medium text-3xl">{t('address.heading')}</h2>
+
+      {billingAddress ? (
+        <div>
+          <AddressItem
+            actions={
+              <Button
+                variant={'outline'}
+                disabled={isInitiatingPayment}
+                onClick={(e) => {
+                  e.preventDefault()
+                  setBillingAddress(undefined)
+                }}
+              >
+                {tCart('remove')}
+              </Button>
+            }
+            address={billingAddress}
+          />
+        </div>
+      ) : user ? (
+        <CheckoutAddresses heading={t('address.billingAddress')} setAddress={setBillingAddress} />
+      ) : (
+        <CreateAddressModal
+          disabled={!email || Boolean(emailEditable)}
+          callback={(address) => {
+            setBillingAddress(address)
+          }}
+          skipSubmission={true}
+        />
+      )}
+
+      <div className="flex gap-4 items-center">
+        <Checkbox
+          id="shippingTheSameAsBilling"
+          checked={billingAddressSameAsShipping}
+          disabled={Boolean(isInitiatingPayment || (!user && (!email || Boolean(emailEditable))))}
+          onCheckedChange={(state) => {
+            setBillingAddressSameAsShipping(state as boolean)
+          }}
+        />
+        <Label htmlFor="shippingTheSameAsBilling">{t('address.shippingSameAsBilling')}</Label>
+      </div>
+
+      {!billingAddressSameAsShipping && (
+        <>
+          {shippingAddress ? (
+            <div>
+              <AddressItem
+                actions={
+                  <Button
+                    variant={'outline'}
+                    disabled={isInitiatingPayment}
+                    onClick={(e) => {
+                      e.preventDefault()
+                      setShippingAddress(undefined)
+                    }}
+                  >
+                    {tCart('remove')}
+                  </Button>
+                }
+                address={shippingAddress}
+              />
+            </div>
+          ) : user ? (
+            <CheckoutAddresses
+              heading={t('address.shippingAddress')}
+              description={t('address.shippingAddressDescription')}
+              setAddress={setShippingAddress}
+            />
+          ) : (
+            <CreateAddressModal
+              callback={(address) => {
+                setShippingAddress(address)
+              }}
+              disabled={!email || Boolean(emailEditable)}
+              skipSubmission={true}
+            />
+          )}
+        </>
+      )}
+
+      <DeliveryEstimate
+        cartId={cart?.id}
+        pincode={(billingAddressSameAsShipping ? billingAddress : shippingAddress)?.postalCode ?? undefined}
+      />
+
+      <div className="flex flex-col gap-6">
+        <div>
+          <h2 className="font-medium text-3xl">Dispatch</h2>
+          <p className="text-muted-foreground mt-2 text-sm">Select a shipping method before payment.</p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {shippingMethods.map((method) => (
+            <label
+              className={`flex cursor-pointer items-start gap-4 rounded-lg border p-5 ${
+                shippingMethodId === method.id ? 'border-primary bg-primary/5' : ''
+              }`}
+              key={method.id}
+            >
+              <input
+                checked={shippingMethodId === method.id}
+                className="mt-1"
+                disabled={!canGoToDispatch}
+                onChange={() => {
+                  setShippingMethodId(method.id)
+                  setCheckoutStep('review')
+                }}
+                type="radio"
+              />
+              <span className="flex flex-1 flex-col gap-1">
+                <span className="font-medium">{method.label}</span>
+                <span className="text-muted-foreground text-sm">{method.eta}</span>
+              </span>
+              <Price amount={method.amount} as="span" />
+            </label>
+          ))}
+        </div>
+      </div>
+
+      {shippingMethodId && fullyCoveredByGiftCard && (
+        <div className="flex flex-col gap-4">
+          <div className="bg-success/5 border-success/30 text-success rounded-lg border p-4 text-sm">
+            {t('giftCardCovered')}
+          </div>
+          <Button
+            className="self-start"
+            disabled={!canGoToPayment || isPlacingOrder}
+            onClick={(e) => {
+              e.preventDefault()
+              posthog.capture('checkout_started', {
+                payment_method: 'gift-card',
+                cart_total: cart?.subtotal ?? 0,
+                item_count: cart?.items?.length ?? 0,
+              })
+              void placeDirectOrder()
+            }}
+          >
+            {isPlacingOrder ? t('placingOrder') : t('placeOrder')}
+          </Button>
+
+          <SecureCheckoutBadge />
+        </div>
+      )}
+
+      {shippingMethodId && !fullyCoveredByGiftCard && (
+        <div className="flex flex-col gap-4">
+          <h2 className="font-medium text-3xl">{t('paymentMethod.heading')}</h2>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <label
+              className={`flex flex-1 items-center gap-3 rounded-lg border p-4 ${!cardPaymentAvailable ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-border'}`}
+            >
+              <input
+                checked={paymentMethod === 'card'}
+                disabled={!cardPaymentAvailable}
+                onChange={() => setPaymentMethod('card')}
+                type="radio"
+              />
+              <span>{t('paymentMethod.cardUpiNetbanking')}</span>
+            </label>
+            {flags.cashOnDelivery && (
+              <label
+                className={`flex flex-1 cursor-pointer items-center gap-3 rounded-lg border p-4 ${paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-border'}`}
+              >
+                <input
+                  checked={paymentMethod === 'cod'}
+                  onChange={() => setPaymentMethod('cod')}
+                  type="radio"
+                />
+                <span>{t('paymentMethod.cashOnDelivery')}</span>
+              </label>
+            )}
+          </div>
+
+          {!cardPaymentAvailable && (
+            <p className="text-muted-foreground text-sm">
+              {t('paymentMethod.cardUnavailable', { currency: cart?.currency ?? '' })}
+            </p>
+          )}
+
+          <Button
+            className="self-start"
+            disabled={!canGoToPayment || isPlacingOrder || isInitiatingPayment}
+            onClick={(e) => {
+              e.preventDefault()
+              posthog.capture('checkout_started', {
+                payment_method: paymentMethod,
+                cart_total: cart?.subtotal ?? 0,
+                item_count: cart?.items?.length ?? 0,
+              })
+              if (paymentMethod === 'cod') {
+                void placeDirectOrder()
+              } else {
+                void payWithPayu()
+              }
+            }}
+          >
+            {paymentMethod === 'cod'
+              ? isPlacingOrder
+                ? t('placingOrder')
+                : t('paymentMethod.placeOrderCod')
+              : isInitiatingPayment
+                ? t('paymentMethod.loading')
+                : t('paymentMethod.goToPayment')}
+          </Button>
+
+          <SecureCheckoutBadge />
+        </div>
+      )}
+
+      {error && (
+        <div className="my-8">
+          <Message error={error} />
+
+          <Button
+            onClick={(e) => {
+              e.preventDefault()
+              router.refresh()
+            }}
+            variant="default"
+          >
+            {t('tryAgain')}
+          </Button>
+        </div>
+      )}
       </div>
 
       {!cartIsEmpty && (
-        <div className="basis-full lg:basis-1/3 lg:pl-8 p-8 border-none bg-primary/5 flex flex-col gap-8 rounded-lg">
-          <h2 className="text-3xl font-medium">{t('yourCart')}</h2>
+        <div className="basis-full lg:basis-1/3 lg:pl-8 p-6 border-none bg-primary/5 flex flex-col gap-6 rounded-lg">
+          <h2 className="text-xl font-medium">{t('yourCart')}</h2>
           {cart?.items?.map((item, index) => {
             if (typeof item.product === 'object' && item.product) {
               const {
                 product,
-                product: { id, meta, title, gallery },
+                product: { meta, title, gallery },
                 quantity,
                 variant,
               } = item
@@ -653,19 +654,19 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
               }
 
               return (
-                <div className="flex items-start gap-4" key={index}>
-                  <div className="flex items-stretch justify-stretch h-20 w-20 p-2 rounded-lg border">
+                <div className="relative flex items-start gap-3" key={index}>
+                  <div className="flex items-stretch justify-stretch h-12 w-12 shrink-0 p-1.5 rounded-lg border">
                     <div className="relative w-full h-full">
                       {image && typeof image !== 'string' && (
-                        <Media className="" fill imgClassName="rounded-lg" resource={image} size="80px" />
+                        <Media className="" fill imgClassName="rounded-md" resource={image} size="48px" />
                       )}
                     </div>
                   </div>
-                  <div className="flex grow justify-between items-center">
-                    <div className="flex flex-col gap-1">
-                      <p className="font-medium text-lg">{title}</p>
+                  <div className="flex grow justify-between items-start gap-2">
+                    <div className="flex flex-col gap-0.5">
+                      <p className="font-medium text-sm leading-tight">{title}</p>
                       {variant && typeof variant === 'object' && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-xs text-muted-foreground">
                           {variant.options
                             ?.map((option: VariantOptionItem) => {
                               if (typeof option === 'object') return option.label
@@ -674,13 +675,16 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                             .join(', ')}
                         </p>
                       )}
-                      <div>
+                      <div className="text-xs text-muted-foreground">
                         {'x'}
                         {quantity}
                       </div>
                     </div>
 
-                    {typeof price === 'number' && <Price amount={price} />}
+                    {typeof price === 'number' && <Price amount={price} className="text-sm" />}
+                  </div>
+                  <div className="pr-1 pt-0.5">
+                    <DeleteItemButton item={item} />
                   </div>
                 </div>
               )
@@ -799,9 +803,9 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                 </div>
               )}
               <div className="flex justify-between items-center gap-2">
-                <span className="uppercase">{tCart('total')}</span>
+                <span className="uppercase text-sm">{tCart('total')}</span>
                 <Price
-                  className="text-3xl font-medium"
+                  className="text-xl font-medium"
                   amount={checkoutTotal}
                 />
               </div>
@@ -815,8 +819,8 @@ export const CheckoutPage: React.FC<{ businessState: string; defaultGstPercent: 
                 </div>
               )}
               <div className="flex justify-between items-center gap-2">
-                <span className="uppercase">{tCart('total')}</span>{' '}
-                <Price className="text-3xl font-medium" amount={checkoutTotal} />
+                <span className="uppercase text-sm">{tCart('total')}</span>{' '}
+                <Price className="text-xl font-medium" amount={checkoutTotal} />
               </div>
             </div>
           )}

@@ -30,24 +30,43 @@ export type PincodeApiOffice = {
 
 let cachedStates: PincodeApiState[] | null = null
 
+// The district reverse-lookup (matching a pincode against every district in
+// a state) fires dozens of these in parallel — a single transient failure
+// (a flaky DNS resolution to this GitHub Pages host, in particular) used to
+// silently read as "this district has no matching office", making the whole
+// search falsely report "not found" even though the real data was there.
+// A couple of quick retries absorb exactly that kind of one-off blip without
+// meaningfully slowing down a request that actually is failing for real.
+async function fetchWithRetry(url: string, attempts = 3): Promise<Response> {
+  let lastError: unknown
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      const res = await fetch(url)
+      if (res.ok) return res
+      lastError = new Error(`Request failed with status ${res.status}`)
+    } catch (err) {
+      lastError = err
+    }
+    if (attempt < attempts) await new Promise((resolve) => setTimeout(resolve, 200 * attempt))
+  }
+  throw lastError instanceof Error ? lastError : new Error('Request failed')
+}
+
 export async function fetchStates(): Promise<PincodeApiState[]> {
   if (cachedStates) return cachedStates
-  const res = await fetch(`${BASE_URL}/states.json`)
-  if (!res.ok) throw new Error('Could not load state list.')
+  const res = await fetchWithRetry(`${BASE_URL}/states.json`)
   cachedStates = (await res.json()) as PincodeApiState[]
   return cachedStates
 }
 
 export async function fetchDistricts(stateSlug: string): Promise<PincodeApiDistrict[]> {
-  const res = await fetch(`${BASE_URL}/states/${stateSlug}.json`)
-  if (!res.ok) throw new Error('Could not load district list.')
+  const res = await fetchWithRetry(`${BASE_URL}/states/${stateSlug}.json`)
   const data = (await res.json()) as { districts: PincodeApiDistrict[] }
   return data.districts || []
 }
 
 export async function fetchOffices(stateSlug: string, districtSlug: string): Promise<PincodeApiOffice[]> {
-  const res = await fetch(`${BASE_URL}/districts/${stateSlug}/${districtSlug}.json`)
-  if (!res.ok) throw new Error('Could not load city/pincode list.')
+  const res = await fetchWithRetry(`${BASE_URL}/districts/${stateSlug}/${districtSlug}.json`)
   const data = (await res.json()) as { offices: PincodeApiOffice[] }
   return data.offices || []
 }

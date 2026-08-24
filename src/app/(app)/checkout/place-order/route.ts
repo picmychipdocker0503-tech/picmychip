@@ -52,9 +52,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Cart is empty.' }, { status: 400 })
     }
 
+    const siteSettings = await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
+
     let selectedShippingMethod
     try {
-      selectedShippingMethod = requireCheckoutShippingMethod(shippingMethod)
+      selectedShippingMethod = requireCheckoutShippingMethod(shippingMethod, siteSettings?.shippingSettings ?? undefined)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Please select a valid shipping method.'
       return NextResponse.json({ error: message }, { status: 400 })
@@ -64,7 +66,6 @@ export async function POST(request: NextRequest) {
 
     let amount = baseSubtotal
     if (baseSubtotal > 0) {
-      const siteSettings = await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
       const tax = siteSettings?.taxSettings
       const defaultGstPercent = tax?.gstRatePercent ?? 18
       const businessState = tax?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka'

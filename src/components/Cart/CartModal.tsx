@@ -64,8 +64,8 @@ export function CartModal() {
             <p className="text-center text-2xl font-bold">Your cart is empty.</p>
           </div>
         ) : (
-          <div className="grow flex px-4">
-            <div className="flex flex-col justify-between w-full">
+          <div className="grow flex px-4 min-h-0">
+            <div className="flex flex-col justify-between w-full min-h-0">
               {flags.freeShippingBanner && typeof cart?.subtotal === 'number' && (
                 <div className="border-border bg-muted/30 mb-2 rounded-lg border p-3 text-sm">
                   {cart.subtotal >= FREE_SHIPPING_THRESHOLD ? (
@@ -83,7 +83,7 @@ export function CartModal() {
                 </div>
               )}
 
-              <ul className="grow overflow-auto py-4">
+              <ul className="grow overflow-auto py-4 min-h-0">
                 {cart?.items?.map((item, i) => {
                   const product = item.product
                   const variant = item.variant

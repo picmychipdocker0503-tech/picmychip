@@ -59,6 +59,7 @@ import * as migration_20260820_183000_add_checkout_shipping_fields from './20260
 import * as migration_20260821_090000_add_category_sequence from './20260821_090000_add_category_sequence';
 import * as migration_20260821_093000_link_category_parents from './20260821_093000_link_category_parents';
 import * as migration_20260824_122135_add_address_book_fields from './20260824_122135_add_address_book_fields';
+import * as migration_20260824_171222_add_shipping_settings from './20260824_171222_add_shipping_settings';
 
 export const migrations = [
   {
@@ -365,5 +366,10 @@ export const migrations = [
     up: migration_20260824_122135_add_address_book_fields.up,
     down: migration_20260824_122135_add_address_book_fields.down,
     name: '20260824_122135_add_address_book_fields',
+  },
+  {
+    up: migration_20260824_171222_add_shipping_settings.up,
+    down: migration_20260824_171222_add_shipping_settings.down,
+    name: '20260824_171222_add_shipping_settings',
   },
 ];

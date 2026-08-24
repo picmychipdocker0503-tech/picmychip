@@ -11,6 +11,22 @@ import type { Product } from '@/payload-types'
  * which updates products through this same Local API path) wouldn't show up
  * on the live page until the next full rebuild.
  */
+// revalidatePath requires an active Next.js request-scoped context
+// (AsyncLocalStorage's "static generation store") to run — it throws
+// "Invariant: static generation store missing" outside one. Confirmed live:
+// a Payload admin bulk-edit across several products hit exactly this, and
+// because afterChange hooks run inside the same DB transaction as the write,
+// the throw rolled back the entire update — the categories change silently
+// never happened, with no useful error shown in the admin UI. Revalidation
+// is a cache-freshness nicety, never something allowed to undo a real write.
+function safeRevalidatePath(path: string, logger: { warn: (obj: unknown) => void }): void {
+  try {
+    revalidatePath(path)
+  } catch (err) {
+    logger.warn({ msg: 'revalidatePath failed (non-fatal)', path, err })
+  }
+}
+
 export const revalidateProduct: CollectionAfterChangeHook<Product> = ({
   doc,
   previousDoc,
@@ -20,13 +36,13 @@ export const revalidateProduct: CollectionAfterChangeHook<Product> = ({
     if (doc._status === 'published' && doc.slug) {
       const path = `/products/${doc.slug}`
       payload.logger.info(`Revalidating product at path: ${path}`)
-      revalidatePath(path)
+      safeRevalidatePath(path, payload.logger)
     }
 
     // Was published, no longer is (unpublished, or slug changed) — the old
     // path would otherwise keep serving the stale cached page indefinitely.
     if (previousDoc?._status === 'published' && previousDoc.slug && previousDoc.slug !== doc.slug) {
-      revalidatePath(`/products/${previousDoc.slug}`)
+      safeRevalidatePath(`/products/${previousDoc.slug}`, payload.logger)
     }
   }
 
@@ -35,10 +51,10 @@ export const revalidateProduct: CollectionAfterChangeHook<Product> = ({
 
 export const revalidateProductDelete: CollectionAfterDeleteHook<Product> = ({
   doc,
-  req: { context },
+  req: { payload, context },
 }) => {
   if (!context.disableRevalidate && doc?.slug) {
-    revalidatePath(`/products/${doc.slug}`)
+    safeRevalidatePath(`/products/${doc.slug}`, payload.logger)
   }
 
   return doc

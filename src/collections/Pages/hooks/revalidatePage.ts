@@ -4,6 +4,21 @@ import { revalidatePath, revalidateTag } from 'next/cache'
 
 import type { Page } from '../../../payload-types'
 
+// revalidatePath requires an active Next.js request-scoped context to run —
+// it throws "Invariant: static generation store missing" outside one, and
+// since afterChange hooks run inside the same DB transaction as the write,
+// that throw rolls back the entire update (confirmed live with the same
+// pattern on Products: a bulk edit's category change silently never
+// persisted). Revalidation is a cache-freshness nicety, never something
+// allowed to undo a real write.
+function safeRevalidatePath(path: string, logger: { warn: (obj: unknown) => void }): void {
+  try {
+    revalidatePath(path)
+  } catch (err) {
+    logger.warn({ msg: 'revalidatePath failed (non-fatal)', path, err })
+  }
+}
+
 export const revalidatePage: CollectionAfterChangeHook<Page> = ({
   doc,
   previousDoc,
@@ -15,7 +30,7 @@ export const revalidatePage: CollectionAfterChangeHook<Page> = ({
 
       payload.logger.info(`Revalidating page at path: ${path}`)
 
-      revalidatePath(path)
+      safeRevalidatePath(path, payload.logger)
       //revalidateTag('pages-sitemap', 'max')
     }
 
@@ -25,17 +40,17 @@ export const revalidatePage: CollectionAfterChangeHook<Page> = ({
 
       payload.logger.info(`Revalidating old page at path: ${oldPath}`)
 
-      revalidatePath(oldPath)
+      safeRevalidatePath(oldPath, payload.logger)
       //revalidateTag('pages-sitemap', 'max')
     }
   }
   return doc
 }
 
-export const revalidateDelete: CollectionAfterDeleteHook<Page> = ({ doc, req: { context } }) => {
+export const revalidateDelete: CollectionAfterDeleteHook<Page> = ({ doc, req: { payload, context } }) => {
   if (!context.disableRevalidate) {
     const path = doc?.slug === 'home' ? '/' : `/${doc?.slug}`
-    revalidatePath(path)
+    safeRevalidatePath(path, payload.logger)
     //revalidateTag('pages-sitemap', 'max')
   }
 
