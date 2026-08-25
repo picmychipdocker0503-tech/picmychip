@@ -21,12 +21,18 @@ const FEATURED_CATEGORY_SLUGS = [
 export async function FeaturedCategories() {
   const payload = await getPayload({ config: configPromise })
 
-  const { docs } = await payload.find({
-    collection: 'categories',
-    where: { slug: { in: FEATURED_CATEGORY_SLUGS } },
-    limit: FEATURED_CATEGORY_SLUGS.length,
-    depth: 0,
-  })
+  const [{ docs }, productCount] = await Promise.all([
+    payload.find({
+      collection: 'categories',
+      where: { slug: { in: FEATURED_CATEGORY_SLUGS } },
+      limit: FEATURED_CATEGORY_SLUGS.length,
+      depth: 0,
+    }),
+    payload.count({
+      collection: 'products',
+      where: { and: [{ _status: { equals: 'published' } }, { isGiftCard: { not_equals: true } }] },
+    }),
+  ])
 
   const bySlug = new Map(docs.map((doc) => [doc.slug, doc]))
   const categories = FEATURED_CATEGORY_SLUGS.map((slug) => bySlug.get(slug)).filter(
@@ -34,6 +40,10 @@ export async function FeaturedCategories() {
   )
 
   if (categories.length === 0) return null
+
+  // Rounded down to the nearest 10 so the count doesn't need updating on
+  // every single product add/remove (e.g. 232 published -> "230+ Parts").
+  const roundedPartsCount = Math.floor(productCount.totalDocs / 10) * 10
 
   return (
     <section className="container mb-10 sm:mb-20">
@@ -54,7 +64,7 @@ export async function FeaturedCategories() {
           href="/shop"
           className="group inline-flex shrink-0 items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors"
         >
-          <span>View All 50,000+ Parts</span>
+          <span>View All {roundedPartsCount.toLocaleString('en-IN')}+ Parts</span>
           <ArrowRight className="size-4 group-hover:translate-x-1 transition-transform" />
         </Link>
       </div>

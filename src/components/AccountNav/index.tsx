@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { LogOutIcon, MapPinIcon, PackageIcon, SlidersIcon } from '@/components/icons/AccountNavIcons'
+import { FileTextIcon, LogOutIcon, MapPinIcon, PackageIcon, SlidersIcon } from '@/components/icons/AccountNavIcons'
 import clsx from 'clsx'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -55,6 +55,21 @@ export const AccountNav: React.FC<Props> = ({ className }) => {
             <Link href="/orders">
               <PackageIcon />
               Orders
+            </Link>
+          </Button>
+        </li>
+
+        <li>
+          <Button
+            asChild
+            variant="link"
+            className={clsx('text-primary/50 hover:text-primary flex items-center gap-2 hover:no-underline', {
+              'text-primary': pathname === '/rfq-requests' || pathname.includes('/rfq-requests'),
+            })}
+          >
+            <Link href="/rfq-requests">
+              <FileTextIcon />
+              RFQ Requests
             </Link>
           </Button>
         </li>

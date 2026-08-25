@@ -56,6 +56,9 @@ export const HeroCarousel: Block = {
         {
           name: 'subheading',
           type: 'textarea',
+          admin: {
+            description: 'One line renders as plain text. Enter two or more lines to render them as a bullet list instead.',
+          },
         },
         link({ appearances: false, disableLabel: false }),
       ],

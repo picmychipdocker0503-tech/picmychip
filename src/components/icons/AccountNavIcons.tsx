@@ -58,6 +58,17 @@ export const MapPinIcon: React.FC<IconProps> = (props) => (
   </svg>
 )
 
+/** "RFQ Requests" — new to the set, same drawing convention. */
+export const FileTextIcon: React.FC<IconProps> = (props) => (
+  <svg {...base(props)}>
+    <path d="M14 2H6A2 2 0 004 4V20A2 2 0 006 22H18A2 2 0 0020 20V8Z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+    <line x1="10" y1="9" x2="8" y2="9" />
+  </svg>
+)
+
 /** "Log out" — new to the set, same drawing convention. */
 export const LogOutIcon: React.FC<IconProps> = (props) => (
   <svg {...base(props)}>

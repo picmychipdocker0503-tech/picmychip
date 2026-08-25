@@ -33,6 +33,7 @@ import { NewsletterSubscribers } from '@/collections/NewsletterSubscribers'
 import { Pages } from '@/collections/Pages'
 import { ReturnRequests } from '@/collections/ReturnRequests'
 import { Reviews } from '@/collections/Reviews'
+import { RfqSubmissions } from '@/collections/RfqSubmissions'
 import { Services } from '@/collections/Services'
 import { StockAlerts } from '@/collections/StockAlerts'
 import { TeamTestimonials } from '@/collections/TeamTestimonials'
@@ -133,6 +134,7 @@ export default buildConfig({
     StockAlerts,
     Wishlists,
     ReturnRequests,
+    RfqSubmissions,
     EmailEvents,
   ],
   db: postgresAdapter({

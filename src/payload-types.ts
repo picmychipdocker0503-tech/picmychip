@@ -90,6 +90,7 @@ export interface Config {
     'stock-alerts': StockAlert;
     wishlists: Wishlist;
     'return-requests': ReturnRequest;
+    'rfq-submissions': RfqSubmission;
     'email-events': EmailEvent;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -138,6 +139,7 @@ export interface Config {
     'stock-alerts': StockAlertsSelect<false> | StockAlertsSelect<true>;
     wishlists: WishlistsSelect<false> | WishlistsSelect<true>;
     'return-requests': ReturnRequestsSelect<false> | ReturnRequestsSelect<true>;
+    'rfq-submissions': RfqSubmissionsSelect<false> | RfqSubmissionsSelect<true>;
     'email-events': EmailEventsSelect<false> | EmailEventsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -1491,6 +1493,9 @@ export interface HeroCarouselBlock {
          */
         badge?: string | null;
         heading: string;
+        /**
+         * One line renders as plain text. Enter two or more lines to render them as a bullet list instead.
+         */
         subheading?: string | null;
         link: {
           type?: ('reference' | 'custom') | null;
@@ -2446,6 +2451,49 @@ export interface ReturnRequest {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rfq-submissions".
+ */
+export interface RfqSubmission {
+  id: number;
+  ticketId: string;
+  /**
+   * Set automatically when the submitter was logged in — blank for guest submissions.
+   */
+  customer?: (number | null) | User;
+  status?: ('new' | 'reviewing' | 'quoted' | 'won' | 'lost' | 'closed') | null;
+  firstName: string;
+  lastName: string;
+  email: string;
+  company?: string | null;
+  gst?: string | null;
+  phone?: string | null;
+  message?: string | null;
+  /**
+   * Manually entered line items, if the customer used the multi-line RFQ grid instead of (or alongside) a BOM file upload.
+   */
+  lineItems?:
+    | {
+        mpn?: string | null;
+        manufacturer?: string | null;
+        quantity?: string | null;
+        targetPrice?: string | null;
+        leadTime?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * The uploaded BOM spreadsheet (.xlsx/.xls/.csv), if the customer used the file-upload flow.
+   */
+  bomFile?: (number | null) | Datasheet;
+  /**
+   * Internal follow-up notes — never shown to the customer.
+   */
+  adminNotes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "email-events".
  */
 export interface EmailEvent {
@@ -2602,6 +2650,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'return-requests';
         value: number | ReturnRequest;
+      } | null)
+    | ({
+        relationTo: 'rfq-submissions';
+        value: number | RfqSubmission;
       } | null)
     | ({
         relationTo: 'email-events';
@@ -3535,6 +3587,36 @@ export interface ReturnRequestsSelect<T extends boolean = true> {
   refundAmount?: T;
   refundStatus?: T;
   refundNote?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rfq-submissions_select".
+ */
+export interface RfqSubmissionsSelect<T extends boolean = true> {
+  ticketId?: T;
+  customer?: T;
+  status?: T;
+  firstName?: T;
+  lastName?: T;
+  email?: T;
+  company?: T;
+  gst?: T;
+  phone?: T;
+  message?: T;
+  lineItems?:
+    | T
+    | {
+        mpn?: T;
+        manufacturer?: T;
+        quantity?: T;
+        targetPrice?: T;
+        leadTime?: T;
+        id?: T;
+      };
+  bomFile?: T;
+  adminNotes?: T;
   updatedAt?: T;
   createdAt?: T;
 }

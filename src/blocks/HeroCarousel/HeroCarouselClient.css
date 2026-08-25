@@ -254,6 +254,35 @@
   max-width: 480px;
 }
 
+.pmc-description-list {
+  margin: 16px 0 0;
+  padding: 0;
+  max-width: 480px;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pmc-description-list li {
+  position: relative;
+  padding-left: 18px;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.pmc-description-list li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+}
+
 .pmc-actions {
   display: flex;
   flex-wrap: wrap;

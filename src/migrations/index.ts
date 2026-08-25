@@ -63,6 +63,8 @@ import * as migration_20260824_171222_add_shipping_settings from './20260824_171
 import * as migration_20260824_194916_remove_shiprocket_fields from './20260824_194916_remove_shiprocket_fields';
 import * as migration_20260824_221421_add_address_email from './20260824_221421_add_address_email';
 import * as migration_20260824_221656_add_billing_address_email from './20260824_221656_add_billing_address_email';
+import * as migration_20260825_103500_add_rfq_submissions from './20260825_103500_add_rfq_submissions';
+import * as migration_20260825_113000_add_rfq_submissions_customer from './20260825_113000_add_rfq_submissions_customer';
 
 export const migrations = [
   {
@@ -389,5 +391,15 @@ export const migrations = [
     up: migration_20260824_221656_add_billing_address_email.up,
     down: migration_20260824_221656_add_billing_address_email.down,
     name: '20260824_221656_add_billing_address_email',
+  },
+  {
+    up: migration_20260825_103500_add_rfq_submissions.up,
+    down: migration_20260825_103500_add_rfq_submissions.down,
+    name: '20260825_103500_add_rfq_submissions',
+  },
+  {
+    up: migration_20260825_113000_add_rfq_submissions_customer.up,
+    down: migration_20260825_113000_add_rfq_submissions_customer.down,
+    name: '20260825_113000_add_rfq_submissions_customer',
   },
 ];

@@ -1,6 +1,7 @@
 'use server'
 
 import configPromise from '@payload-config'
+import { headers as getHeaders } from 'next/headers'
 import { getPayload } from 'payload'
 import { sendTransactionalEmail } from '@/lib/email/emailService'
 
@@ -53,6 +54,7 @@ function parseLineItems(raw: string): LineItem[] {
 
 export async function submitRfq(formData: FormData): Promise<SubmitRfqResult> {
   const payload = await getPayload({ config: configPromise })
+  const { user } = await payload.auth({ headers: await getHeaders() })
 
   const email = String(formData.get('email') || '').trim()
   const firstName = String(formData.get('firstName') || '').trim()
@@ -78,12 +80,13 @@ export async function submitRfq(formData: FormData): Promise<SubmitRfqResult> {
   }
 
   let attachments: { filename: string; content: string; contentType?: string }[] | undefined
+  let uploadedFileBuffer: Buffer | undefined
   if (uploadedFile) {
-    const buffer = Buffer.from(await uploadedFile.arrayBuffer())
+    uploadedFileBuffer = Buffer.from(await uploadedFile.arrayBuffer())
     attachments = [
       {
         filename: uploadedFile.name,
-        content: buffer.toString('base64'),
+        content: uploadedFileBuffer.toString('base64'),
         contentType: uploadedFile.type || undefined,
       },
     ]
@@ -128,6 +131,47 @@ export async function submitRfq(formData: FormData): Promise<SubmitRfqResult> {
     ${uploadedFile ? `<p><b>Attached BOM file:</b> ${escapeHtml(uploadedFile.name)}</p>` : ''}
     ${message ? `<p><b>Message:</b><br/>${escapeHtml(message).replace(/\n/g, '<br/>')}</p>` : ''}
   `
+
+  // Persisted so the ticket is visible/manageable from the admin panel even
+  // if the notification email below fails or is missed in an inbox — best
+  // effort and non-blocking, since the email to sales is the critical path.
+  try {
+    let bomFileId: number | undefined
+    if (uploadedFile && uploadedFileBuffer) {
+      const bomFile = await payload.create({
+        collection: 'datasheets',
+        data: { title: uploadedFile.name },
+        file: {
+          data: uploadedFileBuffer,
+          mimetype: uploadedFile.type || 'application/octet-stream',
+          name: uploadedFile.name,
+          size: uploadedFileBuffer.length,
+        },
+        overrideAccess: true,
+      })
+      bomFileId = bomFile.id
+    }
+
+    await payload.create({
+      collection: 'rfq-submissions',
+      data: {
+        ticketId,
+        customer: user?.id,
+        firstName,
+        lastName,
+        email,
+        company: company || undefined,
+        gst: gst || undefined,
+        phone: phone || undefined,
+        message: message || undefined,
+        lineItems,
+        bomFile: bomFileId,
+      },
+      overrideAccess: true,
+    })
+  } catch (error) {
+    payload.logger.error({ msg: 'Failed to save RFQ submission record', error, ticketId })
+  }
 
   const result = await sendTransactionalEmail(payload, {
     to: 'sales@picmychip.com',

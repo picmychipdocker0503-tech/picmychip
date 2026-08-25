@@ -33,7 +33,25 @@ const HeroContent = ({ slide, stats }: { slide: Slide; stats: HeroStats }) => {
 
       <h1 className="pmc-heading">{slide.heading}</h1>
 
-      {slide.subheading && <p className="pmc-description">{slide.subheading}</p>}
+      {slide.subheading &&
+        (() => {
+          const lines = slide.subheading
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean)
+
+          // A single line reads better as plain copy; multiple lines (entered
+          // as separate lines in the admin) become a scannable bullet list.
+          return lines.length > 1 ? (
+            <ul className="pmc-description-list">
+              {lines.map((line, index) => (
+                <li key={index}>{line}</li>
+              ))}
+            </ul>
+          ) : (
+            <p className="pmc-description">{lines[0] ?? slide.subheading}</p>
+          )
+        })()}
 
       <div className="pmc-actions">
         {slide.link?.label ? (

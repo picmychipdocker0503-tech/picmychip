@@ -8,8 +8,9 @@ import configPromise from '@payload-config'
 import { AccountAvatar } from '@/components/AccountAvatar'
 import { AccountForm } from '@/components/forms/AccountForm'
 import { LoyaltyProgressBar } from '@/components/loyalty/LoyaltyProgressBar'
-import { Order } from '@/payload-types'
+import { Order, RfqSubmission } from '@/payload-types'
 import { OrderItem } from '@/components/OrderItem'
+import { RfqRequestItem } from '@/components/RfqRequestItem'
 import { getPayload } from 'payload'
 import { redirect } from 'next/navigation'
 import { getCachedGlobal } from '@/utilities/getGlobals'
@@ -21,6 +22,7 @@ export default async function AccountPage() {
   const featureFlags = await getCachedGlobal('feature-flags', 0)()
 
   let orders: Order[] | null = null
+  let rfqSubmissions: RfqSubmission[] | null = null
 
   if (!user) {
     redirect(
@@ -49,6 +51,24 @@ export default async function AccountPage() {
     // in production you may want to redirect to a 404  page or at least log the error somewhere
     // console.error(error)
   }
+
+  try {
+    const rfqResult = await payload.find({
+      collection: 'rfq-submissions',
+      limit: 5,
+      user,
+      overrideAccess: false,
+      pagination: false,
+      sort: '-createdAt',
+      where: {
+        customer: {
+          equals: user?.id,
+        },
+      },
+    })
+
+    rfqSubmissions = rfqResult?.docs || []
+  } catch (error) {}
 
   return (
     <>
@@ -92,6 +112,35 @@ export default async function AccountPage() {
 
         <Button asChild variant="default">
           <Link href="/orders">View all orders</Link>
+        </Button>
+      </div>
+
+      <div className=" border p-8 rounded-lg bg-primary-foreground">
+        <h2 className="text-3xl font-medium mb-8">Recent RFQ Requests</h2>
+
+        <div className="prose dark:prose-invert mb-8">
+          <p>
+            These are the most recent BOM uploads and multi-line RFQs you&apos;ve submitted through
+            the Instant Sourcing Hub.
+          </p>
+        </div>
+
+        {(!rfqSubmissions || !Array.isArray(rfqSubmissions) || rfqSubmissions?.length === 0) && (
+          <p className="mb-8">You have no RFQ requests.</p>
+        )}
+
+        {rfqSubmissions && rfqSubmissions.length > 0 && (
+          <ul className="flex flex-col gap-6 mb-8">
+            {rfqSubmissions?.map((submission) => (
+              <li key={submission.id}>
+                <RfqRequestItem submission={submission} />
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <Button asChild variant="default">
+          <Link href="/rfq-requests">View all RFQ requests</Link>
         </Button>
       </div>
     </>
