@@ -33,18 +33,19 @@ const nextConfig: NextConfig = {
     loadPaths: ['./node_modules/@payloadcms/ui/dist/scss/'],
   },
   images: {
-    // Without this, Next's default (a matter of seconds) means the optimizer
-    // response is barely cached at all — the browser ends up sending a
-    // conditional request for the same image on nearly every repeat view,
-    // and each of those costs a real round trip to the image-optimization
-    // worker rather than being served straight from the browser's own disk
-    // cache. Not set to something much longer (e.g. a year, matching
-    // `_next/static`'s immutable caching) because filenames here aren't
-    // content-hashed (see generateFileURL in plugins/index.ts) — an editor
-    // replacing an existing Media document's file can end up reusing the
-    // same URL, so a correction should still show up for real visitors
-    // within a day rather than staying stale for months.
-    minimumCacheTTL: 86400,
+    // Filenames here aren't content-hashed (see generateFileURL in
+    // plugins/index.ts) — an editor replacing an existing Media document's
+    // file reuses the same URL, so this governs how long a published
+    // correction can stay invisible to real visitors (and to the admin's own
+    // browser, via the same Cache-Control header) after being republished.
+    // A full day was too long in practice — confirmed live: an admin
+    // publish/unpublish or image swap wasn't visible in their own browser,
+    // only showing up in a different profile, and even then only once
+    // Vercel's shared edge cache for the transform happened to expire. One
+    // minute still gets real caching benefit for a burst of repeat views
+    // (product page browsing, a listing grid re-rendering) without the
+    // day-long stale window.
+    minimumCacheTTL: 60,
     localPatterns: [
       {
         pathname: '/api/media/file/**',

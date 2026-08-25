@@ -178,6 +178,18 @@ let candidatePoolCache: { fetchedAt: number; data: Candidate[] } | null = null
 let candidatePoolInFlight: Promise<Candidate[]> | null = null
 const CANDIDATE_POOL_TTL_MS = 60 * 1000
 
+/**
+ * Drops the cached candidate pool so the next database-fallback search
+ * re-fetches from Postgres instead of serving up to CANDIDATE_POOL_TTL_MS of
+ * staleness. Called from the Products collection's afterChange/afterDelete
+ * hooks — without this, publishing/unpublishing a product (or any other
+ * catalog edit) wouldn't show up in category/shop listings for up to a
+ * minute whenever Meilisearch is down and this fallback is serving requests.
+ */
+export const invalidateSearchCandidatePool = (): void => {
+  candidatePoolCache = null
+}
+
 const buildCategoryTitleMap = async (payload: Awaited<ReturnType<typeof getPayload>>) => {
   const { docs: categories } = await payload.find({
     collection: 'categories',

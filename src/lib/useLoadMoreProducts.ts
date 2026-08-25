@@ -108,6 +108,14 @@ export const useLoadMoreProducts = ({
         window.sessionStorage.removeItem(storageKey)
         return
       }
+      // A cache entry gets written on every unmount, including a plain first
+      // visit that never clicked "Load More" (page stays 1). Restoring that
+      // is a pure no-op re-render of content that already matches the SSR
+      // grid — but it still swaps `items`/`ratings` for new array/object
+      // references, which was forcing every product card to re-render right
+      // after hydration and reading as a flicker. Only worth restoring when
+      // there's actually a page 2+ to bring back.
+      if (!saved.page || saved.page <= 1) return
       setItems(saved.items)
       setRatings(saved.ratings)
       setHasNextPage(saved.hasNextPage)

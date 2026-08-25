@@ -39,9 +39,16 @@ export const revalidateProduct: CollectionAfterChangeHook<Product> = ({
       safeRevalidatePath(path, payload.logger)
     }
 
-    // Was published, no longer is (unpublished, or slug changed) — the old
-    // path would otherwise keep serving the stale cached page indefinitely.
-    if (previousDoc?._status === 'published' && previousDoc.slug && previousDoc.slug !== doc.slug) {
+    // Was published, no longer is (unpublished — same slug — or slug
+    // changed) — the old path would otherwise keep serving the stale
+    // cached (still-published-looking) page indefinitely. Checking only
+    // the slug-changed case here missed the far more common "just click
+    // Unpublish" flow, since that leaves previousDoc.slug === doc.slug.
+    if (
+      previousDoc?._status === 'published' &&
+      previousDoc.slug &&
+      (doc._status !== 'published' || previousDoc.slug !== doc.slug)
+    ) {
       safeRevalidatePath(`/products/${previousDoc.slug}`, payload.logger)
     }
   }
