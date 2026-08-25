@@ -29,12 +29,17 @@ export const initiatePayment =
     const payload = req.payload
     const { merchantKey, merchantSalt, mode } = props
     const { billingAddress, cart, currency, customerEmail, shippingAddress } = data
-    // businessDetails (GSTIN/company/PAN) isn't part of the plugin's typed additionalData
-    // shape — the checkout page still sends it through as an extra key.
-    const businessDetails = (data as Record<string, unknown>).businessDetails as
+    // businessDetails (GSTIN/company/PAN) and shippingMethod aren't part of the plugin's
+    // typed `data` shape — initiatePaymentHandler rebuilds `data` from only 5 fixed fields
+    // (billingAddress/cart/currency/customerEmail/shippingAddress), silently dropping any
+    // extra keys the client sent in `additionalData`. The full original request body is
+    // still on `req.data` though (set by `addDataAndFileToRequest` before the handler even
+    // calls this adapter), so read the extra fields from there instead.
+    const requestData = req.data as Record<string, unknown> | undefined
+    const businessDetails = requestData?.businessDetails as
       | { companyName?: string; gstin?: string; panNumber?: string }
       | undefined
-    const shippingMethodId = (data as Record<string, unknown>).shippingMethod as string | undefined
+    const shippingMethodId = requestData?.shippingMethod as string | undefined
 
     if (currency !== 'INR') {
       throw new Error('Card / UPI / NetBanking payment via PayU is only available for INR orders.')
@@ -59,11 +64,12 @@ export const initiatePayment =
       payload,
       items: cart.items,
       baseSubtotal: cart.subtotal ?? 0,
+      shippingAmount: shippingMethod.amount,
       businessState,
       customerState,
       defaultGstPercent,
     })
-    const amountInPaise = Math.round(finalAmount) + shippingMethod.amount
+    const amountInPaise = Math.round(finalAmount)
 
     if (!amountInPaise || typeof amountInPaise !== 'number' || amountInPaise < 100) {
       throw new Error('A valid amount of at least ₹1 is required to initiate a payment.')

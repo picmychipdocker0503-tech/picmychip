@@ -381,6 +381,7 @@ async function syncZohoSalesOrderForOrderUnguarded(payload: Payload, orderId: nu
         const shippingTaxId = await resolveTaxId(defaultGstPercent, taxType)
         lineItems.push({
           name: order.shippingMethod === 'express' ? 'Express Shipping' : 'Standard Shipping',
+          hsn_or_sac: '9968',
           rate: order.shippingAmount / 100,
           quantity: 1,
           tax_id: shippingTaxId,

@@ -144,6 +144,18 @@ export default async function InvoicePage({ params, searchParams }: PageProps) {
                 </tr>
               )
             })}
+            {Boolean(order.shippingAmount) && (
+              <tr className="border-border border-b">
+                <td className="py-2">
+                  {order.shippingMethod === 'express' ? 'Express Shipping' : 'Standard Shipping'}
+                  <span className="text-muted-foreground"> (SAC 9968)</span>
+                </td>
+                <td className="py-2 text-right">1</td>
+                <td className="py-2 text-right">
+                  <Price amount={order.shippingAmount ?? 0} as="span" />
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
 

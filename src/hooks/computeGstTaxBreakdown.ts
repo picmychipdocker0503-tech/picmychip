@@ -62,9 +62,14 @@ export const computeGstTaxBreakdown: CollectionBeforeChangeHook = async ({ data,
       nominalTotal - (data.couponApplied?.discountAmount ?? 0) - (data.giftCardApplied?.amountApplied ?? 0),
     )
 
+    // Shipping (SAC 9968) is taxable too and was added on at checkout the same
+    // way — folded in as its own line item so this snapshot matches doc.amount.
+    const shippingAmount = (data.shippingAmount as number | undefined) ?? 0
+    const taxableItems = shippingAmount > 0 ? [...validItems, { gstPercent: defaultGstPercent, nominal: shippingAmount }] : validItems
+
     const taxBreakdown = computeOrderTaxAddOn({
-      items: validItems,
-      amount: discountedBase,
+      items: taxableItems,
+      amount: discountedBase + shippingAmount,
       defaultGstPercent,
       businessState: tax?.businessState || process.env.ZOHO_BUSINESS_STATE || 'Karnataka',
       customerState: data.shippingAddress?.state,

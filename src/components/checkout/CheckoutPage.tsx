@@ -88,28 +88,35 @@ export const CheckoutPage: React.FC<{
   const taxBreakdown =
     !cartIsEmpty && cart?.currency === 'INR'
       ? computeOrderTaxAddOn({
-          items: (cart.items || []).reduce<TaxLineItem[]>((acc, item) => {
-            if (typeof item.product !== 'object' || !item.product || !item.quantity) return acc
-            const unitPrice =
-              item.variant && typeof item.variant === 'object'
-                ? (item.variant.priceInINR ?? item.product.priceInINR ?? 0)
-                : (item.product.priceInINR ?? 0)
-            acc.push({
-              gstPercent: item.product.gstPercent ?? defaultGstPercent,
-              nominal: unitPrice * item.quantity,
-            })
-            return acc
-          }, []),
-          amount: subtotalAfterDiscounts,
+          items: (() => {
+            const items = (cart.items || []).reduce<TaxLineItem[]>((acc, item) => {
+              if (typeof item.product !== 'object' || !item.product || !item.quantity) return acc
+              const unitPrice =
+                item.variant && typeof item.variant === 'object'
+                  ? (item.variant.priceInINR ?? item.product.priceInINR ?? 0)
+                  : (item.product.priceInINR ?? 0)
+              acc.push({
+                gstPercent: item.product.gstPercent ?? defaultGstPercent,
+                nominal: unitPrice * item.quantity,
+              })
+              return acc
+            }, [])
+            // Shipping is a taxable charge too (SAC 9968) — folded in as its own
+            // line item at the default GST rate so it's taxed exactly like the
+            // server's authoritative computeCheckoutTotal (initiatePayment.ts /
+            // place-order route), keeping this preview and the actual charge in sync.
+            if (shippingAmount > 0) items.push({ gstPercent: defaultGstPercent, nominal: shippingAmount })
+            return items
+          })(),
+          amount: subtotalAfterDiscounts + shippingAmount,
           defaultGstPercent,
           businessState,
           customerState,
         })
       : null
-  const checkoutTotalBeforeShipping = taxBreakdown
-    ? subtotalAfterDiscounts + taxBreakdown.totalTax
-    : (cart?.subtotal ?? 0)
-  const checkoutTotal = checkoutTotalBeforeShipping + shippingAmount
+  const checkoutTotal = taxBreakdown
+    ? subtotalAfterDiscounts + shippingAmount + taxBreakdown.totalTax
+    : (cart?.subtotal ?? 0) + shippingAmount
   const fullyCoveredByGiftCard = !cartIsEmpty && checkoutTotal <= 0
 
   const applyDiscount = useCallback(
