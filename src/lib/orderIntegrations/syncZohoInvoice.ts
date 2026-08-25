@@ -85,7 +85,16 @@ async function recordPaymentIfNeeded(args: {
       // typo/rename doesn't require a code change to fix.
       paymentMode: isPayu ? process.env.ZOHO_PAYU_PAYMENT_MODE || 'PAYU' : 'cash',
       accountId: process.env.ZOHO_PAYMENT_DEPOSIT_ACCOUNT_ID || undefined,
-      accountName: process.env.ZOHO_PAYMENT_DEPOSIT_ACCOUNT_NAME || 'SBI-BKC',
+      // No hardcoded org-specific fallback here — a bank account name is
+      // only valid for the Zoho org it was configured against, and this
+      // exact thing broke silently once already when the connected org
+      // changed (a stale "SBI-BKC" from a previous org didn't exist in the
+      // new one, so every payment-recording call threw "account not found",
+      // was swallowed by the catch below, and every invoice sat with an
+      // unpaid balance despite being fully paid via PayU). Leaving both
+      // unset falls through to recordCustomerPayment's own documented
+      // behavior: Zoho's own "Undeposited Funds" default, which always exists.
+      accountName: process.env.ZOHO_PAYMENT_DEPOSIT_ACCOUNT_NAME || undefined,
     })
     return true
   } catch (err) {

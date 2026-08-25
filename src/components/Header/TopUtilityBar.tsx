@@ -78,7 +78,7 @@ export function TopUtilityBar({ announcementBar, socialLinks, supportEmail, supp
           <div className="flex items-center gap-5 border-l border-neutral-800 pl-5">
             <Link
               className="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
-              href="/contact"
+              href="/help"
             >
               <HelpCircleIcon className="size-3.5" />
               {t('help')}

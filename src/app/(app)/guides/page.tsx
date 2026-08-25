@@ -1,6 +1,7 @@
 import { Grid } from '@/components/Grid'
 import { Media } from '@/components/Media'
 import { getCategoryIcon } from '@/components/illustrations/categoryIcons'
+import { getGuideIllustration } from '@/components/illustrations/guides'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import Link from 'next/link'
@@ -42,6 +43,7 @@ export default async function GuidesPage() {
             const media = guide.hero?.media || guide.coverImage
             const categorySlug =
               typeof guide.relatedCategory === 'object' ? guide.relatedCategory?.slug : undefined
+            const Illustration = getGuideIllustration(guide.slug)
             const Icon = getCategoryIcon(categorySlug)
 
             return (
@@ -57,6 +59,10 @@ export default async function GuidesPage() {
                     imgClassName="object-cover"
                     resource={media}
                   />
+                ) : Illustration ? (
+                  <div className="relative aspect-video overflow-hidden rounded-2xl border border-border">
+                    <Illustration className="absolute inset-0 h-full w-full" />
+                  </div>
                 ) : (
                   <div className="card-hover from-orange/25 to-orange/10 border-orange/20 relative flex aspect-video items-center justify-center overflow-hidden rounded-2xl border bg-gradient-to-br">
                     <Icon className="text-orange size-14" />

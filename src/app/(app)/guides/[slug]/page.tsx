@@ -5,6 +5,7 @@ import { RenderHero } from '@/heros/RenderHero'
 import { JsonLd } from '@/components/JsonLd'
 import { Media } from '@/components/Media'
 import { getCategoryIcon } from '@/components/illustrations/categoryIcons'
+import { getGuideIllustration } from '@/components/illustrations/guides'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { generateMeta } from '@/utilities/generateMeta'
 import { getServerSideURL } from '@/utilities/getURL'
@@ -56,6 +57,7 @@ export default async function GuidePage({ params }: Args) {
   const bannerMedia = hero?.media || coverImage
   const hasBannerMedia = bannerMedia && typeof bannerMedia === 'object'
   const categorySlug = typeof relatedCategory === 'object' ? relatedCategory?.slug : undefined
+  const Illustration = getGuideIllustration(guide.slug)
   const Icon = getCategoryIcon(categorySlug)
 
   const siteSettings = await getCachedGlobal('site-settings', 0)()
@@ -85,6 +87,10 @@ export default async function GuidePage({ params }: Args) {
             imgClassName="object-cover"
             resource={bannerMedia}
           />
+        ) : Illustration ? (
+          <div className="relative aspect-[21/9] overflow-hidden rounded-3xl border border-border">
+            <Illustration className="absolute inset-0 h-full w-full" />
+          </div>
         ) : (
           <div className="from-orange/25 to-orange/10 border-orange/20 relative flex aspect-[21/9] items-center justify-center overflow-hidden rounded-3xl border bg-gradient-to-br">
             <Icon className="text-orange size-24" />
