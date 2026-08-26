@@ -20,7 +20,13 @@ type HeroStats = { componentCount: number; reviewMessage: string }
 /* Hero content                                                                */
 /* -------------------------------------------------------------------------- */
 
-const HeroContent = ({ slide, stats }: { slide: Slide; stats: HeroStats }) => {
+const HeroContent = ({ slide, stats, isFirst }: { slide: Slide; stats: HeroStats; isFirst: boolean }) => {
+  // Embla keeps every slide mounted in the DOM (just translated off-screen),
+  // so with all slides rendering an <h1> this page had 5 of them at once —
+  // only the first (initially-visible) slide's heading is the page's real
+  // H1; the rest are still headings, just not THE heading.
+  const HeadingTag = isFirst ? 'h1' : 'h2'
+
   return (
     <div className="pmc-hero-content">
       {slide.badge && (
@@ -31,7 +37,7 @@ const HeroContent = ({ slide, stats }: { slide: Slide; stats: HeroStats }) => {
         </div>
       )}
 
-      <h1 className="pmc-heading">{slide.heading}</h1>
+      <HeadingTag className="pmc-heading">{slide.heading}</HeadingTag>
 
       {slide.subheading &&
         (() => {
@@ -132,7 +138,7 @@ const SplitSlide = ({
       <div className="pmc-hero-bg" />
 
       <div className="pmc-hero-left">
-        <HeroContent slide={slide} stats={stats} />
+        <HeroContent slide={slide} stats={stats} isFirst={Boolean(priority)} />
       </div>
 
       <div className="pmc-hero-right">
@@ -168,7 +174,7 @@ const FullBleedSlide = ({
       <div className="pmc-full-overlay" />
 
       <div className="pmc-full-content">
-        <HeroContent slide={slide} stats={stats} />
+        <HeroContent slide={slide} stats={stats} isFirst={Boolean(priority)} />
       </div>
     </div>
   )
