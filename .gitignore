@@ -21,10 +21,6 @@ playwright-report/index.html
 # misc
 .DS_Store
 *.pem
-# ...except the RDS CA bundle — a public certificate, not a secret, and
-# needed at runtime (POSTGRES_CA_CERT) for the Postgres SSL connection to
-# actually ship with the deploy.
-!/certs/rds-ca.pem
 
 # debug
 npm-debug.log*

@@ -191,20 +191,22 @@ export function ProductDescription({
             <AddToCart product={product} />
           </Suspense>
 
-          <button
-            aria-label={comparing ? 'Remove from compare' : 'Add to compare'}
-            className={cn(
-              'flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors',
-              comparing
-                ? 'border-primary text-primary bg-primary/5'
-                : 'border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted',
-            )}
-            onClick={() => toggle(productId)}
-            type="button"
-          >
-            {comparing ? <CheckIcon className="size-4" /> : <ScaleIcon className="size-4" />}
-            {comparing ? t('comparing') : t('compare')}
-          </button>
+          {flags.productCompare && (
+            <button
+              aria-label={comparing ? 'Remove from compare' : 'Add to compare'}
+              className={cn(
+                'flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-medium transition-colors',
+                comparing
+                  ? 'border-primary text-primary bg-primary/5'
+                  : 'border-border bg-background text-muted-foreground hover:text-foreground hover:bg-muted',
+              )}
+              onClick={() => toggle(productId)}
+              type="button"
+            >
+              {comparing ? <CheckIcon className="size-4" /> : <ScaleIcon className="size-4" />}
+              {comparing ? t('comparing') : t('compare')}
+            </button>
+          )}
 
           <button
             aria-label={saved ? t('removeFromFavorites') : t('addToFavorites')}

@@ -177,8 +177,8 @@ export const AddToCartButton: React.FC<Props> = ({
       aria-label="Add to cart"
       className={cn(
         'group border-foreground/15 text-foreground hover:bg-muted flex size-9 items-center justify-center gap-1.5 rounded-full border text-xs font-bold transition-[background-color,color,transform] duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-50',
-        'sm:bg-foreground sm:text-background sm:hover:bg-foreground/90 sm:w-auto sm:border-transparent sm:px-4',
-        justAdded && 'sm:bg-success sm:hover:bg-success',
+        'sm:w-auto sm:px-4',
+        justAdded && 'border-success text-success bg-success/10 hover:bg-success/10',
         className,
       )}
       disabled={disabled || isLoading}

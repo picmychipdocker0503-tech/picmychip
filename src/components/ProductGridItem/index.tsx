@@ -6,6 +6,7 @@ import { AddToCartButton } from '@/components/Cart/AddToCartButton'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
 import { ProductMatchingImage } from '@/components/product/ProductMatchingImage'
+import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import { useTilt3D } from '@/lib/useTilt3D'
 import { useCompare } from '@/providers/Compare'
 import { useQuickView } from '@/providers/QuickView'
@@ -38,6 +39,7 @@ const STOCK_LABEL: Record<string, { label: string; className: string; dot: strin
 
 export const ProductGridItem: React.FC<Props> = ({ product, averageRating, reviewCount, priority }) => {
   const { gallery, title, stockStatus, slug, categories } = product
+  const flags = useFeatureFlags()
   const { toggle, isComparing } = useCompare()
   const { toggle: toggleWishlist, isSaved } = useWishlist()
   const { open: openQuickView } = useQuickView()
@@ -191,23 +193,25 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
                 <HeartIcon className={clsx('size-3.5', saved && 'fill-current')} />
               </button>
 
-              <button
-                aria-label={comparing ? 'Remove from compare' : 'Add to compare'}
-                className={clsx(
-                  'flex size-8 items-center justify-center rounded-xl border backdrop-blur-md shadow-sm transition-all duration-200 cursor-pointer',
-                  comparing
-                    ? 'border-primary text-primary bg-primary/10'
-                    : 'bg-card/90 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card',
-                )}
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  toggle(productId)
-                }}
-                type="button"
-              >
-                {comparing ? <CheckIcon className="size-3.5 text-primary" /> : <ScaleIcon className="size-3.5" />}
-              </button>
+              {flags.productCompare && (
+                <button
+                  aria-label={comparing ? 'Remove from compare' : 'Add to compare'}
+                  className={clsx(
+                    'flex size-8 items-center justify-center rounded-xl border backdrop-blur-md shadow-sm transition-all duration-200 cursor-pointer',
+                    comparing
+                      ? 'border-primary text-primary bg-primary/10'
+                      : 'bg-card/90 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card',
+                  )}
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    toggle(productId)
+                  }}
+                  type="button"
+                >
+                  {comparing ? <CheckIcon className="size-3.5 text-primary" /> : <ScaleIcon className="size-3.5" />}
+                </button>
+              )}
             </div>
           )}
         </div>

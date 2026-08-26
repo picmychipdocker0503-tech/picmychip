@@ -4614,6 +4614,7 @@ export interface FeatureFlag {
   trustedByBrands?: boolean | null;
   rewardsProgram?: boolean | null;
   freeShippingBanner?: boolean | null;
+  productCompare?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -4777,6 +4778,7 @@ export interface FeatureFlagsSelect<T extends boolean = true> {
   trustedByBrands?: T;
   rewardsProgram?: T;
   freeShippingBanner?: T;
+  productCompare?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

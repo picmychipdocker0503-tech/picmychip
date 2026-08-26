@@ -17,6 +17,7 @@ const DEFAULTS: FeatureFlag = {
   trustedByBrands: true,
   rewardsProgram: false,
   freeShippingBanner: false,
+  productCompare: true,
   updatedAt: '',
   createdAt: '',
 }

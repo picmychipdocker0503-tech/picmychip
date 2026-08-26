@@ -9,6 +9,7 @@ import { OpenCartButton } from '@/components/Cart/OpenCart'
 import { Media } from '@/components/Media'
 import { Search } from '@/components/Search'
 import { NavIconBadge } from '@/components/ui/nav-icon-badge'
+import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import { useAuth } from '@/providers/Auth'
 import { useCompare } from '@/providers/Compare'
 import { useTranslations } from 'next-intl'
@@ -31,6 +32,7 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
   const { ids } = useCompare()
   const { ids: wishlistIds } = useWishlist()
   const { user } = useAuth()
+  const flags = useFeatureFlags()
   const t = useTranslations('account')
 
   const iconButtonClass =
@@ -90,14 +92,16 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
               <HeartIcon className="pmc-icon-anim size-5 group-hover:animate-[pmc-icon-pop_0.5s_ease-in-out]" />
               <NavIconBadge count={wishlistIds.length} />
             </Link>
-            <Link
-              aria-label="Compare"
-              className={iconButtonClass}
-              href={ids.length > 0 ? `/compare?ids=${ids.join(',')}` : '/compare'}
-            >
-              <ScaleIcon className="pmc-icon-anim size-5 group-hover:animate-[pmc-icon-tilt_0.5s_ease-in-out]" />
-              <NavIconBadge count={ids.length} />
-            </Link>
+            {flags.productCompare && (
+              <Link
+                aria-label="Compare"
+                className={iconButtonClass}
+                href={ids.length > 0 ? `/compare?ids=${ids.join(',')}` : '/compare'}
+              >
+                <ScaleIcon className="pmc-icon-anim size-5 group-hover:animate-[pmc-icon-tilt_0.5s_ease-in-out]" />
+                <NavIconBadge count={ids.length} />
+              </Link>
+            )}
             <div className="ml-1 border-l border-border/70 pl-1">
               <Suspense fallback={<OpenCartButton />}>
                 <Cart />

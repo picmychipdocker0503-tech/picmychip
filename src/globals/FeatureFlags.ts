@@ -77,5 +77,11 @@ export const FeatureFlags: GlobalConfig = {
       defaultValue: false,
       label: 'Show the free-shipping progress banner in the cart drawer',
     },
+    {
+      name: 'productCompare',
+      type: 'checkbox',
+      defaultValue: true,
+      label: 'Enable product comparison (header icon, "Add to compare" buttons, compare bar)',
+    },
   ],
 }
