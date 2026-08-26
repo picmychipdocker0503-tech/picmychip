@@ -41,22 +41,22 @@ export function TopUtilityBar({ announcementBar, socialLinks, supportEmail, supp
           {supportEmail && (
             <a
               className={cn(
-                'hidden items-center gap-1.5 text-neutral-400 transition-colors hover:text-white lg:flex',
+                'group hidden items-center gap-1.5 text-neutral-400 transition-colors hover:text-white lg:flex',
                 hasAnnouncement && 'border-l border-neutral-800 pl-5',
               )}
               href={`mailto:${supportEmail}`}
             >
-              <MailIcon className="size-3.5" />
+              <MailIcon className="pmc-icon-anim size-3.5 group-hover:animate-[pmc-icon-wiggle_0.5s_ease-in-out]" />
               {supportEmail}
             </a>
           )}
 
           {supportPhone && (
             <a
-              className="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
+              className="group flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
               href={`tel:${supportPhone.replace(/\s+/g, '')}`}
             >
-              <PhoneIcon className="size-3.5" />
+              <PhoneIcon className="pmc-icon-anim size-3.5 group-hover:animate-[pmc-icon-wiggle_0.5s_ease-in-out]" />
               {supportPhone}
             </a>
           )}
@@ -65,11 +65,11 @@ export function TopUtilityBar({ announcementBar, socialLinks, supportEmail, supp
         <div className="ml-auto flex items-center gap-5">
           <button
             aria-label="Start chat"
-            className="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
+            className="group flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
             onClick={showTawkChat}
             type="button"
           >
-            <MessageCircleIcon className="size-3.5" />
+            <MessageCircleIcon className="pmc-icon-anim size-3.5 group-hover:animate-[pmc-icon-pop_0.5s_ease-in-out]" />
             {t('chat')}
           </button>
 
@@ -77,18 +77,18 @@ export function TopUtilityBar({ announcementBar, socialLinks, supportEmail, supp
 
           <div className="flex items-center gap-5 border-l border-neutral-800 pl-5">
             <Link
-              className="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
+              className="group flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
               href="/help"
             >
-              <HelpCircleIcon className="size-3.5" />
+              <HelpCircleIcon className="pmc-icon-anim size-3.5 group-hover:animate-[pmc-icon-tilt_0.5s_ease-in-out]" />
               {t('help')}
             </Link>
             {flags.trackOrder && (
               <Link
-                className="flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
+                className="group flex items-center gap-1.5 text-neutral-400 transition-colors hover:text-white"
                 href="/find-order"
               >
-                <TruckIcon className="size-3.5" />
+                <TruckIcon className="pmc-icon-anim size-3.5 group-hover:animate-[pmc-icon-nudge-right_0.5s_ease-in-out]" />
                 {t('trackOrder')}
               </Link>
             )}
@@ -102,13 +102,13 @@ export function TopUtilityBar({ announcementBar, socialLinks, supportEmail, supp
                 return (
                   <a
                     aria-label="Social link"
-                    className="text-neutral-400 transition-colors hover:text-white"
+                    className="group text-neutral-400 transition-colors hover:text-white"
                     href={social.url}
                     key={index}
                     rel="noopener noreferrer"
                     target="_blank"
                   >
-                    <Icon className="size-3.5" />
+                    <Icon className="pmc-icon-anim size-3.5 group-hover:animate-[pmc-icon-pop_0.5s_ease-in-out]" />
                   </a>
                 )
               })}

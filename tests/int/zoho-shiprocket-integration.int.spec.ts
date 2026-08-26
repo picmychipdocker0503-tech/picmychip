@@ -444,7 +444,10 @@ describe('Zoho Books API integration (mocked fetch)', () => {
       vi.fn(async (url: string) => {
         if (url.includes('/oauth/v2/token')) return jsonResponse({ access_token: 'token', expires_in: 3600 })
         if (url.includes('reference_number=42')) {
-          return jsonResponse({ code: 0, salesorders: [{ salesorder_id: 'so-1', salesorder_number: 'SO-00001' }] })
+          return jsonResponse({
+            code: 0,
+            salesorders: [{ salesorder_id: 'so-1', salesorder_number: 'SO-00001', reference_number: '42' }],
+          })
         }
         if (url.includes('/salesorders/so-1')) {
           return jsonResponse({
@@ -452,6 +455,7 @@ describe('Zoho Books API integration (mocked fetch)', () => {
             salesorder: {
               salesorder_id: 'so-1',
               salesorder_number: 'SO-00001',
+              reference_number: '42',
               status: 'invoiced',
               invoiced_status: 'invoiced',
               total: 100,
@@ -466,9 +470,45 @@ describe('Zoho Books API integration (mocked fetch)', () => {
       }),
     )
 
-    const found = await findExistingSalesOrderByOrderId(42)
+    const found = await findExistingSalesOrderByOrderId(42, 100)
     expect(found?.invoices?.[0]?.invoice_id).toBe('inv-9')
-    await expect(findExistingSalesOrderByOrderId(999)).resolves.toBeUndefined()
+    await expect(findExistingSalesOrderByOrderId(999, 100)).resolves.toBeUndefined()
+  })
+
+  it('findExistingSalesOrderByOrderId rejects a reference_number match whose total belongs to a different sale', async () => {
+    // Confirmed live: orders 77/78 got linked to an unrelated sales order
+    // ("sri sakthi industries") that simply happened to share a
+    // reference_number with our own order id in the same Zoho org — trusting
+    // reference_number alone silently adopted someone else's sale instead of
+    // ever creating the real one.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (url: string) => {
+        if (url.includes('/oauth/v2/token')) return jsonResponse({ access_token: 'token', expires_in: 3600 })
+        if (url.includes('reference_number=77')) {
+          return jsonResponse({
+            code: 0,
+            salesorders: [{ salesorder_id: 'so-collision', salesorder_number: 'SO-00053', reference_number: '77' }],
+          })
+        }
+        if (url.includes('/salesorders/so-collision')) {
+          return jsonResponse({
+            code: 0,
+            salesorder: {
+              salesorder_id: 'so-collision',
+              salesorder_number: 'SO-00053',
+              reference_number: '77',
+              status: 'invoiced',
+              invoiced_status: 'invoiced',
+              total: 11.8,
+            },
+          })
+        }
+        throw new Error(`Unexpected fetch: ${url}`)
+      }),
+    )
+
+    await expect(findExistingSalesOrderByOrderId(77, 499.5)).resolves.toBeUndefined()
   })
 
   it('Products.defaultPopulate includes every field the Zoho sales-order sync reads off a relationship-populated product', async () => {

@@ -35,17 +35,18 @@ const nextConfig: NextConfig = {
   images: {
     // Filenames here aren't content-hashed (see generateFileURL in
     // plugins/index.ts) — an editor replacing an existing Media document's
-    // file reuses the same URL, so this governs how long a published
-    // correction can stay invisible to real visitors (and to the admin's own
-    // browser, via the same Cache-Control header) after being republished.
-    // A full day was too long in practice — confirmed live: an admin
-    // publish/unpublish or image swap wasn't visible in their own browser,
-    // only showing up in a different profile, and even then only once
-    // Vercel's shared edge cache for the transform happened to expire. One
-    // minute still gets real caching benefit for a burst of repeat views
-    // (product page browsing, a listing grid re-rendering) without the
-    // day-long stale window.
-    minimumCacheTTL: 60,
+    // file reuses the same URL. That used to mean this TTL governed how long
+    // a republished correction could stay invisible (kept at 60s rather than
+    // a day for that reason), which in turn meant almost every repeat image
+    // request re-triggered a billed Vercel Image Optimization
+    // "transformation" instead of reusing a cached one — the site's real
+    // driver of near-exhausting the Hobby plan's 5,000/month quota.
+    // Superseded by cache-busting the image URL itself on the Media doc's
+    // `updatedAt` (see components/Media/Image/index.tsx and
+    // ProductMatchingImage.tsx) — an edit now changes the requested URL, so
+    // staleness no longer depends on this TTL at all, freeing it to be long.
+    minimumCacheTTL: 2592000, // 30 days
+
     localPatterns: [
       {
         pathname: '/api/media/file/**',

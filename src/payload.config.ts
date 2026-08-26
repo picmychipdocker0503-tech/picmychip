@@ -1,7 +1,7 @@
+import { transactionalEmailPayloadAdapter } from '@/lib/email/payloadAdapter'
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { nodemailerAdapter } from '@payloadcms/email-nodemailer'
 import { en } from '@payloadcms/translations/languages/en'
-import { transactionalEmailPayloadAdapter } from '@/lib/email/payloadAdapter'
 
 import {
   BoldFeature,
@@ -22,9 +22,9 @@ import { fileURLToPath } from 'url'
 import { Brands } from '@/collections/Brands'
 import { Categories } from '@/collections/Categories'
 import { CommunityFeedback } from '@/collections/CommunityFeedback'
-import { EmailEvents } from '@/collections/EmailEvents'
 import { Coupons } from '@/collections/Coupons'
 import { Datasheets } from '@/collections/Datasheets'
+import { EmailEvents } from '@/collections/EmailEvents'
 import { GiftCards } from '@/collections/GiftCards'
 import { Guides } from '@/collections/Guides'
 import { Jobs } from '@/collections/Jobs'
@@ -46,7 +46,6 @@ import { SiteSettings } from '@/globals/SiteSettings'
 import { shouldUseMeilisearch } from '@/lib/meilisearch'
 import { configureProductsIndex } from '@/lib/searchIndex'
 import { plugins } from './plugins'
-
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
@@ -84,6 +83,9 @@ export default buildConfig({
     components: {
       // Renders top-right of every admin page (not just the dashboard).
       actions: ['@/components/admin/EnvironmentBadge#EnvironmentBadge'],
+      // Quick-jump search above the sidebar nav links — a static list, not a
+      // live filter of the real nav (see NavSearch's own comment for why).
+      beforeNavLinks: ['@/components/admin/NavSearch#NavSearch'],
       // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
       // Feel free to delete this at any time. Simply remove the line below and the import `BeforeLogin` statement on line 15.
       beforeLogin: ['@/components/BeforeLogin#BeforeLogin'],
@@ -140,7 +142,13 @@ export default buildConfig({
   db: postgresAdapter({
     pool: {
       connectionString: process.env.DATABASE_URL || '',
+      ssl: {
+        rejectUnauthorized: false,
+       
+      },
+      
     },
+    
     // Schema changes go through `payload migrate:create` + `payload migrate` in every
     // environment. Push mode's per-request introspection is fine over localhost but
     // takes 30-60s per request against a remote host like Neon.

@@ -20,6 +20,13 @@ export const EmailEvents: CollectionConfig = {
     group: 'Sales',
     defaultColumns: ['emailEventId', 'emailType', 'recipient', 'status', 'primaryProvider', 'fallbackProvider', 'createdAt'],
     useAsTitle: 'emailEventId',
+    components: {
+      views: {
+        list: {
+          Component: '@/components/admin/collections/EmailEventsListView#EmailEventsListView',
+        },
+      },
+    },
   },
   fields: [
     {

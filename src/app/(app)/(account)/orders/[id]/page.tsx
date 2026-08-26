@@ -15,6 +15,7 @@ import { getPayload } from 'payload'
 import { OrderStatus } from '@/components/OrderStatus'
 import { OrderTrackingTimeline } from '@/components/OrderTrackingTimeline'
 import { AddressItem } from '@/components/addresses/AddressItem'
+import { ClearCartIfMatchesOrder } from '@/components/Cart/ClearCartIfMatchesOrder'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +40,15 @@ export default async function Order({ params, searchParams }: PageProps) {
     } = await payload.find({
       collection: 'orders',
       user,
-      overrideAccess: !Boolean(user),
+      // Always true, not just for guests: ownership of this specific order is
+      // already independently enforced below (canAccessAsUser/canAccessAsGuest,
+      // plus the where clause above), and the ecommerce plugin's `transactions`
+      // field has field-level read access locked to admins only — without this,
+      // a logged-in customer's `order.transactions` comes back stripped, so
+      // orderCartId below is always undefined and the cart never clears after
+      // a PayU order (only worked for guest checkout, which already used
+      // overrideAccess: true).
+      overrideAccess: true,
       depth: 2,
       where: {
         and: [
@@ -95,6 +104,7 @@ export default async function Order({ params, searchParams }: PageProps) {
         giftCardApplied: true,
         zohoInvoiceId: true,
         invoiceSyncStatus: true,
+        transactions: true,
       },
     })
 
@@ -136,6 +146,13 @@ export default async function Order({ params, searchParams }: PageProps) {
 
   return (
     <div className="">
+      <ClearCartIfMatchesOrder
+        orderCartId={(() => {
+          const transaction = order.transactions?.[0]
+          const cart = typeof transaction === 'object' ? transaction?.cart : undefined
+          return typeof cart === 'object' ? cart?.id : cart
+        })()}
+      />
       <div className="flex gap-8 justify-between items-center mb-6">
         {user ? (
           <div className="flex gap-4">

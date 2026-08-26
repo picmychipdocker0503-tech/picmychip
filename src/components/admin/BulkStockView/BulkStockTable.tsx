@@ -2,9 +2,9 @@
 
 import type { Product } from '@/payload-types'
 
+import { DataTableShell } from '@/components/admin/DataTable/DataTableShell'
 import {
   createColumnHelper,
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
@@ -13,7 +13,7 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { toast } from '@payloadcms/ui'
-import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, ChevronLeftIcon, ChevronRightIcon, SaveIcon } from 'lucide-react'
+import { SaveIcon } from 'lucide-react'
 import React, { useMemo, useState } from 'react'
 
 type Row = Pick<Product, 'id' | 'title' | 'slug' | 'priceInINR' | 'inventory' | 'lowStockThreshold' | 'stockStatus'>
@@ -158,26 +158,21 @@ export const BulkStockTable: React.FC<{ products: Row[] }> = ({ products }) => {
     }
   }
 
-  const rows = table.getRowModel().rows
   const totalFiltered = table.getFilteredRowModel().rows.length
 
   return (
-    <div className="border-base-content/10 bg-base-100/40 pmc-rounded-box flex flex-col gap-4 border p-5 shadow-md backdrop-blur-xl">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <input
-          className="pmc-input pmc-input-sm w-full max-w-xs"
-          onChange={(e) => {
-            setQuery(e.target.value)
-            table.setPageIndex(0)
-          }}
-          placeholder="Search by product title…"
-          type="text"
-          value={query}
-        />
-        <div className="text-base-content/60 flex items-center gap-3 text-sm">
-          <span>
-            {totalFiltered} product{totalFiltered === 1 ? '' : 's'}
-          </span>
+    <div className="border-base-content/10 bg-base-100/40 pmc-rounded-box border p-5 shadow-md backdrop-blur-xl">
+      <DataTableShell
+        emptyMessage={`No products match "${query}".`}
+        onSearchChange={(value) => {
+          setQuery(value)
+          table.setPageIndex(0)
+        }}
+        rowClassName={(row) => (edits[row.original.id] ? 'bg-warning/10 hover:bg-warning/15' : undefined)}
+        searchInput={query}
+        searchPlaceholder="Search by product title…"
+        table={table}
+        toolbarRight={
           <button
             className="pmc-btn pmc-btn-primary pmc-btn-sm gap-1.5"
             disabled={dirtyCount === 0 || saving}
@@ -187,80 +182,9 @@ export const BulkStockTable: React.FC<{ products: Row[] }> = ({ products }) => {
             {saving ? <span className="pmc-loading pmc-loading-spinner pmc-loading-xs" /> : <SaveIcon className="size-3.5" />}
             {saving ? 'Saving…' : `Save Changes${dirtyCount > 0 ? ` (${dirtyCount})` : ''}`}
           </button>
-        </div>
-      </div>
-
-      <div className="border-base-content/10 pmc-rounded-box overflow-x-auto border">
-        <table className="pmc-table pmc-table-zebra">
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr className="text-base-content/70" key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  const sortDirection = header.column.getIsSorted()
-
-                  return (
-                    <th key={header.id}>
-                      {header.column.getCanSort() ? (
-                        <button
-                          className="flex cursor-pointer items-center gap-1 select-none"
-                          onClick={header.column.getToggleSortingHandler()}
-                          type="button"
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                          {sortDirection === 'asc' && <ArrowUpIcon className="size-3" />}
-                          {sortDirection === 'desc' && <ArrowDownIcon className="size-3" />}
-                          {!sortDirection && <ArrowUpDownIcon className="size-3 opacity-30" />}
-                        </button>
-                      ) : (
-                        flexRender(header.column.columnDef.header, header.getContext())
-                      )}
-                    </th>
-                  )
-                })}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {rows.map((row) => (
-              <tr className={edits[row.original.id] ? 'bg-warning/10' : undefined} key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {totalFiltered === 0 && <p className="text-base-content/60 text-sm">No products match &quot;{query}&quot;.</p>}
-
-      {table.getPageCount() > 1 && (
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-base-content/60 text-sm">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              className="pmc-btn pmc-btn-ghost pmc-btn-sm"
-              disabled={!table.getCanPreviousPage()}
-              onClick={() => table.previousPage()}
-              type="button"
-            >
-              <ChevronLeftIcon className="size-4" />
-              Prev
-            </button>
-            <button
-              className="pmc-btn pmc-btn-ghost pmc-btn-sm"
-              disabled={!table.getCanNextPage()}
-              onClick={() => table.nextPage()}
-              type="button"
-            >
-              Next
-              <ChevronRightIcon className="size-4" />
-            </button>
-          </div>
-        </div>
-      )}
+        }
+        totalDocs={totalFiltered}
+      />
     </div>
   )
 }

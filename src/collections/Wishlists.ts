@@ -50,6 +50,13 @@ export const Wishlists: CollectionConfig = {
     group: 'Sales',
     defaultColumns: ['customer', 'product', 'priceAtAdd', 'createdAt'],
     useAsTitle: 'id',
+    components: {
+      views: {
+        list: {
+          Component: '@/components/admin/collections/WishlistsListView#WishlistsListView',
+        },
+      },
+    },
   },
   hooks: {
     beforeChange: [forceOwnCustomerAndSnapshotPrice],

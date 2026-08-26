@@ -247,6 +247,45 @@ export interface User {
    * Zoho Books contact id — checked first when matching this customer on future orders.
    */
   zohoCustomerId?: string | null;
+  /**
+   * Storefront theme this account last chose — set automatically from the theme switcher so it follows them across devices. Blank means "Auto" (match system setting).
+   */
+  themePreference?:
+    | (
+        | 'light'
+        | 'dark'
+        | 'high-contrast'
+        | 'midnight'
+        | 'warm'
+        | 'ocean'
+        | 'circuit'
+        | 'sunset'
+        | 'cupcake'
+        | 'bumblebee'
+        | 'emerald'
+        | 'corporate'
+        | 'synthwave'
+        | 'retro'
+        | 'cyberpunk'
+        | 'valentine'
+        | 'halloween'
+        | 'garden'
+        | 'forest'
+        | 'aqua'
+        | 'autumn'
+        | 'business'
+        | 'acid'
+        | 'lemonade'
+        | 'night'
+        | 'coffee'
+        | 'winter'
+        | 'dim'
+        | 'nord'
+        | 'caramellatte'
+        | 'abyss'
+        | 'silk'
+      )
+    | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -2753,6 +2792,7 @@ export interface UsersSelect<T extends boolean = true> {
   cart?: T;
   addresses?: T;
   zohoCustomerId?: T;
+  themePreference?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;

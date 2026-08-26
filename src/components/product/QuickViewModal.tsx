@@ -34,6 +34,10 @@ const QuickViewBody: React.FC<{ product: Product }> = ({ product }) => {
   const { currency } = useCurrency()
   const { toggle: toggleWishlist, isSaved } = useWishlist()
   const [quantity, setQuantity] = useState(1)
+  // Kept separate from `quantity` — a number input bound straight to a
+  // number state can't ever show "" while backspacing a single digit to
+  // retype it (see the identical comment in Cart/AddToCart.tsx).
+  const [quantityInput, setQuantityInput] = useState('1')
   const [current, setCurrent] = useState(0)
   const [justAdded, setJustAdded] = useState(false)
   const [ratingInfo, setRatingInfo] = useState<{ average: number; count: number }>({
@@ -56,6 +60,7 @@ const QuickViewBody: React.FC<{ product: Product }> = ({ product }) => {
 
   useEffect(() => {
     setQuantity(1)
+    setQuantityInput('1')
     setCurrent(0)
 
     fetch(
@@ -72,6 +77,36 @@ const QuickViewBody: React.FC<{ product: Product }> = ({ product }) => {
   }, [product.id])
 
   const isOutOfStock = product.stockStatus === 'out-of-stock'
+  const availableInventory = product.inventory ?? 0
+
+  const clampQuantity = (next: number) => {
+    const clamped = Math.max(1, Math.floor(next) || 1)
+    return availableInventory > 0 ? Math.min(availableInventory, clamped) : clamped
+  }
+
+  const applyQuantity = (next: number) => {
+    const clamped = clampQuantity(next)
+    setQuantity(clamped)
+    setQuantityInput(String(clamped))
+  }
+
+  const handleQuantityInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Always mirror exactly what's typed, including empty — clamping happens
+    // once editing finishes, in commitQuantityInput.
+    setQuantityInput(e.target.value)
+  }
+
+  const commitQuantityInput = () => {
+    const parsed = Number(quantityInput)
+    applyQuantity(quantityInput === '' || Number.isNaN(parsed) ? 1 : parsed)
+  }
+
+  const handleQuantityInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      e.currentTarget.blur()
+    }
+  }
 
   const handleAddToCart = () => {
     setJustAdded(true)
@@ -167,22 +202,34 @@ const QuickViewBody: React.FC<{ product: Product }> = ({ product }) => {
             <p className="text-muted-foreground mb-1 text-xs font-semibold uppercase">Quantity</p>
             <div className="border-border flex items-center rounded-lg border">
               <button
-                aria-label="Increase quantity"
-                className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center"
-                onClick={() => setQuantity((q) => q + 1)}
-                type="button"
-              >
-                <PlusIcon className="size-4" />
-              </button>
-              <span className="w-8 text-center text-sm font-medium">{quantity}</span>
-              <button
                 aria-label="Decrease quantity"
                 className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"
                 disabled={quantity <= 1}
-                onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                onClick={() => applyQuantity(quantity - 1)}
                 type="button"
               >
                 <MinusIcon className="size-4" />
+              </button>
+              <input
+                aria-label="Quantity"
+                className="w-10 [appearance:textfield] bg-transparent text-center text-sm font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                inputMode="numeric"
+                max={availableInventory > 0 ? availableInventory : undefined}
+                min={1}
+                onBlur={commitQuantityInput}
+                onChange={handleQuantityInputChange}
+                onKeyDown={handleQuantityInputKeyDown}
+                type="number"
+                value={quantityInput}
+              />
+              <button
+                aria-label="Increase quantity"
+                className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"
+                disabled={availableInventory > 0 && quantity >= availableInventory}
+                onClick={() => applyQuantity(quantity + 1)}
+                type="button"
+              >
+                <PlusIcon className="size-4" />
               </button>
             </div>
           </div>

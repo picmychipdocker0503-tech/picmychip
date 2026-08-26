@@ -21,6 +21,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { deepMergeSimple } from 'payload/shared'
 import { FloatingField, floatingFieldInputClassName } from '@/components/forms/FloatingField'
 import { useAuth } from '@/providers/Auth'
+import { toast } from 'sonner'
 
 type AddressFormValues = {
   title?: string | null
@@ -66,7 +67,7 @@ export const AddressForm: React.FC<Props> = ({
     register,
     handleSubmit,
     watch,
-    formState: { errors },
+    formState: { errors, isSubmitting },
     setValue,
   } = useForm<AddressFormValues>({
     defaultValues: {
@@ -346,13 +347,32 @@ export const AddressForm: React.FC<Props> = ({
         ...rest,
         isDefaultBilling: Boolean(isDefaultAddress),
         isDefaultShipping: Boolean(isDefaultAddress),
+        // The ecommerce plugin only auto-fills `customer` on the server when
+        // the account's roles include 'customer' — an admin-role account
+        // (e.g. staff who also shop themselves) fails that check silently,
+        // so their address saved with customer: null and never showed up in
+        // their own address book again. This form is always "manage my own
+        // address," never an admin picking someone else's, so set it
+        // explicitly here rather than depending on that role-gated default.
+        ...(user?.id ? { customer: user.id } : {}),
       })
 
       if (!skipSubmission) {
-        if (addressID) {
-          await updateAddress(addressID, newData)
-        } else {
-          await createAddress(newData)
+        try {
+          if (addressID) {
+            await updateAddress(addressID, newData)
+          } else {
+            await createAddress(newData)
+          }
+        } catch (error) {
+          // Both createAddress/updateAddress (from the ecommerce plugin's
+          // client provider) throw on a non-ok response — previously
+          // uncaught here, so a failed save (e.g. a validation error, an
+          // access-control rejection) did nothing visible at all: no toast,
+          // no field error, the modal just sat there as if nothing happened.
+          const message = error instanceof Error ? error.message : 'Could not save this address. Please try again.'
+          toast.error(message)
+          return
         }
       }
 
@@ -360,7 +380,7 @@ export const AddressForm: React.FC<Props> = ({
         callback(newData)
       }
     },
-    [initialData, skipSubmission, callback, addressID, updateAddress, createAddress],
+    [initialData, skipSubmission, callback, addressID, updateAddress, createAddress, user?.id],
   )
 
   return (
@@ -558,8 +578,8 @@ export const AddressForm: React.FC<Props> = ({
             Cancel
           </Button>
         )}
-        <Button type="submit" variant="outline">
-          Save
+        <Button type="submit" variant="outline" disabled={isSubmitting}>
+          {isSubmitting ? 'Saving…' : 'Save'}
         </Button>
       </div>
     </form>

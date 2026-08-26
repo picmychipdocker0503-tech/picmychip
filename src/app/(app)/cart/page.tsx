@@ -6,13 +6,14 @@ import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
 import { SecureCheckoutBadge } from '@/components/SecureCheckoutBadge'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
+import { setCartItemQuantity } from '@/lib/cart/setCartItemQuantity'
 import { getClientSideURL } from '@/utilities/getURL'
 import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import { MinusIcon, PlusIcon, ShoppingCartIcon, Trash2Icon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import posthog from 'posthog-js'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 type GalleryItem = NonNullable<Product['gallery']>[number]
 type VariantOptionItem = NonNullable<Variant['options']>[number]
@@ -285,8 +286,17 @@ const CartRow: React.FC<{ item: CartItem; priceField: `priceIn${string}` }> = ({
   item,
   priceField,
 }) => {
-  const { decrementItem, incrementItem, removeItem, isLoading } = useCart()
+  const { cart, decrementItem, incrementItem, refreshCart, removeItem, isLoading } = useCart()
   const t = useTranslations('cart')
+  const [quantityInput, setQuantityInput] = useState(String(item.quantity ?? 1))
+  const [isUpdatingQuantity, setIsUpdatingQuantity] = useState(false)
+
+  // Resyncs the typed value whenever the committed quantity changes —
+  // whether from this row's own commit, the +/- buttons, or a cart refresh
+  // triggered elsewhere.
+  useEffect(() => {
+    setQuantityInput(String(item.quantity ?? 1))
+  }, [item.quantity])
 
   const product = item.product
   const variant = item.variant
@@ -329,6 +339,29 @@ const CartRow: React.FC<{ item: CartItem; priceField: `priceIn${string}` }> = ({
     typeof inventory === 'number' && typeof item.quantity === 'number' && item.quantity >= inventory
 
   const lineTotal = typeof unitPrice === 'number' ? unitPrice * (item.quantity ?? 0) : undefined
+
+  const clampQuantity = (next: number) => {
+    const clamped = Math.max(1, Math.floor(next) || 1)
+    return typeof inventory === 'number' && inventory > 0 ? Math.min(inventory, clamped) : clamped
+  }
+
+  const commitQuantity = async () => {
+    if (!item.id || !cart?.id) return
+    const parsed = Number(quantityInput)
+    const next = clampQuantity(Number.isNaN(parsed) ? (item.quantity ?? 1) : parsed)
+    setQuantityInput(String(next))
+    if (next === item.quantity) return
+
+    setIsUpdatingQuantity(true)
+    try {
+      await setCartItemQuantity({ cartId: cart.id, itemId: item.id, quantity: next })
+      await refreshCart()
+    } catch {
+      setQuantityInput(String(item.quantity ?? 1))
+    } finally {
+      setIsUpdatingQuantity(false)
+    }
+  }
 
   return (
     <li className="bg-card border-border flex gap-4 rounded-2xl border p-4 shadow-sm">
@@ -379,17 +412,34 @@ const CartRow: React.FC<{ item: CartItem; priceField: `priceIn${string}` }> = ({
               <button
                 aria-label={t('decreaseQuantity')}
                 className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"
-                disabled={isLoading || !item.id}
+                disabled={isLoading || isUpdatingQuantity || !item.id}
                 onClick={() => item.id && decrementItem(item.id)}
                 type="button"
               >
                 <MinusIcon className="size-4" />
               </button>
-              <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+              <input
+                aria-label="Quantity"
+                className="w-10 [appearance:textfield] bg-transparent text-center text-sm font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                disabled={isLoading || isUpdatingQuantity || !item.id}
+                inputMode="numeric"
+                max={typeof inventory === 'number' && inventory > 0 ? inventory : undefined}
+                min={1}
+                onBlur={commitQuantity}
+                onChange={(e) => setQuantityInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    e.currentTarget.blur()
+                  }
+                }}
+                type="number"
+                value={quantityInput}
+              />
               <button
                 aria-label={t('increaseQuantity')}
                 className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"
-                disabled={isLoading || !item.id || atMaxInventory}
+                disabled={isLoading || isUpdatingQuantity || !item.id || atMaxInventory}
                 onClick={() => item.id && incrementItem(item.id)}
                 type="button"
               >

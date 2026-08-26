@@ -16,6 +16,13 @@ export const Services: CollectionConfig = {
     group: 'Content',
     defaultColumns: ['title', 'slug', 'updatedAt'],
     useAsTitle: 'title',
+    components: {
+      views: {
+        list: {
+          Component: '@/components/admin/collections/ServicesListView#ServicesListView',
+        },
+      },
+    },
   },
   fields: [
     {

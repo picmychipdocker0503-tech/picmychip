@@ -86,30 +86,34 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
       <div className="absolute top-1/2 right-3 z-10 flex -translate-y-1/2 flex-col gap-2 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100">
         <button
           aria-label="Quick view"
-          className="bg-background text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-110"
+          className="group bg-background text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-110"
           onClick={(e) => {
             e.preventDefault()
             if (product.id) open(product as Product)
           }}
           type="button"
         >
-          <SearchIcon className="size-4" />
+          <SearchIcon className="pmc-icon-anim size-4 group-hover:animate-[pmc-icon-tilt_0.5s_ease-in-out]" />
         </button>
 
         <button
           aria-label="Add to cart"
-          className="bg-background text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-110 disabled:opacity-50"
+          className="group bg-background text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-110 disabled:opacity-50"
           disabled={isOutOfStock || isLoading}
           onClick={handleAddToCart}
           type="button"
         >
-          {justAdded ? <CheckIcon className="size-4" /> : <ShoppingCartIcon className="size-4" />}
+          {justAdded ? (
+            <CheckIcon className="size-4" />
+          ) : (
+            <ShoppingCartIcon className="pmc-icon-anim size-4 group-hover:animate-[pmc-icon-nudge-up_0.5s_ease-in-out]" />
+          )}
         </button>
 
         <button
           aria-label={saved ? 'Remove from favorites' : 'Add to favorites'}
           className={clsx(
-            'bg-background flex size-9 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-110',
+            'group bg-background flex size-9 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-110',
             saved ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
           )}
           onClick={(e) => {
@@ -118,7 +122,12 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
           }}
           type="button"
         >
-          <HeartIcon className={clsx('size-4', saved && 'fill-current')} />
+          <HeartIcon
+            className={clsx(
+              'pmc-icon-anim size-4 group-hover:animate-[pmc-icon-pop_0.5s_ease-in-out]',
+              saved && 'fill-current',
+            )}
+          />
         </button>
       </div>
 

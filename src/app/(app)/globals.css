@@ -2588,6 +2588,78 @@ input[type='reset']:disabled {
   animation: pmc-cart-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
+/* Small per-icon hover animations for the header / top utility bar SVG
+   icons — applied via Tailwind's group-hover:animate-[...] arbitrary value
+   syntax, referencing these keyframes by name. The .pmc-icon-anim marker
+   lets prefers-reduced-motion turn all of them off in one place. */
+@keyframes pmc-icon-pop {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.22);
+  }
+  70% {
+    transform: scale(0.94);
+  }
+}
+
+@keyframes pmc-icon-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  20% {
+    transform: rotate(-12deg);
+  }
+  40% {
+    transform: rotate(10deg);
+  }
+  60% {
+    transform: rotate(-6deg);
+  }
+  80% {
+    transform: rotate(4deg);
+  }
+}
+
+@keyframes pmc-icon-tilt {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(18deg);
+  }
+}
+
+@keyframes pmc-icon-nudge-up {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+@keyframes pmc-icon-nudge-right {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pmc-icon-anim {
+    animation: none !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .pmc-cart-pop {
     animation: none !important;

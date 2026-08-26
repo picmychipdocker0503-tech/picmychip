@@ -7,7 +7,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useAuth } from '@/providers/Auth'
 import { cn } from '@/utilities/cn'
+import { getClientSideURL } from '@/utilities/getURL'
 import React, { useState } from 'react'
 
 import type { Theme } from '../types'
@@ -249,6 +251,7 @@ const Swatch: React.FC<{ option: ThemeOption; size?: 'sm' | 'md' }> = ({ option,
 
 export const ThemeSelector: React.FC = () => {
   const { setTheme } = useTheme()
+  const { user } = useAuth()
   const [value, setValue] = useState<ThemeValue | ''>('')
 
   const onThemeChange = (themeToSet: ThemeValue) => {
@@ -258,6 +261,19 @@ export const ThemeSelector: React.FC = () => {
     } else {
       setTheme(themeToSet)
       setValue(themeToSet)
+    }
+
+    // Logged-in users get their choice saved to their account (not just this
+    // browser's localStorage), so it follows them next time they sign in —
+    // "auto" clears the saved preference rather than locking in whatever
+    // this device's system theme happened to resolve to.
+    if (user) {
+      fetch(`${getClientSideURL()}/api/users/${user.id}`, {
+        body: JSON.stringify({ themePreference: themeToSet === 'auto' ? null : themeToSet }),
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        method: 'PATCH',
+      }).catch(() => {})
     }
   }
 

@@ -15,6 +15,11 @@ export const StockAlerts: CollectionConfig = {
     group: 'Sales',
     components: {
       beforeList: ['@/components/admin/StockAlertsListStats#StockAlertsListStats'],
+      views: {
+        list: {
+          Component: '@/components/admin/collections/StockAlertsListView#StockAlertsListView',
+        },
+      },
     },
     defaultColumns: ['product', 'email', 'notifiedAt', 'createdAt'],
     useAsTitle: 'email',

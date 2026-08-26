@@ -36,8 +36,8 @@ export const Image: React.FC<MediaProps> = (props) => {
   if (!src && resource && typeof resource === 'object') {
     const {
       alt: altFromResource,
-      filename: fullFilename,
       height: fullHeight,
+      updatedAt,
       url,
       width: fullWidth,
     } = resource
@@ -46,10 +46,15 @@ export const Image: React.FC<MediaProps> = (props) => {
     height = heightFromProps ?? fullHeight
     alt = altFromResource
 
-    const filename = fullFilename
-
     // Use relative URL instead of full URL to avoid Next.js image optimization security issues
-    src = url || ''
+    // The Media doc's filename isn't content-hashed (see next.config.ts's
+    // images.minimumCacheTTL comment) — replacing a product photo reuses the
+    // exact same URL, so a long CDN/Image-Optimization cache TTL would keep
+    // serving the old bytes indefinitely. Appending `updatedAt` as a cache
+    // key makes the URL itself change on every edit, so correctness comes
+    // from that instead of a short TTL — freeing minimumCacheTTL to be long
+    // (fewer repeat "transformations" billed) without ever going stale.
+    src = url ? `${url}${url.includes('?') ? '&' : '?'}v=${new Date(updatedAt).getTime()}` : ''
   }
 
   // NOTE: this is used by the browser to determine which image to download at different screen

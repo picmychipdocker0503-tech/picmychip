@@ -2,9 +2,10 @@
 
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
 import { CheckIcon, MinusIcon, PlusIcon, ShoppingCartIcon } from 'lucide-react'
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 
+import { setCartItemQuantity } from '@/lib/cart/setCartItemQuantity'
 import { cn } from '@/utilities/cn'
 
 import { NotifyMeButton } from './NotifyMeButton'
@@ -40,7 +41,7 @@ export const AddToCartButton: React.FC<Props> = ({
   className,
   onBeforeAdd,
 }) => {
-  const { addItem, cart, decrementItem, incrementItem, isLoading } = useCart()
+  const { addItem, cart, decrementItem, incrementItem, isLoading, refreshCart } = useCart()
   const [justAdded, setJustAdded] = useState(false)
 
   const existingItem = useMemo(() => {
@@ -57,6 +58,38 @@ export const AddToCartButton: React.FC<Props> = ({
       )
     })
   }, [cart?.items, productId, variantId])
+
+  const [quantityInput, setQuantityInput] = useState(String(existingItem?.quantity ?? 1))
+  const [isUpdatingQuantity, setIsUpdatingQuantity] = useState(false)
+
+  // Resyncs the typed value whenever the committed quantity changes — from
+  // this control's own commit, the +/- buttons, or a cart refresh elsewhere.
+  useEffect(() => {
+    setQuantityInput(String(existingItem?.quantity ?? 1))
+  }, [existingItem?.quantity])
+
+  const clampQuantity = (next: number) => {
+    const clamped = Math.max(1, Math.floor(next) || 1)
+    return typeof inventory === 'number' && inventory > 0 ? Math.min(inventory, clamped) : clamped
+  }
+
+  const commitQuantity = async () => {
+    if (!existingItem?.id || !cart?.id) return
+    const parsed = Number(quantityInput)
+    const next = clampQuantity(Number.isNaN(parsed) ? (existingItem.quantity ?? 1) : parsed)
+    setQuantityInput(String(next))
+    if (next === existingItem.quantity) return
+
+    setIsUpdatingQuantity(true)
+    try {
+      await setCartItemQuantity({ cartId: cart.id, itemId: existingItem.id, quantity: next })
+      await refreshCart()
+    } catch {
+      setQuantityInput(String(existingItem.quantity ?? 1))
+    } finally {
+      setIsUpdatingQuantity(false)
+    }
+  }
 
   const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault()
@@ -90,7 +123,7 @@ export const AddToCartButton: React.FC<Props> = ({
         <button
           aria-label="Decrease quantity"
           className="text-muted-foreground hover:text-foreground flex h-full w-8 items-center justify-center disabled:opacity-40"
-          disabled={isLoading}
+          disabled={isLoading || isUpdatingQuantity}
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
@@ -100,11 +133,29 @@ export const AddToCartButton: React.FC<Props> = ({
         >
           <MinusIcon className="size-3.5" />
         </button>
-        <span className="w-5 text-center text-xs font-semibold">{existingItem.quantity}</span>
+        <input
+          aria-label="Quantity"
+          className="w-7 [appearance:textfield] bg-transparent text-center text-xs font-semibold [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          disabled={isLoading || isUpdatingQuantity}
+          inputMode="numeric"
+          max={typeof inventory === 'number' && inventory > 0 ? inventory : undefined}
+          min={1}
+          onBlur={commitQuantity}
+          onChange={(e) => setQuantityInput(e.target.value)}
+          onClick={(e) => e.stopPropagation()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              e.currentTarget.blur()
+            }
+          }}
+          type="number"
+          value={quantityInput}
+        />
         <button
           aria-label="Increase quantity"
           className="text-muted-foreground hover:text-foreground flex h-full w-8 items-center justify-center disabled:opacity-40"
-          disabled={isLoading || atMax}
+          disabled={isLoading || isUpdatingQuantity || atMax}
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
@@ -125,7 +176,7 @@ export const AddToCartButton: React.FC<Props> = ({
     <button
       aria-label="Add to cart"
       className={cn(
-        'border-foreground/15 text-foreground hover:bg-muted flex size-9 items-center justify-center gap-1.5 rounded-full border text-xs font-bold transition-[background-color,color,transform] duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-50',
+        'group border-foreground/15 text-foreground hover:bg-muted flex size-9 items-center justify-center gap-1.5 rounded-full border text-xs font-bold transition-[background-color,color,transform] duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-50',
         'sm:bg-foreground sm:text-background sm:hover:bg-foreground/90 sm:w-auto sm:border-transparent sm:px-4',
         justAdded && 'sm:bg-success sm:hover:bg-success',
         className,
@@ -137,7 +188,7 @@ export const AddToCartButton: React.FC<Props> = ({
       <span className="grid">
         <ShoppingCartIcon
           className={cn(
-            'col-start-1 row-start-1 size-3.5 shrink-0 transition-transform duration-200',
+            'pmc-icon-anim col-start-1 row-start-1 size-3.5 shrink-0 transition-transform duration-200 group-hover:animate-[pmc-icon-nudge-up_0.5s_ease-in-out]',
             justAdded && 'scale-0',
           )}
         />

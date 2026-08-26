@@ -2,15 +2,8 @@
 
 import type { InventoryReport } from '@/lib/reports'
 
-import {
-  createColumnHelper,
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type SortingState,
-} from '@tanstack/react-table'
-import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon } from 'lucide-react'
+import { DataTableShell } from '@/components/admin/DataTable/DataTableShell'
+import { createColumnHelper, getCoreRowModel, getSortedRowModel, useReactTable, type SortingState } from '@tanstack/react-table'
 import React, { useState } from 'react'
 
 type LowStockRow = InventoryReport['lowStock'][number]
@@ -48,42 +41,6 @@ export const InventoryTable: React.FC<{ lowStock: LowStockRow[] }> = ({ lowStock
   })
 
   return (
-    <div className="border-base-content/10 pmc-rounded-box overflow-x-auto border">
-      <table className="pmc-table pmc-table-zebra">
-        <thead>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr className="text-base-content/70" key={headerGroup.id}>
-              {headerGroup.headers.map((header) => {
-                const sortDirection = header.column.getIsSorted()
-
-                return (
-                  <th key={header.id}>
-                    <button
-                      className="flex cursor-pointer items-center gap-1 select-none"
-                      onClick={header.column.getToggleSortingHandler()}
-                      type="button"
-                    >
-                      {flexRender(header.column.columnDef.header, header.getContext())}
-                      {sortDirection === 'asc' && <ArrowUpIcon className="size-3" />}
-                      {sortDirection === 'desc' && <ArrowDownIcon className="size-3" />}
-                      {!sortDirection && <ArrowUpDownIcon className="size-3 opacity-30" />}
-                    </button>
-                  </th>
-                )
-              })}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTableShell emptyMessage="No low-stock products right now." table={table} totalDocs={lowStock.length} />
   )
 }

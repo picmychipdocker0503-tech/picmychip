@@ -7,6 +7,7 @@ import { findOrCreateZohoItem } from '@/lib/zoho/items'
 import { getZohoOrganizationState } from '@/lib/zoho/organization'
 import { resolveTaxId } from '@/lib/zoho/taxes'
 import { getInvoicePdfUrl, getZohoInvoice } from '@/lib/zoho/invoices'
+import { recordPaymentIfNeeded } from './syncZohoInvoice'
 import { findCreditNoteForInvoice, getCreditNoteUrl } from '@/lib/zoho/creditNotes'
 import {
   convertSalesOrderToInvoice,
@@ -254,7 +255,29 @@ async function applyLinkedInvoice(payload: Payload, orderId: number | string, sa
   const linked = salesOrder.invoices?.[0]
   if (!linked) return
 
-  const invoice = await getZohoInvoice(linked.invoice_id)
+  let invoice = await getZohoInvoice(linked.invoice_id)
+
+  // This app collects 100% of the order total upfront (PayU, or COD on
+  // delivery) before an invoice ever exists — so the moment a sales order
+  // converts to an invoice (whether via the admin's "Accept" action or
+  // detected here after being converted directly in Zoho Books), the money
+  // has already been received and the payment should record automatically,
+  // not require a separate manual step. Best-effort: a failure here doesn't
+  // undo the (already successful) invoice — it just leaves the balance
+  // showing until the next sync picks it up again.
+  if (invoice.customer_id && (invoice.balance ?? invoice.total) > 0) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const order: any = await payload.findByID({ collection: 'orders', id: orderId, depth: 1, overrideAccess: true })
+    const paymentRecorded = await recordPaymentIfNeeded({
+      payload,
+      order,
+      customerId: invoice.customer_id,
+      invoice,
+    })
+    if (paymentRecorded) {
+      invoice = await getZohoInvoice(invoice.invoice_id).catch(() => invoice)
+    }
+  }
 
   await payload.update({
     collection: 'orders',
@@ -357,7 +380,9 @@ async function syncZohoSalesOrderForOrderUnguarded(payload: Payload, orderId: nu
   try {
     // Idempotency guard — checks Zoho directly, not just our local flag, so
     // a retried hook or manual retry never produces a duplicate sales order.
-    let salesOrder = await findExistingSalesOrderByOrderId(orderId)
+    // amount is stored in paise (matches priceInINR elsewhere); Zoho's own
+    // total is in rupees.
+    let salesOrder = await findExistingSalesOrderByOrderId(orderId, (order.amount ?? 0) / 100)
 
     if (!salesOrder) {
       const { contactId } = await resolveCustomerForOrder(payload, order)

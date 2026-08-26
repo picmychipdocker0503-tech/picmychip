@@ -42,7 +42,7 @@ const toZohoAddress = (address: AddressLike, state?: IndianState): ZohoAddress |
  * internal order id — it's what shows up in PayU's own settlement reports,
  * so it's what reconciliation is actually done against.
  */
-function getPayuReference(order: { transactions?: unknown }): string | undefined {
+export function getPayuReference(order: { transactions?: unknown }): string | undefined {
   const transaction = Array.isArray(order.transactions) ? order.transactions[0] : undefined
   const payu = transaction && typeof transaction === 'object' ? (transaction as { payu?: { mihpayid?: string; txnid?: string } }).payu : undefined
   return payu?.mihpayid || payu?.txnid
@@ -57,7 +57,7 @@ function getPayuReference(order: { transactions?: unknown }): string | undefined
  * and non-fatal: a failure here doesn't undo the (already successful)
  * invoice creation, just leaves the balance showing until retried.
  */
-async function recordPaymentIfNeeded(args: {
+export async function recordPaymentIfNeeded(args: {
   payload: import('payload').Payload
   order: { id: number | string; createdAt?: string; paymentMethod?: string | null; transactions?: unknown }
   customerId?: string

@@ -34,9 +34,9 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
   const t = useTranslations('account')
 
   const iconButtonClass =
-    'relative hidden size-10 items-center justify-center rounded-full text-muted-foreground transition-[background-color,color,transform] hover:bg-muted hover:text-foreground active:scale-95 md:inline-flex'
+    'group relative hidden size-10 items-center justify-center rounded-full text-muted-foreground transition-[background-color,color,transform] hover:bg-muted hover:text-foreground active:scale-95 md:inline-flex'
   const rfqActionClass =
-    'bg-muted/60 text-muted-foreground hover:bg-primary/10 hover:text-primary focus-visible:ring-primary/15 inline-flex h-10 min-w-24 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-4 active:scale-95'
+    'group bg-muted/60 text-muted-foreground hover:bg-primary/10 hover:text-primary focus-visible:ring-primary/15 inline-flex h-10 min-w-24 items-center justify-center gap-2 rounded-full px-4 text-sm font-semibold transition-colors focus-visible:outline-none focus-visible:ring-4 active:scale-95'
 
   return (
     <>
@@ -72,14 +72,14 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
               className={rfqActionClass}
               href="/rfq?upload=1"
             >
-              <UploadIcon className="size-4" />
+              <UploadIcon className="pmc-icon-anim size-4 group-hover:animate-[pmc-icon-nudge-up_0.5s_ease-in-out]" />
               BOM
             </Link>
             <Link
               className={rfqActionClass}
               href="/rfq#rfq-form"
             >
-              <ReceiptTextIcon className="size-4" />
+              <ReceiptTextIcon className="pmc-icon-anim size-4 group-hover:animate-[pmc-icon-pop_0.5s_ease-in-out]" />
               RFQ
             </Link>
           </div>
@@ -87,7 +87,7 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
           {/* Right Icons */}
           <div className="flex items-center gap-1">
             <Link aria-label="Favorites" className={iconButtonClass} href="/wishlist">
-              <HeartIcon className="size-5" />
+              <HeartIcon className="pmc-icon-anim size-5 group-hover:animate-[pmc-icon-pop_0.5s_ease-in-out]" />
               <NavIconBadge count={wishlistIds.length} />
             </Link>
             <Link
@@ -95,7 +95,7 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
               className={iconButtonClass}
               href={ids.length > 0 ? `/compare?ids=${ids.join(',')}` : '/compare'}
             >
-              <ScaleIcon className="size-5" />
+              <ScaleIcon className="pmc-icon-anim size-5 group-hover:animate-[pmc-icon-tilt_0.5s_ease-in-out]" />
               <NavIconBadge count={ids.length} />
             </Link>
             <div className="ml-1 border-l border-border/70 pl-1">
@@ -154,10 +154,10 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
                 </Link>
                 <span className="bg-border h-3 w-px" />
                 <Link
-                  className="text-foreground hover:text-primary inline-flex items-center gap-1 font-medium transition-colors"
+                  className="group text-foreground hover:text-primary inline-flex items-center gap-1 font-medium transition-colors"
                   href="/login"
                 >
-                  <LogInIcon className="size-3.5" />
+                  <LogInIcon className="pmc-icon-anim size-3.5 group-hover:animate-[pmc-icon-nudge-right_0.5s_ease-in-out]" />
                   {t('signIn')}
                 </Link>
               </>

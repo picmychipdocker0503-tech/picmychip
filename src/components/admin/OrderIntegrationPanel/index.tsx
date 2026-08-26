@@ -1,6 +1,6 @@
 'use client'
 
-import { useDocumentInfo, useFormFields } from '@payloadcms/ui'
+import { Drawer, DrawerToggler, useDocumentInfo, useDrawerSlug, useFormFields } from '@payloadcms/ui'
 import React, { useState } from 'react'
 
 type SyncStatus = 'pending' | 'processing' | 'completed' | 'failed' | undefined
@@ -54,9 +54,16 @@ async function readActionResponse(res: Response): Promise<ActionResponse> {
  * manual courier details, with retry actions that call the
  * /api/admin/orders/[id]/* routes — a full page reload afterwards keeps this
  * simple and always shows the true persisted state.
+ *
+ * Only a compact status strip renders inline; the full detail (retry/accept
+ * buttons, invoice/credit-note links, courier info) lives in a Drawer opened
+ * from it. Payload's own Drawer is a portal with its own opaque overlay, so
+ * unlike the previous always-expanded inline card, it can never visually
+ * bleed into whatever sits behind it in the edit view.
  */
 export const OrderIntegrationPanel: React.FC = () => {
   const { id } = useDocumentInfo()
+  const drawerSlug = useDrawerSlug('order-integrations')
   const [loading, setLoading] = useState<Action | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [lastResponse, setLastResponse] = useState<ActionResponse | null>(null)
@@ -122,157 +129,173 @@ export const OrderIntegrationPanel: React.FC = () => {
   const hasInvoice = invoiceSyncStatus === 'completed' && Boolean(zohoInvoiceNumber)
 
   return (
-    <div className="pmc-rounded-box border-base-content/10 bg-base-200/40 mb-4 flex flex-col gap-4 border p-4">
-      <div>
-        <div className="mb-1 flex items-center justify-between">
-          <span className="text-base-content text-sm font-medium">Zoho Sales Order</span>
-          <StatusBadge status={salesOrderSyncStatus} />
-        </div>
-        {zohoSalesOrderNumber && (
-          <p className="text-base-content/70 text-sm">
-            {zohoSalesOrderNumber}
-            {zohoSalesOrderStatus ? ` · ${zohoSalesOrderStatus}` : ''}
-          </p>
-        )}
-        {salesOrderSyncStatus === 'failed' && salesOrderError && (
-          <p className="text-error mt-1 text-xs break-words">{salesOrderError}</p>
-        )}
-        {error && <p className="text-error mt-2 text-xs break-words">{error}</p>}
-        {lastResponse && (
-          <div className="bg-base-100/70 border-base-content/10 mt-2 rounded border p-2 text-xs">
-            <p className="font-medium">Last retry result</p>
-            <p>Sales order: {lastResponse.salesOrderSyncStatus || 'unknown'}</p>
-            {lastResponse.zohoSalesOrderNumber && <p>Zoho SO: {lastResponse.zohoSalesOrderNumber}</p>}
-            {lastResponse.zohoSalesOrderId && <p>Zoho ID: {lastResponse.zohoSalesOrderId}</p>}
-          </div>
-        )}
-        <div className="mt-2 flex gap-2">
-          <button
-            className="pmc-btn pmc-btn-xs"
-            disabled={loading !== null}
-            onClick={() => callAction('retry-sales-order')}
-            type="button"
-          >
-            {loading === 'retry-sales-order' ? 'Retrying…' : 'Retry'}
-          </button>
-        </div>
+    <div className="pmc-rounded-box border-base-content/10 bg-base-200 relative z-10 mb-4 flex items-center justify-between gap-4 border p-3 shadow-sm">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+        <span className="text-base-content/70">
+          Sales order: <StatusBadge status={salesOrderSyncStatus} />
+        </span>
+        <span className="text-base-content/70">
+          Invoice: <StatusBadge status={invoiceSyncStatus} />
+        </span>
       </div>
+      <DrawerToggler className="pmc-btn pmc-btn-xs" slug={drawerSlug}>
+        View Zoho details
+      </DrawerToggler>
 
-      <div>
-        <div className="mb-1 flex items-center justify-between">
-          <span className="text-base-content text-sm font-medium">Zoho Books Invoice</span>
-          <StatusBadge status={invoiceSyncStatus} />
-        </div>
-        {hasInvoice ? (
-          <>
-            <p className="text-base-content/70 text-sm">{zohoInvoiceNumber}</p>
-            {paymentReference && (
-              <p className="text-base-content/70 text-xs">
-                PayU reference {paymentReference}
-                {zohoPaymentRecordedAt ? ' · payment recorded in Zoho' : ''}
+      <Drawer slug={drawerSlug} title="Zoho Integration">
+        <div className="flex flex-col gap-4">
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-base-content text-sm font-medium">Zoho Sales Order</span>
+              <StatusBadge status={salesOrderSyncStatus} />
+            </div>
+            {zohoSalesOrderNumber && (
+              <p className="text-base-content/70 text-sm">
+                {zohoSalesOrderNumber}
+                {zohoSalesOrderStatus ? ` · ${zohoSalesOrderStatus}` : ''}
               </p>
             )}
-            <div className="mt-2 flex gap-2">
-              {zohoInvoiceUrl && (
-                <a
-                  className="pmc-btn pmc-btn-xs pmc-btn-outline"
-                  href={zohoInvoiceUrl}
-                  rel="noopener noreferrer"
-                  target="_blank"
-                >
-                  View in Zoho
-                </a>
-              )}
-              {id && (
-                <a className="pmc-btn pmc-btn-xs pmc-btn-outline" href={`/api/orders/${id}/invoice-pdf`}>
-                  Download PDF
-                </a>
-              )}
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="text-base-content/70 text-sm">
-              Not yet accepted — confirm stock/availability, then accept to generate the invoice. Also
-              auto-detected here if accepted directly in Zoho Books.
-            </p>
-            {invoiceSyncStatus === 'failed' && invoiceError && (
-              <p className="text-error mt-1 text-xs break-words">{invoiceError}</p>
+            {salesOrderSyncStatus === 'failed' && salesOrderError && (
+              <p className="text-error mt-1 text-xs break-words">{salesOrderError}</p>
+            )}
+            {error && <p className="text-error mt-2 text-xs break-words">{error}</p>}
+            {lastResponse && (
+              <div className="bg-base-100 border-base-content/10 mt-2 rounded border p-2 text-xs">
+                <p className="font-medium">Last retry result</p>
+                <p>Sales order: {lastResponse.salesOrderSyncStatus || 'unknown'}</p>
+                {lastResponse.zohoSalesOrderNumber && <p>Zoho SO: {lastResponse.zohoSalesOrderNumber}</p>}
+                {lastResponse.zohoSalesOrderId && <p>Zoho ID: {lastResponse.zohoSalesOrderId}</p>}
+              </div>
             )}
             <div className="mt-2 flex gap-2">
               <button
                 className="pmc-btn pmc-btn-xs"
-                disabled={loading !== null || !zohoSalesOrderNumber}
-                onClick={() => callAction('accept-sales-order')}
+                disabled={loading !== null}
+                onClick={() => callAction('retry-sales-order')}
                 type="button"
               >
-                {loading === 'accept-sales-order' ? 'Accepting…' : 'Accept & Generate Invoice'}
+                {loading === 'retry-sales-order' ? 'Retrying…' : 'Retry'}
               </button>
             </div>
-          </>
-        )}
-      </div>
-
-      {zohoCreditNoteNumber && (
-        <div>
-          <div className="mb-1 flex items-center justify-between">
-            <span className="text-base-content text-sm font-medium">Zoho Credit Note</span>
-            <span className="text-base-content/60 text-sm font-medium">
-              {zohoCreditNoteStatus || 'Linked'}
-            </span>
           </div>
-          <p className="text-base-content/70 text-sm">{zohoCreditNoteNumber}</p>
-          <div className="mt-2 flex gap-2">
-            {zohoCreditNoteUrl && (
-              <a
-                className="pmc-btn pmc-btn-xs pmc-btn-outline"
-                href={zohoCreditNoteUrl}
-                rel="noopener noreferrer"
-                target="_blank"
-              >
-                View in Zoho
-              </a>
-            )}
-            {id && (
-              <a className="pmc-btn pmc-btn-xs pmc-btn-outline" href={`/api/orders/${id}/credit-note-pdf`}>
-                Download PDF
-              </a>
+
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-base-content text-sm font-medium">Zoho Books Invoice</span>
+              <StatusBadge status={invoiceSyncStatus} />
+            </div>
+            {hasInvoice ? (
+              <>
+                <p className="text-base-content/70 text-sm">{zohoInvoiceNumber}</p>
+                {paymentReference && (
+                  <p className="text-base-content/70 text-xs">
+                    PayU reference {paymentReference}
+                    {zohoPaymentRecordedAt ? ' · payment recorded in Zoho' : ''}
+                  </p>
+                )}
+                <div className="mt-2 flex gap-2">
+                  {zohoInvoiceUrl && (
+                    <a
+                      className="pmc-btn pmc-btn-xs pmc-btn-outline"
+                      href={zohoInvoiceUrl}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      View in Zoho
+                    </a>
+                  )}
+                  {id && (
+                    <a className="pmc-btn pmc-btn-xs pmc-btn-outline" href={`/api/orders/${id}/invoice-pdf`}>
+                      Download PDF
+                    </a>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-base-content/70 text-sm">
+                  Not yet accepted — confirm stock/availability, then accept to generate the invoice. Also
+                  auto-detected here if accepted directly in Zoho Books.
+                </p>
+                {invoiceSyncStatus === 'failed' && invoiceError && (
+                  <p className="text-error mt-1 text-xs break-words">{invoiceError}</p>
+                )}
+                <div className="mt-2 flex gap-2">
+                  <button
+                    className="pmc-btn pmc-btn-xs"
+                    disabled={loading !== null || !zohoSalesOrderNumber}
+                    onClick={() => callAction('accept-sales-order')}
+                    type="button"
+                  >
+                    {loading === 'accept-sales-order' ? 'Accepting…' : 'Accept & Generate Invoice'}
+                  </button>
+                </div>
+              </>
             )}
           </div>
-        </div>
-      )}
 
-      <div>
-        <div className="mb-1 flex items-center justify-between">
-          <span className="text-base-content text-sm font-medium">Manual Courier</span>
-        </div>
-        {trackingNumber || courierName || shipmentStatus ? (
-          <p className="text-base-content/70 text-sm">
-            {courierName || 'Courier'}
-            {trackingNumber ? ` · AWB ${trackingNumber}` : ''}
-          </p>
-        ) : (
-          <p className="text-base-content/70 text-sm">
-            Choose the courier manually after invoice generation, then enter courier name, tracking number,
-            tracking URL, and shipment status in the sidebar.
-          </p>
-        )}
-        {shipmentStatus && <p className="text-base-content/70 text-xs">{shipmentStatus}</p>}
-        <div className="mt-2 flex gap-2">
-          {trackingUrl && (
-            <a
-              className="pmc-btn pmc-btn-xs pmc-btn-outline"
-              href={trackingUrl}
-              rel="noopener noreferrer"
-              target="_blank"
-            >
-              Track
-            </a>
+          {zohoCreditNoteNumber && (
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-base-content text-sm font-medium">Zoho Credit Note</span>
+                <span className="text-base-content/60 text-sm font-medium">
+                  {zohoCreditNoteStatus || 'Linked'}
+                </span>
+              </div>
+              <p className="text-base-content/70 text-sm">{zohoCreditNoteNumber}</p>
+              <div className="mt-2 flex gap-2">
+                {zohoCreditNoteUrl && (
+                  <a
+                    className="pmc-btn pmc-btn-xs pmc-btn-outline"
+                    href={zohoCreditNoteUrl}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  >
+                    View in Zoho
+                  </a>
+                )}
+                {id && (
+                  <a className="pmc-btn pmc-btn-xs pmc-btn-outline" href={`/api/orders/${id}/credit-note-pdf`}>
+                    Download PDF
+                  </a>
+                )}
+              </div>
+            </div>
           )}
-        </div>
-      </div>
 
-      {error && <p className="text-error text-xs">{error}</p>}
+          <div>
+            <div className="mb-1 flex items-center justify-between">
+              <span className="text-base-content text-sm font-medium">Manual Courier</span>
+            </div>
+            {trackingNumber || courierName || shipmentStatus ? (
+              <p className="text-base-content/70 text-sm">
+                {courierName || 'Courier'}
+                {trackingNumber ? ` · AWB ${trackingNumber}` : ''}
+              </p>
+            ) : (
+              <p className="text-base-content/70 text-sm">
+                Choose the courier manually after invoice generation, then enter courier name, tracking number,
+                tracking URL, and shipment status in the sidebar.
+              </p>
+            )}
+            {shipmentStatus && <p className="text-base-content/70 text-xs">{shipmentStatus}</p>}
+            <div className="mt-2 flex gap-2">
+              {trackingUrl && (
+                <a
+                  className="pmc-btn pmc-btn-xs pmc-btn-outline"
+                  href={trackingUrl}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                >
+                  Track
+                </a>
+              )}
+            </div>
+          </div>
+
+          {error && <p className="text-error text-xs">{error}</p>}
+        </div>
+      </Drawer>
     </div>
   )
 }

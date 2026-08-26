@@ -52,15 +52,41 @@ export async function createZohoSalesOrder(args: CreateZohoSalesOrderArgs): Prom
  * Idempotency guard — searches by `reference_number` (we always set it to
  * the order id) before creating anything, so a retried hook or a manual
  * admin retry never produces a duplicate sales order.
+ *
+ * `reference_number` alone is NOT proof of ownership: confirmed live, two
+ * real orders (77, 78) got silently linked to an unrelated sales order
+ * belonging to a different customer ("sri sakthi industries") that simply
+ * happened to carry the same reference_number in the same Zoho org — this
+ * app never created the real sales order for either order as a result. A
+ * close match on `total` is a second, cheap signal against that (an
+ * unrelated sales order is extremely unlikely to happen to total the same
+ * amount, in rupees, as this specific order) — it doesn't require resolving
+ * the Zoho contact first, which would otherwise risk creating a duplicate
+ * contact before even knowing whether a sales order already exists. No
+ * match within tolerance is treated the same as no sales order at all, so
+ * the caller creates a fresh (correct) one instead of adopting someone
+ * else's.
  */
 export async function findExistingSalesOrderByOrderId(
   orderId: string | number,
+  expectedTotal: number,
 ): Promise<ZohoSalesOrder | undefined> {
   const params = new URLSearchParams({ reference_number: String(orderId) })
   const data = await zohoFetch<{ salesorders: ZohoSalesOrder[] }>(`/salesorders?${params.toString()}`)
-  const match = data.salesorders?.[0]
-  if (!match) return undefined
-  return getZohoSalesOrder(match.salesorder_id)
+  const candidates = data.salesorders ?? []
+
+  // The list response is abbreviated and doesn't reliably carry `total` (or
+  // even `reference_number`) — both checks need the full object, which is
+  // fetched anyway for the `invoices` array on a real match. Usually exactly
+  // one candidate, so this is one extra call in the common case.
+  for (const candidate of candidates) {
+    const full = await getZohoSalesOrder(candidate.salesorder_id)
+    if (full.reference_number === String(orderId) && Math.abs(full.total - expectedTotal) < 1) {
+      return full
+    }
+  }
+
+  return undefined
 }
 
 /**

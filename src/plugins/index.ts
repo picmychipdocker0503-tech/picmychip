@@ -71,6 +71,13 @@ export const plugins: Plugin[] = [
       },
       admin: {
         group: 'Marketing',
+        components: {
+          views: {
+            list: {
+              Component: '@/components/admin/collections/FormSubmissionsListView#FormSubmissionsListView',
+            },
+          },
+        },
       },
     },
     formOverrides: {
@@ -138,6 +145,12 @@ export const plugins: Plugin[] = [
               ...defaultCollection.admin?.components?.edit,
               // Invoice/shipment sync status + retry actions, shown above the save controls.
               beforeDocumentControls: ['@/components/admin/OrderIntegrationPanel#OrderIntegrationPanel'],
+            },
+            views: {
+              ...defaultCollection.admin?.components?.views,
+              list: {
+                Component: '@/components/admin/collections/OrdersListView#OrdersListView',
+              },
             },
           },
           defaultColumns: ['id', 'customer', 'status', 'amount', 'createdAt'],
@@ -615,6 +628,15 @@ export const plugins: Plugin[] = [
         admin: {
           ...defaultCollection.admin,
           group: 'Sales',
+          components: {
+            ...defaultCollection.admin?.components,
+            views: {
+              ...defaultCollection.admin?.components?.views,
+              list: {
+                Component: '@/components/admin/collections/CartsListView#CartsListView',
+              },
+            },
+          },
         },
         hooks: {
           ...defaultCollection.hooks,
@@ -671,6 +693,15 @@ export const plugins: Plugin[] = [
         admin: {
           ...defaultCollection.admin,
           group: 'Sales',
+          components: {
+            ...defaultCollection.admin?.components,
+            views: {
+              ...defaultCollection.admin?.components?.views,
+              list: {
+                Component: '@/components/admin/collections/TransactionsListView#TransactionsListView',
+              },
+            },
+          },
         },
         fields: [
           ...defaultCollection.fields,

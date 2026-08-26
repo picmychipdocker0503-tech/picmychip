@@ -172,7 +172,10 @@ export const ProductMatchingImage: React.FC<Props> = ({
 
   const imageUrl =
     image && typeof image === 'object' && image.url
-      ? image.url
+      ? // Cache-busts on the Media doc's own updatedAt — its filename isn't
+        // content-hashed, so replacing the file reuses the same URL (see the
+        // identical comment in components/Media/Image/index.tsx).
+        `${image.url}${image.url.includes('?') ? '&' : '?'}v=${new Date(image.updatedAt).getTime()}`
       : typeof image === 'string'
         ? image
         : null

@@ -36,6 +36,13 @@ export const Guides: CollectionConfig = {
     group: 'Content',
     defaultColumns: ['title', 'slug', 'updatedAt'],
     useAsTitle: 'title',
+    components: {
+      views: {
+        list: {
+          Component: '@/components/admin/collections/GuidesListView#GuidesListView',
+        },
+      },
+    },
   },
   fields: [
     {

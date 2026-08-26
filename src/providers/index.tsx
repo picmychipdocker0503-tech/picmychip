@@ -5,6 +5,7 @@ import { CompareProvider } from '@/providers/Compare'
 import { EcommerceAuthSync } from '@/providers/EcommerceAuthSync'
 import { QuickViewProvider } from '@/providers/QuickView'
 import { RecentlyViewedProvider } from '@/providers/RecentlyViewed'
+import { ThemeAccountSync } from '@/providers/ThemeAccountSync'
 import { WishlistProvider } from '@/providers/Wishlist'
 import { EcommerceProvider } from '@payloadcms/plugin-ecommerce/client/react'
 import { payuAdapterClient } from '@/payments/payu/client'
@@ -30,6 +31,7 @@ export const Providers: React.FC<{
   return (
     <ThemeProvider>
       <AuthProvider>
+        <ThemeAccountSync />
         <HeaderThemeProvider>
           <SonnerProvider />
           <EcommerceProvider

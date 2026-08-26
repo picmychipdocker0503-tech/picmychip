@@ -1,0 +1,18 @@
+@keyframes pmc-testimonial-progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.pmc-testimonial-progress-fill {
+  animation-name: pmc-testimonial-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+.pmc-testimonial-progress-fill[data-paused='true'] {
+  animation-play-state: paused;
+}

@@ -8,6 +8,8 @@ import { JsonLd } from '@/components/JsonLd'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
 import { MobileTabBar } from '@/components/MobileTabBar'
 import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistration'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import { ensureStartsWith } from '@/utilities/ensureStartsWith'
 import { buildOrganizationJsonLd } from '@/utilities/jsonLd'
 import { Providers } from '@/providers'
@@ -149,6 +151,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <MobileTabBar />
           </Providers>
         </NextIntlClientProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )

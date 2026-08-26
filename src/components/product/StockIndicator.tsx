@@ -71,7 +71,9 @@ export const StockIndicator: React.FC<Props> = ({ product }) => {
       )}
       {showInventoryLine && (
         <div className="text-muted-foreground uppercase text-sm font-medium">
-          {stockQuantity < 10 && stockQuantity > 0 && <p>Only {stockQuantity} left in stock</p>}
+          {stockQuantity > 0 && (
+            <p>{stockQuantity < 10 ? `Only ${stockQuantity} left in stock` : `${stockQuantity} in stock`}</p>
+          )}
           {(stockQuantity === 0 || !stockQuantity) && <p>Out of stock</p>}
         </div>
       )}

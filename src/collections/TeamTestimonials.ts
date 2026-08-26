@@ -25,6 +25,13 @@ export const TeamTestimonials: CollectionConfig = {
     useAsTitle: 'name',
     description:
       'Real people, real quotes, real stories — shown on the "People & Culture" page (quote) and the "Team" page (full story). Only add people and content you have permission to publish.',
+    components: {
+      views: {
+        list: {
+          Component: '@/components/admin/collections/TeamTestimonialsListView#TeamTestimonialsListView',
+        },
+      },
+    },
   },
   fields: [
     {

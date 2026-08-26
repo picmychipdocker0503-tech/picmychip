@@ -21,6 +21,13 @@ export const RfqSubmissions: CollectionConfig = {
     group: 'Sales',
     defaultColumns: ['ticketId', 'status', 'company', 'email', 'createdAt'],
     useAsTitle: 'ticketId',
+    components: {
+      views: {
+        list: {
+          Component: '@/components/admin/collections/RfqSubmissionsListView#RfqSubmissionsListView',
+        },
+      },
+    },
   },
   fields: [
     {

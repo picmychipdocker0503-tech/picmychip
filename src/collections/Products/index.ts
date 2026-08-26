@@ -52,6 +52,12 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
     components: {
       ...defaultCollection?.admin?.components,
       beforeList: ['@/components/admin/ProductsListStats#ProductsListStats'],
+      views: {
+        ...defaultCollection?.admin?.components?.views,
+        list: {
+          Component: '@/components/admin/collections/ProductsListView#ProductsListView',
+        },
+      },
     },
     defaultColumns: ['title', 'stockStatus', 'categories', 'priceInINR', 'onSale', '_status'],
     group: 'Catalog',

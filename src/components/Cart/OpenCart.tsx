@@ -35,14 +35,14 @@ export function OpenCartButton({
     <button
       aria-label="Open cart"
       className={cn(
-        'text-muted-foreground hover:bg-muted hover:text-foreground relative inline-flex size-10 items-center justify-center rounded-full transition-[background-color,color,transform] duration-200 active:scale-95',
+        'group text-muted-foreground hover:bg-muted hover:text-foreground relative inline-flex size-10 items-center justify-center rounded-full transition-[background-color,color,transform] duration-200 active:scale-95',
         bounce && 'scale-125',
         className,
       )}
       type="button"
       {...rest}
     >
-      <ShoppingBagIcon className="size-5" />
+      <ShoppingBagIcon className="pmc-icon-anim size-5 group-hover:animate-[pmc-icon-pop_0.5s_ease-in-out]" />
       <NavIconBadge count={quantity ?? 0} />
     </button>
   )

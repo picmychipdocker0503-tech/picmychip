@@ -21,12 +21,18 @@ import { EditItemQuantityButton } from './EditItemQuantityButton'
 import { OpenCartButton } from './OpenCart'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
+import { setCartItemQuantity } from '@/lib/cart/setCartItemQuantity'
 import { FREE_SHIPPING_THRESHOLD } from '@/lib/shipping'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import { Product, Variant } from '@/payload-types'
 
 type GalleryItem = NonNullable<Product['gallery']>[number]
 type VariantOptionItem = NonNullable<Variant['options']>[number]
+type CartItem = NonNullable<ReturnType<typeof useCart>['cart']>['items'] extends
+  | (infer T)[]
+  | undefined
+  ? T
+  : never
 
 export function CartModal() {
   const { cart } = useCart()
@@ -40,15 +46,18 @@ export function CartModal() {
     setIsOpen(false)
   }, [pathname])
 
-  const totalQuantity = useMemo(() => {
+  // The badge on the cart icon is a count of distinct items in the cart, not
+  // the sum of their quantities — 15 of one product and 1 of another reads
+  // as "2 items in your cart", not "16".
+  const itemCount = useMemo(() => {
     if (!cart || !cart.items || !cart.items.length) return undefined
-    return cart.items.reduce((quantity, item) => (item.quantity || 0) + quantity, 0)
+    return cart.items.length
   }, [cart])
 
   return (
     <Sheet onOpenChange={setIsOpen} open={isOpen}>
       <SheetTrigger asChild>
-        <OpenCartButton quantity={totalQuantity} />
+        <OpenCartButton quantity={itemCount} />
       </SheetTrigger>
 
       <SheetContent className="flex flex-col">
@@ -83,99 +92,10 @@ export function CartModal() {
                 </div>
               )}
 
-              <ul className="grow overflow-auto py-4 min-h-0">
-                {cart?.items?.map((item, i) => {
-                  const product = item.product
-                  const variant = item.variant
-
-                  if (typeof product !== 'object' || !item || !product || !product.slug)
-                    return <React.Fragment key={i} />
-
-                  const metaImage =
-                    product.meta?.image && typeof product.meta?.image === 'object'
-                      ? product.meta.image
-                      : undefined
-
-                  const firstGalleryImage =
-                    typeof product.gallery?.[0]?.image === 'object'
-                      ? product.gallery?.[0]?.image
-                      : undefined
-
-                  let image = firstGalleryImage || metaImage
-                  let price = product.priceInINR
-
-                  const isVariant = Boolean(variant) && typeof variant === 'object'
-
-                  if (isVariant) {
-                    price = variant?.priceInINR
-
-                    const imageVariant = product.gallery?.find((item: GalleryItem) => {
-                      if (!item.variantOption) return false
-                      const variantOptionID =
-                        typeof item.variantOption === 'object'
-                          ? item.variantOption.id
-                          : item.variantOption
-
-                      const hasMatch = variant?.options?.some((option: VariantOptionItem) => {
-                        if (typeof option === 'object') return option.id === variantOptionID
-                        else return option === variantOptionID
-                      })
-
-                      return hasMatch
-                    })
-
-                    if (imageVariant && typeof imageVariant.image === 'object') {
-                      image = imageVariant.image
-                    }
-                  }
-
-                  return (
-                    <li className="flex w-full flex-col" key={i}>
-                      <div className="relative flex w-full flex-row justify-between px-1 py-4">
-                        <div className="absolute z-40 -mt-2 ml-[55px]">
-                          <DeleteItemButton item={item} />
-                        </div>
-                        <Link
-                          className="z-30 flex flex-row space-x-4"
-                          href={`/products/${(item.product as Product)?.slug}`}
-                        >
-                          <div className="relative h-16 w-16 cursor-pointer overflow-hidden rounded-md border border-neutral-300 bg-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800">
-                            <Media fill imgClassName="h-full w-full object-cover" resource={image} size="64px" />
-                          </div>
-
-                          <div className="flex flex-1 flex-col text-base">
-                            <span className="leading-tight">{product?.title}</span>
-                            {isVariant && variant ? (
-                              <p className="text-sm text-neutral-500 dark:text-neutral-400 capitalize">
-                                {variant.options
-                                  ?.map((option: VariantOptionItem) => {
-                                    if (typeof option === 'object') return option.label
-                                    return null
-                                  })
-                                  .join(', ')}
-                              </p>
-                            ) : null}
-                          </div>
-                        </Link>
-                        <div className="flex h-16 flex-col justify-between">
-                          {typeof price === 'number' && (
-                            <Price
-                              amount={price}
-                              className="flex justify-end space-y-2 text-right text-sm"
-                            />
-                          )}
-                          <div className="ml-auto flex h-9 flex-row items-center rounded-lg border">
-                            <EditItemQuantityButton item={item} type="minus" />
-                            <p className="w-6 text-center">
-                              <span className="w-full text-sm">{item.quantity}</span>
-                            </p>
-                            <EditItemQuantityButton item={item} type="plus" />
-                          </div>
-                        </div>
-                      </div>
-                    </li>
-                  )
-                })}
+              <ul className="grow overflow-y-auto overflow-x-hidden py-4 min-h-0">
+                {cart?.items?.map((item, i) => (
+                  <CartModalItem item={item as CartItem} key={item.id ?? i} />
+                ))}
               </ul>
 
               <div className="px-4">
@@ -206,5 +126,135 @@ export function CartModal() {
         )}
       </SheetContent>
     </Sheet>
+  )
+}
+
+const CartModalItem: React.FC<{ item: CartItem }> = ({ item }) => {
+  const { cart, refreshCart } = useCart()
+  const product = item.product
+  const variant = item.variant
+
+  const [quantityInput, setQuantityInput] = useState(String(item.quantity ?? 1))
+  const [isUpdatingQuantity, setIsUpdatingQuantity] = useState(false)
+
+  // Resyncs the typed value whenever the committed quantity changes —
+  // whether from this row's own commit, the +/- buttons, or a cart refresh
+  // triggered elsewhere.
+  useEffect(() => {
+    setQuantityInput(String(item.quantity ?? 1))
+  }, [item.quantity])
+
+  if (typeof product !== 'object' || !item || !product || !product.slug) return null
+
+  const metaImage =
+    product.meta?.image && typeof product.meta?.image === 'object' ? product.meta.image : undefined
+
+  const firstGalleryImage =
+    typeof product.gallery?.[0]?.image === 'object' ? product.gallery?.[0]?.image : undefined
+
+  let image = firstGalleryImage || metaImage
+  let price = product.priceInINR
+
+  const isVariant = Boolean(variant) && typeof variant === 'object'
+
+  if (isVariant) {
+    price = variant?.priceInINR
+
+    const imageVariant = product.gallery?.find((galleryItem: GalleryItem) => {
+      if (!galleryItem.variantOption) return false
+      const variantOptionID =
+        typeof galleryItem.variantOption === 'object' ? galleryItem.variantOption.id : galleryItem.variantOption
+
+      return variant?.options?.some((option: VariantOptionItem) => {
+        if (typeof option === 'object') return option.id === variantOptionID
+        return option === variantOptionID
+      })
+    })
+
+    if (imageVariant && typeof imageVariant.image === 'object') {
+      image = imageVariant.image
+    }
+  }
+
+  const target = isVariant && variant ? variant : product
+  const inventory = target?.inventory
+
+  const clampQuantity = (next: number) => {
+    const clamped = Math.max(1, Math.floor(next) || 1)
+    return typeof inventory === 'number' && inventory > 0 ? Math.min(inventory, clamped) : clamped
+  }
+
+  const commitQuantity = async () => {
+    if (!item.id || !cart?.id) return
+    const parsed = Number(quantityInput)
+    const next = clampQuantity(Number.isNaN(parsed) ? (item.quantity ?? 1) : parsed)
+    setQuantityInput(String(next))
+    if (next === item.quantity) return
+
+    setIsUpdatingQuantity(true)
+    try {
+      await setCartItemQuantity({ cartId: cart.id, itemId: item.id, quantity: next })
+      await refreshCart()
+    } catch {
+      setQuantityInput(String(item.quantity ?? 1))
+    } finally {
+      setIsUpdatingQuantity(false)
+    }
+  }
+
+  return (
+    <li className="flex w-full min-w-0 flex-col">
+      <div className="relative flex w-full min-w-0 flex-row justify-between gap-2 px-1 py-4">
+        <div className="absolute z-40 -mt-2 ml-[55px]">
+          <DeleteItemButton item={item} />
+        </div>
+        <Link className="z-30 flex min-w-0 flex-1 flex-row space-x-4" href={`/products/${product.slug}`}>
+          <div className="relative h-16 w-16 shrink-0 cursor-pointer overflow-hidden rounded-md border border-neutral-300 bg-neutral-300 dark:border-neutral-700 dark:bg-neutral-900 dark:hover:bg-neutral-800">
+            <Media fill imgClassName="h-full w-full object-cover" resource={image} size="64px" />
+          </div>
+
+          <div className="flex min-w-0 flex-1 flex-col text-base">
+            <span className="truncate leading-tight">{product?.title}</span>
+            {isVariant && variant ? (
+              <p className="truncate text-sm text-neutral-500 dark:text-neutral-400 capitalize">
+                {variant.options
+                  ?.map((option: VariantOptionItem) => {
+                    if (typeof option === 'object') return option.label
+                    return null
+                  })
+                  .join(', ')}
+              </p>
+            ) : null}
+          </div>
+        </Link>
+        <div className="flex h-16 shrink-0 flex-col justify-between">
+          {typeof price === 'number' && (
+            <Price amount={price} className="flex justify-end space-y-2 text-right text-sm" />
+          )}
+          <div className="ml-auto flex h-9 flex-row items-center rounded-lg border">
+            <EditItemQuantityButton item={item} type="minus" />
+            <input
+              aria-label="Quantity"
+              className="w-8 [appearance:textfield] bg-transparent text-center text-sm [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              disabled={isUpdatingQuantity}
+              inputMode="numeric"
+              max={typeof inventory === 'number' && inventory > 0 ? inventory : undefined}
+              min={1}
+              onBlur={commitQuantity}
+              onChange={(e) => setQuantityInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  e.currentTarget.blur()
+                }
+              }}
+              type="number"
+              value={quantityInput}
+            />
+            <EditItemQuantityButton item={item} type="plus" />
+          </div>
+        </div>
+      </div>
+    </li>
   )
 }

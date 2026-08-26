@@ -3,11 +3,11 @@
 import type { Cart } from '@/payload-types'
 
 import { StatusPill } from '@/components/admin/StatusPill'
+import { DataTableShell } from '@/components/admin/DataTable/DataTableShell'
 import { formatDateTime } from '@/utilities/formatDateTime'
 import { toast } from '@payloadcms/ui'
 import {
   createColumnHelper,
-  flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
@@ -15,7 +15,6 @@ import {
   useReactTable,
   type SortingState,
 } from '@tanstack/react-table'
-import { ArrowDownIcon, ArrowUpIcon, ArrowUpDownIcon, ChevronLeftIcon, ChevronRightIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
@@ -108,113 +107,29 @@ export const AbandonedCheckoutsTable: React.FC<Props> = ({ carts }) => {
     state: { globalFilter: query, sorting },
   })
 
-  const rows = table.getRowModel().rows
   const totalFiltered = table.getFilteredRowModel().rows.length
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <input
-          className="pmc-input pmc-input-sm w-full max-w-xs"
-          onChange={(e) => {
-            setQuery(e.target.value)
-            table.setPageIndex(0)
-          }}
-          placeholder="Search by customer name or email…"
-          type="text"
-          value={query}
-        />
-        <div className="flex items-center gap-3">
-          <span className="text-base-content/60 text-sm">
-            {totalFiltered} checkout{totalFiltered === 1 ? '' : 's'}
-          </span>
-          <button
-            className="pmc-btn pmc-btn-primary pmc-btn-sm rounded-full"
-            disabled={sending}
-            onClick={handleSendNow}
-            type="button"
-          >
-            {sending ? 'Sending…' : 'Send recovery emails now'}
-          </button>
-        </div>
-      </div>
-
-      <div className="border-base-content/10 pmc-rounded-box overflow-x-auto border">
-        <table className="pmc-table pmc-table-zebra">
-          <thead>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr className="text-base-content/70" key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  const sortDirection = header.column.getIsSorted()
-
-                  return (
-                    <th key={header.id}>
-                      {header.column.getCanSort() ? (
-                        <button
-                          className="flex cursor-pointer items-center gap-1 select-none"
-                          onClick={header.column.getToggleSortingHandler()}
-                          type="button"
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                          {sortDirection === 'asc' && <ArrowUpIcon className="size-3" />}
-                          {sortDirection === 'desc' && <ArrowDownIcon className="size-3" />}
-                          {!sortDirection && <ArrowUpDownIcon className="size-3 opacity-30" />}
-                        </button>
-                      ) : (
-                        flexRender(header.column.columnDef.header, header.getContext())
-                      )}
-                    </th>
-                  )
-                })}
-              </tr>
-            ))}
-          </thead>
-          <tbody>
-            {rows.length === 0 && (
-              <tr>
-                <td className="text-base-content/50" colSpan={columns.length}>
-                  {carts.length === 0 ? 'No abandoned checkouts right now.' : `No checkouts match "${query}".`}
-                </td>
-              </tr>
-            )}
-            {rows.map((row) => (
-              <tr key={row.id}>
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {table.getPageCount() > 1 && (
-        <div className="flex items-center justify-between gap-3">
-          <span className="text-base-content/60 text-sm">
-            Page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              className="pmc-btn pmc-btn-ghost pmc-btn-sm"
-              disabled={!table.getCanPreviousPage()}
-              onClick={() => table.previousPage()}
-              type="button"
-            >
-              <ChevronLeftIcon className="size-4" />
-              Prev
-            </button>
-            <button
-              className="pmc-btn pmc-btn-ghost pmc-btn-sm"
-              disabled={!table.getCanNextPage()}
-              onClick={() => table.nextPage()}
-              type="button"
-            >
-              Next
-              <ChevronRightIcon className="size-4" />
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+    <DataTableShell
+      emptyMessage={carts.length === 0 ? 'No abandoned checkouts right now.' : `No checkouts match "${query}".`}
+      onSearchChange={(value) => {
+        setQuery(value)
+        table.setPageIndex(0)
+      }}
+      searchInput={query}
+      searchPlaceholder="Search by customer name or email…"
+      table={table}
+      toolbarRight={
+        <button
+          className="pmc-btn pmc-btn-primary pmc-btn-sm rounded-full"
+          disabled={sending}
+          onClick={handleSendNow}
+          type="button"
+        >
+          {sending ? 'Sending…' : 'Send recovery emails now'}
+        </button>
+      }
+      totalDocs={totalFiltered}
+    />
   )
 }
