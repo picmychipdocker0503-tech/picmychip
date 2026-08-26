@@ -375,6 +375,10 @@ export interface Order {
   status?: OrderStatus;
   amount?: number | null;
   currency?: 'INR' | null;
+  /**
+   * Customer-facing order number, shown on the storefront and in emails.
+   */
+  orderNumber?: string | null;
   accessToken?: string | null;
   /**
    * Carrier tracking number (AWB), shown to the customer on their order. Entered manually once a courier picks up the shipment.
@@ -4178,6 +4182,7 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   amount?: T;
   currency?: T;
+  orderNumber?: T;
   accessToken?: T;
   trackingNumber?: T;
   courierName?: T;
@@ -4572,6 +4577,16 @@ export interface SiteSetting {
      */
     expressShippingRate?: number | null;
   };
+  /**
+   * Controls the customer-facing order number shown on the storefront, in emails, and in admin (e.g. "ECOM0001") — the underlying order id used internally (URLs, relations) is unaffected.
+   */
+  orderNumberSettings?: {
+    prefix?: string | null;
+    /**
+     * Minimum digits, zero-padded — 4 gives ECOM0001, 5 gives ECOM00001.
+     */
+    padding?: number | null;
+  };
   sameAs?:
     | {
         url: string;
@@ -4730,6 +4745,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | {
         standardShippingRate?: T;
         expressShippingRate?: T;
+      };
+  orderNumberSettings?:
+    | T
+    | {
+        prefix?: T;
+        padding?: T;
       };
   sameAs?:
     | T

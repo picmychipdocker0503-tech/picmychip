@@ -45,4 +45,7 @@ scripts/output
 # scraped product data/images for one-off import scripts
 scripts/data/
 
+# database dumps — contain real customer PII (names, emails, addresses, phone numbers)
+/backups/
+
 .env

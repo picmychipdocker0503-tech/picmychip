@@ -166,6 +166,32 @@ export const SiteSettings: GlobalConfig = {
       ],
     },
     {
+      name: 'orderNumberSettings',
+      type: 'group',
+      label: 'Order Numbering',
+      admin: {
+        description:
+          'Controls the customer-facing order number shown on the storefront, in emails, and in admin (e.g. "ECOM0001") — the underlying order id used internally (URLs, relations) is unaffected.',
+      },
+      fields: [
+        {
+          name: 'prefix',
+          type: 'text',
+          defaultValue: 'ECOM',
+        },
+        {
+          name: 'padding',
+          type: 'number',
+          defaultValue: 4,
+          min: 1,
+          max: 10,
+          admin: {
+            description: 'Minimum digits, zero-padded — 4 gives ECOM0001, 5 gives ECOM00001.',
+          },
+        },
+      ],
+    },
+    {
       name: 'sameAs',
       type: 'array',
       label: 'Social / Profile Links',

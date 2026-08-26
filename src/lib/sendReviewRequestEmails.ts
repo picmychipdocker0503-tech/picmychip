@@ -45,6 +45,7 @@ export const findReviewRequestCandidates = async (payload: Payload): Promise<Rev
     customerLabel:
       (typeof order.customer === 'object' ? order.customer?.name : undefined) ||
       order.customerEmail ||
+      order.orderNumber ||
       `Order #${order.id}`,
     updatedAt: order.updatedAt,
   }))
@@ -81,10 +82,11 @@ export const sendReviewRequestEmails = async (payload: Payload): Promise<{ sent:
   for (const order of orders) {
     if (!order.customerEmail) continue
 
+    const label = order.orderNumber || `#${order.id}`
     await sendMail(payload, {
       to: order.customerEmail,
-      subject: `How was your order #${order.id}?`,
-      html: reviewRequestEmailHtml({ id: order.id, siteUrl }),
+      subject: `How was your order ${label}?`,
+      html: reviewRequestEmailHtml({ id: order.id, orderNumber: order.orderNumber, siteUrl }),
       emailType: 'REVIEW_REQUEST',
       eventId: `REVIEW_REQUEST_${order.id}`,
     })

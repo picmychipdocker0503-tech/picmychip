@@ -153,7 +153,7 @@ export const plugins: Plugin[] = [
               },
             },
           },
-          defaultColumns: ['id', 'customer', 'status', 'amount', 'createdAt'],
+          defaultColumns: ['orderNumber', 'customer', 'status', 'amount', 'createdAt'],
           group: 'Sales',
         },
         hooks: {
@@ -185,6 +185,37 @@ export const plugins: Plugin[] = [
             }
             return field
           }),
+          // Customer-facing order number (ECOM0001, ECOM0002…) — virtual, not
+          // stored: derived straight from the order's own auto-increment id,
+          // so it can never drift out of sync and needs no separate counter
+          // or migration. The underlying id is untouched and still used
+          // internally (URLs, relations) — this is purely a display label.
+          // Prefix/padding are configurable in Site Settings rather than
+          // hard-coded, so a format change doesn't need a code deploy.
+          {
+            name: 'orderNumber',
+            type: 'text',
+            virtual: true,
+            admin: {
+              position: 'sidebar',
+              readOnly: true,
+              description: 'Customer-facing order number, shown on the storefront and in emails.',
+            },
+            hooks: {
+              afterRead: [
+                async ({ data, req }) => {
+                  const id = data?.id
+                  if (id === undefined || id === null) return undefined
+                  const settings = await req.payload
+                    .findGlobal({ slug: 'site-settings', depth: 0 })
+                    .catch(() => undefined)
+                  const prefix = settings?.orderNumberSettings?.prefix || 'ECOM'
+                  const padding = settings?.orderNumberSettings?.padding || 4
+                  return `${prefix}${String(id).padStart(padding, '0')}`
+                },
+              ],
+            },
+          },
           {
             name: 'accessToken',
             type: 'text',

@@ -14,6 +14,7 @@ import {
   UnorderedListFeature,
   lexicalEditor,
 } from '@payloadcms/richtext-lexical'
+import fs from 'fs'
 import path from 'path'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
@@ -48,6 +49,36 @@ import { configureProductsIndex } from '@/lib/searchIndex'
 import { plugins } from './plugins'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+// Explicit CA (e.g. AWS RDS's own bundle, POSTGRES_CA_CERT=./certs/rds-ca.pem)
+// verifies the real chain instead of disabling verification outright — and,
+// confirmed live, `rejectUnauthorized: false` alone did NOT suppress "self-
+// signed certificate in certificate chain" against RDS: pg-connection-string
+// parses the connection string's own `sslmode=require`/`channel_binding`
+// into its own strict (verify-full-equivalent) ssl config, which took
+// precedence over an explicit `ssl` object regardless of what it contained.
+// Stripping those params from the string — confirmed live, this is what
+// actually made the explicit `ssl` object below take effect — hands full
+// control back to it: the real CA when configured (RDS), or
+// rejectUnauthorized: false otherwise (e.g. Neon, which doesn't need one and
+// was presumably only "working" because its cert already chains to a
+// publicly-trusted CA regardless of this setting).
+const postgresSSL = process.env.POSTGRES_CA_CERT
+  ? { ca: fs.readFileSync(path.resolve(process.cwd(), process.env.POSTGRES_CA_CERT)).toString(), rejectUnauthorized: true }
+  : { rejectUnauthorized: false }
+
+const postgresConnectionString = (() => {
+  const raw = process.env.DATABASE_URL || ''
+  if (!raw) return raw
+  try {
+    const url = new URL(raw)
+    url.searchParams.delete('sslmode')
+    url.searchParams.delete('channel_binding')
+    return url.toString()
+  } catch {
+    return raw
+  }
+})()
 
 export default buildConfig({
   // Required for any collection's `upload.resizeOptions`/`formatOptions` to
@@ -141,14 +172,10 @@ export default buildConfig({
   ],
   db: postgresAdapter({
     pool: {
-      connectionString: process.env.DATABASE_URL || '',
-      ssl: {
-        rejectUnauthorized: false,
-       
-      },
-      
+      connectionString: postgresConnectionString,
+      ssl: postgresSSL,
     },
-    
+
     // Schema changes go through `payload migrate:create` + `payload migrate` in every
     // environment. Push mode's per-request introspection is fine over localhost but
     // takes 30-60s per request against a remote host like Neon.

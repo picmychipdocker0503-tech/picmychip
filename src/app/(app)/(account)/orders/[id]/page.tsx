@@ -84,6 +84,7 @@ export default async function Order({ params, searchParams }: PageProps) {
         ],
       },
       select: {
+        orderNumber: true,
         amount: true,
         currency: true,
         items: true,
@@ -168,7 +169,7 @@ export default async function Order({ params, searchParams }: PageProps) {
         )}
 
         <h1 className="text-sm uppercase font-mono px-2 bg-primary/10 rounded tracking-[0.07em]">
-          <span className="">{`Order #${order.id}`}</span>
+          <span className="">{order.orderNumber || `Order #${order.id}`}</span>
         </h1>
       </div>
 

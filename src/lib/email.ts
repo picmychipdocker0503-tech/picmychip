@@ -33,12 +33,14 @@ const wrapper = (title: string, bodyHtml: string) => `
 
 export function orderConfirmationEmailHtml(order: {
   id: string | number
+  orderNumber?: string | null
   amount?: number | null
   currency?: string | null
   orderedByEmail?: string | null
   billingContactName?: string | null
   billingContactEmail?: string | null
 }): string {
+  const label = order.orderNumber || `#${order.id}`
   const amount =
     typeof order.amount === 'number'
       ? new Intl.NumberFormat('en-IN', {
@@ -69,7 +71,7 @@ export function orderConfirmationEmailHtml(order: {
      </p>`
 
   return wrapper(
-    `Order confirmed — #${order.id}`,
+    `Order confirmed — ${label}`,
     `<p>Thanks for your order! We've received it and it's now being processed.</p>
      <p><strong>Order total:</strong> ${order.currency || ''} ${amount}</p>
      ${whoHtml}
@@ -79,12 +81,14 @@ export function orderConfirmationEmailHtml(order: {
 
 export function shippingUpdateEmailHtml(order: {
   id: string | number
+  orderNumber?: string | null
   trackingNumber?: string | null
   status?: string | null
   orderedByEmail?: string | null
   billingContactName?: string | null
   billingContactEmail?: string | null
 }): string {
+  const label = order.orderNumber || `#${order.id}`
   const trackingHtml = order.trackingNumber
     ? `<p><strong>Tracking number:</strong> ${order.trackingNumber}</p>`
     : ''
@@ -102,7 +106,7 @@ export function shippingUpdateEmailHtml(order: {
     : ''
 
   return wrapper(
-    `Your order #${order.id} has shipped`,
+    `Your order ${label} has shipped`,
     `<p>Good news — there's an update on your order.</p>
      ${trackingHtml}
      <p><strong>Status:</strong> ${order.status || 'processing'}</p>
@@ -112,9 +116,11 @@ export function shippingUpdateEmailHtml(order: {
 
 export function invoiceReadyEmailHtml(order: {
   id: string | number
+  orderNumber?: string | null
   invoiceNumber?: string | null
   invoiceUrl?: string | null
 }): string {
+  const label = order.orderNumber || `#${order.id}`
   const invoiceHtml = order.invoiceUrl
     ? `<p>
          <a href="${order.invoiceUrl}" style="display: inline-block; background: #111; color: #fff; padding: 10px 18px; border-radius: 6px; text-decoration: none;">
@@ -124,7 +130,7 @@ export function invoiceReadyEmailHtml(order: {
     : ''
 
   return wrapper(
-    `Invoice ready for order #${order.id}`,
+    `Invoice ready for order ${label}`,
     `<p>Your order has been accepted and the official tax invoice${order.invoiceNumber ? ` ${order.invoiceNumber}` : ''} is ready.</p>
      <p>We are preparing your items now and will dispatch them shortly. You will receive another update once the shipment details are available.</p>
      ${invoiceHtml}`,
@@ -168,11 +174,13 @@ export function abandonedCartEmailHtml(cart: {
 
 export function reviewRequestEmailHtml(order: {
   id: string | number
+  orderNumber?: string | null
   siteUrl: string
 }): string {
+  const label = order.orderNumber || `#${order.id}`
   return wrapper(
     'How was your order?',
-    `<p>Your order #${order.id} shipped a little while ago — we'd love to hear what you thought of it.</p>
+    `<p>Your order ${label} shipped a little while ago — we'd love to hear what you thought of it.</p>
      <p>A quick review helps other engineers and makers pick the right part.</p>
      <p><a href="${order.siteUrl}/orders/${order.id}">Leave a review</a></p>`,
   )

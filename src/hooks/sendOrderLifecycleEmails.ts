@@ -34,12 +34,14 @@ export const sendOrderLifecycleEmails: CollectionAfterChangeHook = async ({
     recipients.push({ email: billingContactEmail, eventSuffix: 'BILLING' })
   }
 
+  const orderLabel = doc.orderNumber || `#${doc.id}`
+
   if (operation === 'create') {
     const html = orderConfirmationEmailHtml({ ...doc, orderedByEmail, billingContactName, billingContactEmail })
     for (const recipient of recipients) {
       await sendMail(req.payload, {
         to: recipient.email,
-        subject: `Order confirmed — #${doc.id}`,
+        subject: `Order confirmed — ${orderLabel}`,
         html,
         emailType: 'ORDER_CONFIRMATION',
         eventId: `ORDER_CONFIRMATION_${doc.id}_${recipient.eventSuffix}`,
@@ -67,7 +69,7 @@ export const sendOrderLifecycleEmails: CollectionAfterChangeHook = async ({
     for (const recipient of recipients) {
       await sendMail(req.payload, {
         to: recipient.email,
-        subject: `Invoice ready for order #${doc.id}`,
+        subject: `Invoice ready for order ${orderLabel}`,
         html,
         emailType: 'INVOICE_READY',
         eventId: `INVOICE_READY_${doc.id}_${recipient.eventSuffix}`,
@@ -88,7 +90,7 @@ export const sendOrderLifecycleEmails: CollectionAfterChangeHook = async ({
     for (const recipient of recipients) {
       await sendMail(req.payload, {
         to: recipient.email,
-        subject: `Shipping update for order #${doc.id}`,
+        subject: `Shipping update for order ${orderLabel}`,
         html,
         emailType: 'SHIPPING_UPDATE',
         eventId: `SHIPPING_UPDATE_${doc.id}_${doc.trackingNumber || doc.courierName || 'completed'}_${recipient.eventSuffix}`,

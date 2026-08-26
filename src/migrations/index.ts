@@ -66,6 +66,7 @@ import * as migration_20260824_221656_add_billing_address_email from './20260824
 import * as migration_20260825_103500_add_rfq_submissions from './20260825_103500_add_rfq_submissions';
 import * as migration_20260825_113000_add_rfq_submissions_customer from './20260825_113000_add_rfq_submissions_customer';
 import * as migration_20260825_164500_add_user_theme_preference from './20260825_164500_add_user_theme_preference';
+import * as migration_20260826_191500_add_order_number_settings from './20260826_191500_add_order_number_settings';
 
 export const migrations = [
   {
@@ -407,5 +408,10 @@ export const migrations = [
     up: migration_20260825_164500_add_user_theme_preference.up,
     down: migration_20260825_164500_add_user_theme_preference.down,
     name: '20260825_164500_add_user_theme_preference',
+  },
+  {
+    up: migration_20260826_191500_add_order_number_settings.up,
+    down: migration_20260826_191500_add_order_number_settings.down,
+    name: '20260826_191500_add_order_number_settings',
   },
 ];

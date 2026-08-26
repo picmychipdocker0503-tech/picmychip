@@ -30,7 +30,7 @@ const columns = [
   columnHelper.accessor('id', {
     cell: (info) => (
       <a className="pmc-link pmc-link-hover font-mono" href={`/admin/collections/orders/${info.getValue()}`}>
-        #{info.getValue()}
+        {info.row.original.orderNumber || `#${info.getValue()}`}
       </a>
     ),
     header: 'Order',
