@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 
 import type { SpecSchemaType } from '@/fields/productSpecs/specSchemaOptions'
 
+import { BrokenCircuit } from './BrokenCircuit'
 import { Cable } from './Cable'
 import { Capacitor } from './Capacitor'
 import { Chip } from './Chip'
@@ -26,6 +27,7 @@ import { Toolbox } from './Toolbox'
 import { Warning } from './Warning'
 
 export {
+  BrokenCircuit,
   Cable,
   Capacitor,
   Chip,

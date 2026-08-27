@@ -7,6 +7,7 @@ import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
 import { useTilt3D } from '@/lib/useTilt3D'
+import { useCartDrawer } from '@/providers/CartDrawer'
 import { useQuickView } from '@/providers/QuickView'
 import { useWishlist } from '@/providers/Wishlist'
 import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
@@ -14,7 +15,6 @@ import clsx from 'clsx'
 import { CheckIcon, HeartIcon, SearchIcon, ShoppingCartIcon, TagIcon } from 'lucide-react'
 import Link from 'next/link'
 import React, { useState } from 'react'
-import { toast } from 'sonner'
 
 type Props = {
   product: Partial<Product>
@@ -34,8 +34,13 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
   const { currency } = useCurrency()
   const { open } = useQuickView()
   const { toggle: toggleWishlist, isSaved } = useWishlist()
-  const { addItem, isLoading } = useCart()
+  // `isLoading` from useCart() is one shared flag for the whole cart, not
+  // per-card — using it here would disable every other product's quick-add
+  // button on the page while any one add request is in flight.
+  const { addItem } = useCart()
+  const { showMiniCart } = useCartDrawer()
   const [justAdded, setJustAdded] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
   const tilt = useTilt3D<HTMLDivElement>()
 
   const priceField = `priceIn${currency.code}` as keyof Product
@@ -76,9 +81,12 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
     setJustAdded(true)
     window.setTimeout(() => setJustAdded(false), 1500)
 
-    addItem({ product: product.id }).then(() => {
-      toast.success('Item added to cart.')
-    })
+    setIsAdding(true)
+    addItem({ product: product.id })
+      .then(() => {
+        showMiniCart()
+      })
+      .finally(() => setIsAdding(false))
   }
 
   return (
@@ -99,7 +107,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
         <button
           aria-label="Add to cart"
           className="group bg-background text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-110 disabled:opacity-50"
-          disabled={isOutOfStock || isLoading}
+          disabled={isOutOfStock || isAdding}
           onClick={handleAddToCart}
           type="button"
         >
@@ -196,7 +204,11 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
       </Link>
 
       <div className="mt-1 flex w-full items-center justify-between gap-2">
-        <span className={`text-xs font-medium ${stockInfo.className}`}>{stockInfo.label}</span>
+        {product.stockStatus && product.stockStatus !== 'in-stock' ? (
+          <span className={`text-xs font-medium ${stockInfo.className}`}>{stockInfo.label}</span>
+        ) : (
+          <span />
+        )}
         {product.id && <AddToCartButton outOfStock={isOutOfStock} productId={product.id} />}
       </div>
     </div>

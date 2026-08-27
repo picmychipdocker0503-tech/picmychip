@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { getPayload } from 'payload'
+import { getCachedGlobal } from '@/utilities/getGlobals'
 
 export const metadata: Metadata = {
   description:
@@ -122,6 +123,7 @@ export default async function MakerStudioPage() {
   const products = await getStudioProducts()
   const heroProduct = products.find((product) => getProductImage(product)) ?? products[0]
   const heroImage = getProductImage(heroProduct)
+  const featureFlags = await getCachedGlobal('feature-flags', 0)()
 
   return (
     <div className="bg-background">
@@ -207,11 +209,13 @@ export default async function MakerStudioPage() {
               </p>
               <h2 className="mt-2 text-3xl font-semibold md:text-4xl">Choose the build lane</h2>
             </div>
-            <Button asChild variant="outline">
-              <Link href="/compare">
-                Compare parts <Layers3Icon className="size-4" />
-              </Link>
-            </Button>
+            {featureFlags?.compareProducts && (
+              <Button asChild variant="outline">
+                <Link href="/compare">
+                  Compare parts <Layers3Icon className="size-4" />
+                </Link>
+              </Button>
+            )}
           </div>
 
           <div className="grid gap-4 md:grid-cols-3">

@@ -91,6 +91,13 @@ export default async function Page({ params }: Args) {
   const firstBlock = isHome ? layout.slice(0, 1) : []
   const remainingBlocks = isHome ? layout.slice(1) : layout
 
+  // NewArrivals (hardcoded, like FeaturedCategories/TrendingNow above) renders
+  // just above the FAQ block rather than after the whole CMS layout — split
+  // remainingBlocks at 'faq' so it can be slotted in between.
+  const faqIndex = isHome ? remainingBlocks.findIndex((block) => block.blockType === 'faq') : -1
+  const blocksBeforeFaq = faqIndex === -1 ? remainingBlocks : remainingBlocks.slice(0, faqIndex)
+  const blocksFromFaq = faqIndex === -1 ? [] : remainingBlocks.slice(faqIndex)
+
   // The contact page pairs its CMS-managed form with a "how else to reach us"
   // panel sourced from Site Settings — that panel isn't part of the layout
   // builder, so it's slotted in here alongside whichever block holds the form.
@@ -124,12 +131,13 @@ export default async function Page({ params }: Args) {
           <ScrollReveal>
             <RecommendedForYou />
           </ScrollReveal>
-          <RenderBlocks blocks={remainingBlocks} />
+          <RenderBlocks blocks={blocksBeforeFaq} />
           <ScrollReveal>
             <Suspense fallback={null}>
               <NewArrivals />
             </Suspense>
           </ScrollReveal>
+          <RenderBlocks blocks={blocksFromFaq} />
           <ScrollReveal>
             <RecentlyViewedProducts />
           </ScrollReveal>

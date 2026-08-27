@@ -18,6 +18,75 @@ const FEATURED_CATEGORY_SLUGS = [
   'ic',
 ]
 
+// Each category gets its own accent instead of one uniform muted/primary
+// tint, so the grid reads as a color-coded parts index at a glance.
+const CATEGORY_ACCENTS: Record<string, { icon: string; bg: string; border: string; hoverBg: string; hoverBorder: string }> = {
+  resistor: {
+    icon: 'text-amber-600',
+    bg: 'bg-amber-500/10',
+    border: 'border-amber-500/25',
+    hoverBg: 'group-hover:bg-amber-500/20',
+    hoverBorder: 'group-hover:border-amber-500/50',
+  },
+  connectors: {
+    icon: 'text-slate-600',
+    bg: 'bg-slate-500/10',
+    border: 'border-slate-500/25',
+    hoverBg: 'group-hover:bg-slate-500/20',
+    hoverBorder: 'group-hover:border-slate-500/50',
+  },
+  'drone-parts': {
+    icon: 'text-sky-600',
+    bg: 'bg-sky-500/10',
+    border: 'border-sky-500/25',
+    hoverBg: 'group-hover:bg-sky-500/20',
+    hoverBorder: 'group-hover:border-sky-500/50',
+  },
+  capacitor: {
+    icon: 'text-blue-600',
+    bg: 'bg-blue-500/10',
+    border: 'border-blue-500/25',
+    hoverBg: 'group-hover:bg-blue-500/20',
+    hoverBorder: 'group-hover:border-blue-500/50',
+  },
+  diode: {
+    icon: 'text-red-600',
+    bg: 'bg-red-500/10',
+    border: 'border-red-500/25',
+    hoverBg: 'group-hover:bg-red-500/20',
+    hoverBorder: 'group-hover:border-red-500/50',
+  },
+  'usb-cables': {
+    icon: 'text-emerald-600',
+    bg: 'bg-emerald-500/10',
+    border: 'border-emerald-500/25',
+    hoverBg: 'group-hover:bg-emerald-500/20',
+    hoverBorder: 'group-hover:border-emerald-500/50',
+  },
+  inductor: {
+    icon: 'text-orange-600',
+    bg: 'bg-orange-500/10',
+    border: 'border-orange-500/25',
+    hoverBg: 'group-hover:bg-orange-500/20',
+    hoverBorder: 'group-hover:border-orange-500/50',
+  },
+  ic: {
+    icon: 'text-violet-600',
+    bg: 'bg-violet-500/10',
+    border: 'border-violet-500/25',
+    hoverBg: 'group-hover:bg-violet-500/20',
+    hoverBorder: 'group-hover:border-violet-500/50',
+  },
+}
+
+const DEFAULT_ACCENT = {
+  icon: 'text-primary',
+  bg: 'bg-primary/10',
+  border: 'border-primary/25',
+  hoverBg: 'group-hover:bg-primary/20',
+  hoverBorder: 'group-hover:border-primary/50',
+}
+
 export async function FeaturedCategories() {
   const payload = await getPayload({ config: configPromise })
 
@@ -72,6 +141,7 @@ export async function FeaturedCategories() {
       <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6">
         {categories.map((category, index) => {
           const Icon = CATEGORY_ICON_MAP[category.slug] ?? EmptyState
+          const accent = CATEGORY_ACCENTS[category.slug] ?? DEFAULT_ACCENT
 
           return (
             <ScrollReveal index={index} key={category.id} staggerMs={50}>
@@ -79,7 +149,9 @@ export async function FeaturedCategories() {
                 href={`/category/${category.slug}`}
                 className="group relative flex flex-col items-center gap-2 sm:gap-4 rounded-3xl border border-transparent px-1 py-2 text-center transition-all duration-300 sm:border-border/80 sm:bg-card/60 sm:px-6 sm:py-8 sm:backdrop-blur-md sm:hover:-translate-y-1 sm:hover:border-primary/50 sm:hover:bg-card sm:hover:shadow-lg overflow-hidden"
               >
-                <div className="flex size-14 shrink-0 items-center justify-center rounded-full border border-transparent bg-muted/60 text-muted-foreground transition-all duration-300 sm:size-14 sm:rounded-2xl sm:border-border/80 sm:shadow-sm group-hover:text-primary sm:group-hover:border-primary/30 sm:group-hover:bg-primary/10 sm:group-hover:scale-110">
+                <div
+                  className={`flex size-14 shrink-0 items-center justify-center rounded-full border transition-all duration-300 sm:size-14 sm:rounded-2xl sm:shadow-sm sm:group-hover:scale-110 ${accent.icon} ${accent.bg} ${accent.border} ${accent.hoverBg} ${accent.hoverBorder}`}
+                >
                   <Icon className="size-6 sm:size-7" />
                 </div>
 

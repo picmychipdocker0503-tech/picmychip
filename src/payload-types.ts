@@ -4612,6 +4612,7 @@ export interface FeatureFlag {
   searchAutocomplete?: boolean | null;
   trackOrder?: boolean | null;
   trustedByBrands?: boolean | null;
+  compareProducts?: boolean | null;
   rewardsProgram?: boolean | null;
   freeShippingBanner?: boolean | null;
   productCompare?: boolean | null;
@@ -4776,6 +4777,7 @@ export interface FeatureFlagsSelect<T extends boolean = true> {
   searchAutocomplete?: T;
   trackOrder?: T;
   trustedByBrands?: T;
+  compareProducts?: T;
   rewardsProgram?: T;
   freeShippingBanner?: T;
   productCompare?: T;

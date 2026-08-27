@@ -30,10 +30,11 @@ export const QuickViewModal: React.FC = () => {
 }
 
 const QuickViewBody: React.FC<{ product: Product }> = ({ product }) => {
-  const { addItem, isLoading } = useCart()
+  const { addItem } = useCart()
   const { currency } = useCurrency()
   const { toggle: toggleWishlist, isSaved } = useWishlist()
   const [quantity, setQuantity] = useState(1)
+  const [isAdding, setIsAdding] = useState(false)
   // Kept separate from `quantity` — a number input bound straight to a
   // number state can't ever show "" while backspacing a single digit to
   // retype it (see the identical comment in Cart/AddToCart.tsx).
@@ -112,9 +113,12 @@ const QuickViewBody: React.FC<{ product: Product }> = ({ product }) => {
     setJustAdded(true)
     window.setTimeout(() => setJustAdded(false), 1500)
 
-    addItem({ product: product.id }, quantity).then(() => {
-      toast.success('Item added to cart.')
-    })
+    setIsAdding(true)
+    addItem({ product: product.id }, quantity)
+      .then(() => {
+        toast.success('Item added to cart.')
+      })
+      .finally(() => setIsAdding(false))
   }
 
   return (
@@ -238,7 +242,7 @@ const QuickViewBody: React.FC<{ product: Product }> = ({ product }) => {
         <div className="mt-2 flex flex-wrap gap-3">
           <button
             className="btn btn-ghost flex-1 gap-2 border border-white/30 bg-white/10 text-foreground shadow-md backdrop-blur-md backdrop-saturate-150 hover:border-white/40 hover:bg-white/20"
-            disabled={isOutOfStock || isLoading}
+            disabled={isOutOfStock || isAdding}
             onClick={handleAddToCart}
             type="button"
           >

@@ -7,7 +7,7 @@ import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
 import { useWishlist } from '@/providers/Wishlist'
 import { getWishlistProducts } from '@/providers/Wishlist/actions'
-import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
+import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import {
   createColumnHelper,
   flexRender,
@@ -30,10 +30,13 @@ import {
   HeartIcon,
   XCircleIcon,
   XIcon,
+  ZapIcon,
 } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import posthog from 'posthog-js'
 import React, { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 
 const STOCK_DISPLAY = {
   'in-stock': { label: 'In Stock', icon: CheckCircle2Icon, className: 'text-success' },
@@ -47,6 +50,44 @@ type TableMeta = {
 }
 
 const columnHelper = createColumnHelper<Product>()
+
+const BuyNowButton: React.FC<{ product: Product }> = ({ product }) => {
+  const { addItem, isLoading } = useCart()
+  const router = useRouter()
+  const [isBuyingNow, setIsBuyingNow] = useState(false)
+  const outOfStock = product.stockStatus === 'out-of-stock'
+
+  const handleBuyNow = () => {
+    setIsBuyingNow(true)
+
+    posthog.capture('wishlist_item_buy_now', {
+      product_id: product.id,
+      product_title: product.title,
+    })
+
+    addItem({ product: product.id })
+      .then(() => {
+        router.push('/checkout')
+      })
+      .catch(() => {
+        setIsBuyingNow(false)
+        toast.error('Could not start checkout — please try again.')
+      })
+  }
+
+  return (
+    <button
+      aria-label="Buy now"
+      className="border-foreground/15 text-foreground hover:bg-muted flex size-9 items-center justify-center gap-1.5 rounded-full border text-xs font-bold transition-colors disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto sm:px-4"
+      disabled={outOfStock || isLoading || isBuyingNow}
+      onClick={handleBuyNow}
+      type="button"
+    >
+      <ZapIcon className="size-3.5 shrink-0" />
+      <span className="hidden sm:inline">{isBuyingNow ? 'Redirecting…' : 'Buy Now'}</span>
+    </button>
+  )
+}
 
 export default function WishlistPage() {
   const { ids, toggle, clear } = useWishlist()
@@ -138,17 +179,20 @@ export default function WishlistPage() {
         cell: (info) => {
           const product = info.row.original
           return (
-            <AddToCartButton
-              outOfStock={product.stockStatus === 'out-of-stock'}
-              inventory={product.inventory}
-              onBeforeAdd={() =>
-                posthog.capture('wishlist_item_added_to_cart', {
-                  product_id: product.id,
-                  product_title: product.title,
-                })
-              }
-              productId={product.id}
-            />
+            <div className="flex items-center gap-2">
+              <AddToCartButton
+                outOfStock={product.stockStatus === 'out-of-stock'}
+                inventory={product.inventory}
+                onBeforeAdd={() =>
+                  posthog.capture('wishlist_item_added_to_cart', {
+                    product_id: product.id,
+                    product_title: product.title,
+                  })
+                }
+                productId={product.id}
+              />
+              <BuyNowButton product={product} />
+            </div>
           )
         },
         header: 'Action',

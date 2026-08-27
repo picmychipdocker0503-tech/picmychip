@@ -66,6 +66,12 @@ export const FeatureFlags: GlobalConfig = {
       label: 'Show the "Trusted by brands worldwide" strip on the homepage',
     },
     {
+      name: 'compareProducts',
+      type: 'checkbox',
+      defaultValue: true,
+      label: 'Enable the product comparison feature (Compare icon, buttons, and bar)',
+    },
+    {
       name: 'rewardsProgram',
       type: 'checkbox',
       defaultValue: false,

@@ -107,9 +107,13 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
     firstVariant && typeof firstVariant === 'object' ? firstVariant.inventory : undefined
 
   return (
-    <Link className="relative inline-block h-full w-full group" href={`/products/${slug}`}>
-      <div className="relative flex flex-col justify-between h-full rounded-3xl border border-border/80 bg-card/75 backdrop-blur-xl transition-all duration-300 hover:border-primary/60 hover:bg-card hover:shadow-xl hover:shadow-primary/10 overflow-hidden">
-
+    <div className="group relative flex h-full w-full flex-col justify-between rounded-3xl border border-border/80 bg-card/75 backdrop-blur-xl transition-all duration-300 hover:border-primary/60 hover:bg-card hover:shadow-xl hover:shadow-primary/10 overflow-hidden">
+      {/* Only the media + title/price are inside the Link — the action row
+          below (with AddToCartButton) is a sibling, not nested inside it.
+          A <button> nested inside an <a> is invalid HTML, and made clicks
+          on Add to cart unreliably fall through to the card's own link
+          navigation instead of adding the item. */}
+      <Link className="block" href={`/products/${slug}`}>
         {/* Top Media Container: Strictly square and uniform dimensions. 3D tilt lives here, on the image, not the whole card. */}
         <div
           className="relative w-full aspect-square overflow-hidden border-b border-border/60 bg-muted/15 transition-transform duration-150 ease-out will-change-transform"
@@ -193,7 +197,7 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
                 <HeartIcon className={clsx('size-3.5', saved && 'fill-current')} />
               </button>
 
-              {flags.productCompare && (
+              {flags.compareProducts && (
                 <button
                   aria-label={comparing ? 'Remove from compare' : 'Add to compare'}
                   className={clsx(
@@ -217,53 +221,53 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
         </div>
 
         {/* Content Details */}
-        <div className="p-5 flex flex-col justify-between flex-1 gap-3">
-          <div>
-            <div className="font-bold text-sm text-foreground mb-1.5 line-clamp-2 min-h-[2.5rem] group-hover:text-primary transition-colors leading-snug">
-              {title}
+        <div className="p-5">
+          <div className="font-bold text-sm text-foreground mb-1.5 line-clamp-2 min-h-[2.5rem] group-hover:text-primary transition-colors leading-snug">
+            {title}
+          </div>
+
+          {typeof averageRating === 'number' && reviewCount ? (
+            <div className="mb-2 flex items-center gap-1.5">
+              <RatingStars rating={averageRating} size="xs" />
+              <span className="text-muted-foreground text-[11px]">({reviewCount})</span>
             </div>
+          ) : null}
 
-            {typeof averageRating === 'number' && reviewCount ? (
-              <div className="mb-2 flex items-center gap-1.5">
-                <RatingStars rating={averageRating} size="xs" />
-                <span className="text-muted-foreground text-[11px]">({reviewCount})</span>
-              </div>
-            ) : null}
-
-            {typeof displayPrice === 'number' && (
-              <div className="flex items-baseline gap-2">
-                {hasDiscount && typeof strikethroughPrice === 'number' && (
-                  <span className="text-muted-foreground text-xs line-through">
-                    <Price amount={strikethroughPrice} />
-                  </span>
-                )}
-                <span className={clsx('text-base sm:text-lg font-extrabold tracking-tight', hasDiscount ? 'text-primary' : 'text-foreground')}>
-                  <Price amount={displayPrice} />
+          {typeof displayPrice === 'number' && (
+            <div className="flex items-baseline gap-2">
+              {hasDiscount && typeof strikethroughPrice === 'number' && (
+                <span className="text-muted-foreground text-xs line-through">
+                  <Price amount={strikethroughPrice} />
                 </span>
-              </div>
-            )}
-          </div>
-
-          {/* Sourcing / Stock Status & Action */}
-          <div className="pt-2 border-t border-border/60 flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-[11px] font-medium">
-              <span className={`size-1.5 rounded-full ${stockInfo.dot} animate-pulse`} />
-              <span className={stockInfo.className}>{stockInfo.label}</span>
+              )}
+              <span className={clsx('text-base sm:text-lg font-extrabold tracking-tight', hasDiscount ? 'text-primary' : 'text-foreground')}>
+                <Price amount={displayPrice} />
+              </span>
             </div>
-
-            {product.id && (
-              <AddToCartButton
-                outOfStock={isOutOfStock}
-                inventory={hasVariants ? variantInventory : product.inventory}
-                productId={product.id}
-                successMessage="Added to sourcing cart."
-                variantId={variantId}
-              />
-            )}
-          </div>
+          )}
         </div>
+      </Link>
 
+      {/* Sourcing / Stock Status & Action — outside the Link above (see note there). */}
+      <div className="px-5 pb-5 pt-2 border-t border-border/60 flex items-center justify-between gap-2">
+        {stockStatus && stockStatus !== 'in-stock' ? (
+          <div className="flex items-center gap-1.5 text-[11px] font-medium">
+            <span className={`size-1.5 rounded-full ${stockInfo.dot} animate-pulse`} />
+            <span className={stockInfo.className}>{stockInfo.label}</span>
+          </div>
+        ) : (
+          <span />
+        )}
+
+        {product.id && (
+          <AddToCartButton
+            outOfStock={isOutOfStock}
+            inventory={hasVariants ? variantInventory : product.inventory}
+            productId={product.id}
+            variantId={variantId}
+          />
+        )}
       </div>
-    </Link>
+    </div>
   )
 }

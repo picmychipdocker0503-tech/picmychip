@@ -4,10 +4,15 @@ import { CartItem } from '@/components/Cart'
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
 import clsx from 'clsx'
 import { MinusIcon, PlusIcon } from 'lucide-react'
-import React, { useMemo } from 'react'
+import React, { useMemo, useState } from 'react'
 
 export function EditItemQuantityButton({ type, item }: { item: CartItem; type: 'minus' | 'plus' }) {
-  const { decrementItem, incrementItem, isLoading } = useCart()
+  // `isLoading` from useCart() is one shared flag for the whole cart, not
+  // per-line — using it here would disable every other line's +/- buttons
+  // while any single line's request is in flight. Track this row's own
+  // pending state instead.
+  const { decrementItem, incrementItem } = useCart()
+  const [isUpdating, setIsUpdating] = useState(false)
 
   const disabled = useMemo(() => {
     if (!item.id) return true
@@ -36,12 +41,12 @@ export function EditItemQuantityButton({ type, item }: { item: CartItem; type: '
   return (
     <form>
       <button
-        disabled={disabled || isLoading}
+        disabled={disabled || isUpdating}
         aria-label={type === 'plus' ? 'Increase item quantity' : 'Reduce item quantity'}
         className={clsx(
           'ease hover:cursor-pointer flex h-full min-w-[36px] max-w-[36px] flex-none items-center justify-center rounded-full px-2 transition-all duration-200 hover:border-neutral-800 hover:opacity-80',
           {
-            'cursor-not-allowed': disabled || isLoading,
+            'cursor-not-allowed': disabled || isUpdating,
             'ml-auto': type === 'minus',
           },
         )}
@@ -49,11 +54,9 @@ export function EditItemQuantityButton({ type, item }: { item: CartItem; type: '
           e.preventDefault()
 
           if (item.id) {
-            if (type === 'plus') {
-              incrementItem(item.id)
-            } else {
-              decrementItem(item.id)
-            }
+            setIsUpdating(true)
+            const request = type === 'plus' ? incrementItem(item.id) : decrementItem(item.id)
+            request.finally(() => setIsUpdating(false))
           }
         }}
         type="button"

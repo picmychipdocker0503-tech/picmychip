@@ -1,6 +1,7 @@
 'use client'
 
 import { AuthProvider } from '@/providers/Auth'
+import { CartDrawerProvider } from '@/providers/CartDrawer'
 import { CompareProvider } from '@/providers/Compare'
 import { EcommerceAuthSync } from '@/providers/EcommerceAuthSync'
 import { QuickViewProvider } from '@/providers/QuickView'
@@ -78,16 +79,18 @@ export const Providers: React.FC<{
             paymentMethods={[payuAdapterClient()]}
           >
             <EcommerceAuthSync />
-            <CompareProvider>
-              <WishlistProvider>
-                <RecentlyViewedProvider>
-                  <QuickViewProvider>
-                    {children}
-                    <QuickViewModal />
-                  </QuickViewProvider>
-                </RecentlyViewedProvider>
-              </WishlistProvider>
-            </CompareProvider>
+            <CartDrawerProvider>
+              <CompareProvider>
+                <WishlistProvider>
+                  <RecentlyViewedProvider>
+                    <QuickViewProvider>
+                      {children}
+                      <QuickViewModal />
+                    </QuickViewProvider>
+                  </RecentlyViewedProvider>
+                </WishlistProvider>
+              </CompareProvider>
+            </CartDrawerProvider>
           </EcommerceProvider>
         </HeaderThemeProvider>
       </AuthProvider>

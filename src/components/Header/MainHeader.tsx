@@ -6,15 +6,16 @@ import type { CategoryMenuGroup } from '@/utilities/categoryMenuGroups'
 
 import { Cart } from '@/components/Cart'
 import { OpenCartButton } from '@/components/Cart/OpenCart'
+import { MiniCartPopover } from '@/components/Cart/MiniCartPopover'
 import { Media } from '@/components/Media'
 import { Search } from '@/components/Search'
 import { NavIconBadge } from '@/components/ui/nav-icon-badge'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import { useAuth } from '@/providers/Auth'
 import { useCompare } from '@/providers/Compare'
-import { useTranslations } from 'next-intl'
 import { useWishlist } from '@/providers/Wishlist'
 import { HeartIcon, LogInIcon, ReceiptTextIcon, ScaleIcon, UploadIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
@@ -92,7 +93,7 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
               <HeartIcon className="pmc-icon-anim size-5 group-hover:animate-[pmc-icon-pop_0.5s_ease-in-out]" />
               <NavIconBadge count={wishlistIds.length} />
             </Link>
-            {flags.productCompare && (
+            {flags.compareProducts && (
               <Link
                 aria-label="Compare"
                 className={iconButtonClass}
@@ -102,10 +103,11 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
                 <NavIconBadge count={ids.length} />
               </Link>
             )}
-            <div className="ml-1 border-l border-border/70 pl-1">
+            <div className="relative ml-1 border-l border-border/70 pl-1">
               <Suspense fallback={<OpenCartButton />}>
                 <Cart />
               </Suspense>
+              <MiniCartPopover />
             </div>
             <div className="md:hidden">
               <Suspense fallback={null}>

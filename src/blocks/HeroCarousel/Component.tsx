@@ -87,7 +87,7 @@ export const HeroCarouselBlock: React.FC<
         <HeroCarouselClient slides={slides} stats={{ componentCount: productCount, reviewMessage }} />
 
         {sideProducts.length > 0 && (
-          <div className="flex flex-col gap-3 sm:gap-4">
+          <div className="flex flex-col gap-3 sm:gap-4 lg:h-full">
             {sideProducts.map((product) => {
               const image = product.gallery?.find((item) => typeof item.image === 'object')?.image
               const category =
@@ -101,7 +101,7 @@ export const HeroCarouselBlock: React.FC<
 
               return (
                 <PromoCard
-                  className="min-h-[140px] flex-1 sm:min-h-[180px]"
+                  className="min-h-[140px] flex-1 sm:min-h-[180px] lg:min-h-0"
                   disabled={product.stockStatus === 'out-of-stock'}
                   eyebrow={category?.title || 'Featured'}
                   heading={product.title}

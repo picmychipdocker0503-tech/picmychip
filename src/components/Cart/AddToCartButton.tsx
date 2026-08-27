@@ -3,9 +3,9 @@
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
 import { CheckIcon, MinusIcon, PlusIcon, ShoppingCartIcon } from 'lucide-react'
 import React, { useEffect, useMemo, useState } from 'react'
-import { toast } from 'sonner'
 
 import { setCartItemQuantity } from '@/lib/cart/setCartItemQuantity'
+import { useCartDrawer } from '@/providers/CartDrawer'
 import { cn } from '@/utilities/cn'
 
 import { NotifyMeButton } from './NotifyMeButton'
@@ -18,18 +18,17 @@ type Props = {
   /** Swaps the whole control for a "Notify me when back in stock" flip-button instead of a disabled Add to Cart. */
   outOfStock?: boolean
   disabled?: boolean
-  successMessage?: string
   className?: string
   /** Fired synchronously on click, before `addItem` — for analytics events tied to the add action. */
   onBeforeAdd?: () => void
 }
 
 /**
- * Solid black pill by default, collapsing to an icon-only outline button
- * below `sm` to save space in tight card grids. Once this product (+variant)
- * is already in the cart, it swaps for a split quantity stepper so the
- * shopper can adjust the cart line right from the grid/list instead of
- * re-adding it and re-triggering the confirmation toast every time.
+ * Outlined pill, collapsing to an icon-only circle below `sm` to save space
+ * in tight card grids. Once this product (+variant) is already in the cart,
+ * it swaps for a split quantity stepper so the shopper can adjust the cart
+ * line right from the grid/list instead of re-adding it and re-triggering
+ * the confirmation toast every time.
  */
 export const AddToCartButton: React.FC<Props> = ({
   productId,
@@ -37,12 +36,17 @@ export const AddToCartButton: React.FC<Props> = ({
   inventory,
   outOfStock,
   disabled,
-  successMessage = 'Item added to cart.',
   className,
   onBeforeAdd,
 }) => {
-  const { addItem, cart, decrementItem, incrementItem, isLoading, refreshCart } = useCart()
+  // `isLoading` from useCart() is one shared flag for the whole cart, not
+  // per-item — using it to disable this button would disable every other
+  // product's Add to Cart button on the page too while any one request is
+  // in flight. Each control here tracks its own busy state instead.
+  const { addItem, cart, decrementItem, incrementItem, refreshCart } = useCart()
+  const { showMiniCart } = useCartDrawer()
   const [justAdded, setJustAdded] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
 
   const existingItem = useMemo(() => {
     return cart?.items?.find((item) => {
@@ -100,9 +104,12 @@ export const AddToCartButton: React.FC<Props> = ({
     setJustAdded(true)
     window.setTimeout(() => setJustAdded(false), 1200)
 
-    addItem({ product: productId, variant: variantId }).then(() => {
-      toast.success(successMessage)
-    })
+    setIsAdding(true)
+    addItem({ product: productId, variant: variantId })
+      .then(() => {
+        showMiniCart()
+      })
+      .finally(() => setIsAdding(false))
   }
 
   if (outOfStock) {
@@ -123,11 +130,12 @@ export const AddToCartButton: React.FC<Props> = ({
         <button
           aria-label="Decrease quantity"
           className="text-muted-foreground hover:text-foreground flex h-full w-8 items-center justify-center disabled:opacity-40"
-          disabled={isLoading || isUpdatingQuantity}
+          disabled={isUpdatingQuantity}
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
-            decrementItem(itemId)
+            setIsUpdatingQuantity(true)
+            decrementItem(itemId).finally(() => setIsUpdatingQuantity(false))
           }}
           type="button"
         >
@@ -136,7 +144,7 @@ export const AddToCartButton: React.FC<Props> = ({
         <input
           aria-label="Quantity"
           className="w-7 [appearance:textfield] bg-transparent text-center text-xs font-semibold [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          disabled={isLoading || isUpdatingQuantity}
+          disabled={isUpdatingQuantity}
           inputMode="numeric"
           max={typeof inventory === 'number' && inventory > 0 ? inventory : undefined}
           min={1}
@@ -155,11 +163,12 @@ export const AddToCartButton: React.FC<Props> = ({
         <button
           aria-label="Increase quantity"
           className="text-muted-foreground hover:text-foreground flex h-full w-8 items-center justify-center disabled:opacity-40"
-          disabled={isLoading || isUpdatingQuantity || atMax}
+          disabled={isUpdatingQuantity || atMax}
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
-            incrementItem(itemId)
+            setIsUpdatingQuantity(true)
+            incrementItem(itemId).finally(() => setIsUpdatingQuantity(false))
           }}
           type="button"
         >
@@ -176,12 +185,12 @@ export const AddToCartButton: React.FC<Props> = ({
     <button
       aria-label="Add to cart"
       className={cn(
-        'group border-foreground/15 text-foreground hover:bg-muted flex size-9 items-center justify-center gap-1.5 rounded-full border text-xs font-bold transition-[background-color,color,transform] duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-50',
-        'sm:w-auto sm:px-4',
-        justAdded && 'border-success text-success bg-success/10 hover:bg-success/10',
+        'group border-foreground/15 text-foreground hover:bg-muted flex size-9 items-center justify-center gap-1.5 rounded-full border text-xs font-bold transition-[background-color,color,border-color,transform] duration-150 active:scale-90 disabled:cursor-not-allowed disabled:opacity-50',
+        'sm:w-auto sm:px-4 sm:hover:border-foreground/30',
+        justAdded && 'sm:border-success sm:text-success sm:hover:bg-success/10',
         className,
       )}
-      disabled={disabled || isLoading}
+      disabled={disabled || isAdding}
       onClick={handleAdd}
       type="button"
     >

@@ -16,15 +16,16 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useMemo, useState } from 'react'
 
-import { DeleteItemButton } from './DeleteItemButton'
-import { EditItemQuantityButton } from './EditItemQuantityButton'
-import { OpenCartButton } from './OpenCart'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { setCartItemQuantity } from '@/lib/cart/setCartItemQuantity'
 import { FREE_SHIPPING_THRESHOLD } from '@/lib/shipping'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import { Product, Variant } from '@/payload-types'
+import { useCartDrawer } from '@/providers/CartDrawer'
+import { DeleteItemButton } from './DeleteItemButton'
+import { EditItemQuantityButton } from './EditItemQuantityButton'
+import { OpenCartButton } from './OpenCart'
 
 type GalleryItem = NonNullable<Product['gallery']>[number]
 type VariantOptionItem = NonNullable<Variant['options']>[number]
@@ -36,7 +37,7 @@ type CartItem = NonNullable<ReturnType<typeof useCart>['cart']>['items'] extends
 
 export function CartModal() {
   const { cart } = useCart()
-  const [isOpen, setIsOpen] = useState(false)
+  const { isOpen, setIsOpen } = useCartDrawer()
   const flags = useFeatureFlags()
 
   const pathname = usePathname()
@@ -60,7 +61,7 @@ export function CartModal() {
         <OpenCartButton quantity={itemCount} />
       </SheetTrigger>
 
-      <SheetContent className="flex flex-col">
+      <SheetContent className="flex flex-col" overlayClassName="bg-black/10 backdrop-blur-[1px]">
         <SheetHeader>
           <SheetTitle>My Cart</SheetTitle>
 

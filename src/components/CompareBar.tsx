@@ -11,9 +11,7 @@ export const CompareBar: React.FC = () => {
   const { ids, clear } = useCompare()
   const flags = useFeatureFlags()
 
-  // Still checked even with the flag off — a shopper who added items before
-  // the flag was toggled off shouldn't keep seeing this bar.
-  if (!flags.productCompare || ids.length === 0) return null
+  if (!flags.compareProducts || ids.length === 0) return null
 
   return (
     <div className="bg-card fixed inset-x-0 bottom-[calc(4rem+env(safe-area-inset-bottom))] z-50 border-t md:bottom-0">

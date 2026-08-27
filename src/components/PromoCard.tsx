@@ -93,7 +93,7 @@ export const PromoCard: React.FC<Props> = ({
         </span>
         <h3
           className={cn(
-            'mt-2 font-bold tracking-tight text-balance',
+            'mt-2 line-clamp-2 font-bold tracking-tight text-balance',
             headingSize === 'lg' ? 'text-2xl sm:text-4xl' : 'text-lg sm:text-xl',
           )}
         >

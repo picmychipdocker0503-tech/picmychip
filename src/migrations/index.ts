@@ -41,12 +41,12 @@ import * as migration_20260818_121920_add_team_testimonials_and_culture_block fr
 import * as migration_20260819_044939_add_email_events from './20260819_044939_add_email_events';
 import * as migration_20260819_072742_add_product_sale_pricing from './20260819_072742_add_product_sale_pricing';
 import * as migration_20260819_075443_add_product_perf_indexes from './20260819_075443_add_product_perf_indexes';
-import * as migration_20260819_120810_add_team_grid_and_story from './20260819_120810_add_team_grid_and_story';
-import * as migration_20260819_143501_make_team_quote_optional from './20260819_143501_make_team_quote_optional';
-import * as migration_20260819_195700_restore_customer_interaction_block from './20260819_195700_restore_customer_interaction_block';
 import * as migration_20260819_120731_remove_customer_interaction_block from './20260819_120731_remove_customer_interaction_block';
+import * as migration_20260819_120810_add_team_grid_and_story from './20260819_120810_add_team_grid_and_story';
 import * as migration_20260819_131219_add_rfq_bom_section from './20260819_131219_add_rfq_bom_section';
 import * as migration_20260819_140542_add_track_order_feature_flag from './20260819_140542_add_track_order_feature_flag';
+import * as migration_20260819_143501_make_team_quote_optional from './20260819_143501_make_team_quote_optional';
+import * as migration_20260819_195700_restore_customer_interaction_block from './20260819_195700_restore_customer_interaction_block';
 import * as migration_20260819_212037_add_trusted_by_brands_feature_flag from './20260819_212037_add_trusted_by_brands_feature_flag';
 import * as migration_20260820_043804_add_rewards_free_shipping_flags from './20260820_043804_add_rewards_free_shipping_flags';
 import * as migration_20260820_072924_add_contact_info_block from './20260820_072924_add_contact_info_block';
@@ -66,8 +66,7 @@ import * as migration_20260824_221656_add_billing_address_email from './20260824
 import * as migration_20260825_103500_add_rfq_submissions from './20260825_103500_add_rfq_submissions';
 import * as migration_20260825_113000_add_rfq_submissions_customer from './20260825_113000_add_rfq_submissions_customer';
 import * as migration_20260825_164500_add_user_theme_preference from './20260825_164500_add_user_theme_preference';
-import * as migration_20260826_191500_add_order_number_settings from './20260826_191500_add_order_number_settings';
-import * as migration_20260826_211936_add_product_compare_flag from './20260826_211936_add_product_compare_flag';
+import * as migration_20260827_103600_add_compare_products_feature_flag from './20260827_103600_add_compare_products_feature_flag';
 
 export const migrations = [
   {
@@ -411,13 +410,8 @@ export const migrations = [
     name: '20260825_164500_add_user_theme_preference',
   },
   {
-    up: migration_20260826_191500_add_order_number_settings.up,
-    down: migration_20260826_191500_add_order_number_settings.down,
-    name: '20260826_191500_add_order_number_settings',
-  },
-  {
-    up: migration_20260826_211936_add_product_compare_flag.up,
-    down: migration_20260826_211936_add_product_compare_flag.down,
-    name: '20260826_211936_add_product_compare_flag',
+    up: migration_20260827_103600_add_compare_products_feature_flag.up,
+    down: migration_20260827_103600_add_compare_products_feature_flag.down,
+    name: '20260827_103600_add_compare_products_feature_flag',
   },
 ];

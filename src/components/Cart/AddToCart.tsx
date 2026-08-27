@@ -16,11 +16,17 @@ type Props = {
 }
 
 export function AddToCart({ product }: Props) {
-  const { addItem, cart, isLoading, refreshCart } = useCart()
+  // `isLoading` from useCart() is one shared flag for the whole cart, not
+  // just this product — using it to disable these buttons meant an
+  // unrelated add (e.g. from Frequently Bought Together, further down this
+  // same page) would disable Add to Cart/Buy Now here too. Each action
+  // below tracks its own pending state instead.
+  const { addItem, cart, refreshCart } = useCart()
   const t = useTranslations('cart')
   const router = useRouter()
   const searchParams = useSearchParams()
   const [justAdded, setJustAdded] = useState(false)
+  const [isAddingToCart, setIsAddingToCart] = useState(false)
   const [quantity, setQuantity] = useState(1)
   // The input's own text, separate from the committed `quantity` number —
   // a number input bound straight to a number state can't ever show "" while
@@ -186,9 +192,12 @@ export function AddToCart({ product }: Props) {
         quantity,
       })
 
-      commitQuantity().then(() => {
-        toast.success('Item added to cart.')
-      })
+      setIsAddingToCart(true)
+      commitQuantity()
+        .then(() => {
+          toast.success('Item added to cart.')
+        })
+        .finally(() => setIsAddingToCart(false))
     },
     [commitQuantity, product, selectedVariant, quantity],
   )
@@ -256,7 +265,7 @@ export function AddToCart({ product }: Props) {
         aria-label="Add to cart"
         variant={'outline'}
         className="border-white/30 bg-white/10 text-foreground shadow-md backdrop-blur-md backdrop-saturate-150 hover:border-white/40 hover:bg-white/20"
-        disabled={disabled || isLoading}
+        disabled={disabled || isAddingToCart}
         onClick={addToCart}
         type="button"
       >
@@ -273,7 +282,7 @@ export function AddToCart({ product }: Props) {
 
       <Button
         aria-label="Buy now"
-        disabled={disabled || isLoading || isBuyingNow}
+        disabled={disabled || isBuyingNow}
         onClick={buyNow}
         type="button"
       >

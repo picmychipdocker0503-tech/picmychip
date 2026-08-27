@@ -185,11 +185,11 @@ export const Search: React.FC<Props> = ({ className }) => {
           value={query}
         />
         <button
-          className="group bg-primary hover:bg-primary/90 text-primary-foreground inline-flex shrink-0 items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold whitespace-nowrap transition-all active:scale-95"
+          aria-label="Search"
+          className="group bg-primary hover:bg-primary/90 text-primary-foreground inline-flex size-9 shrink-0 items-center justify-center rounded-full transition-all active:scale-95"
           type="submit"
         >
           <SearchIcon className="size-4 transition-transform duration-300 group-hover:rotate-12" />
-          Search
         </button>
       </form>
 

@@ -45,14 +45,29 @@ const nextConfig: NextConfig = {
     // `updatedAt` (see components/Media/Image/index.tsx and
     // ProductMatchingImage.tsx) — an edit now changes the requested URL, so
     // staleness no longer depends on this TTL at all, freeing it to be long.
-    minimumCacheTTL: 2592000, // 30 days
+    minimumCacheTTL: 2678400, // 31 days — Vercel's own suggested value for "images that don't change within a month"
 
     localPatterns: [
       {
         pathname: '/api/media/file/**',
       },
     ],
-    qualities: [90, 100],
+    // The shared Media/Image component (every image on the site) hardcodes
+    // quality={90} — 100 was never actually requested anywhere, just extra
+    // allowed variants inflating the transformation count for nothing.
+    qualities: [90],
+    // AVIF's file-size win over WebP is marginal for this catalog's mostly-
+    // photographic product images, but Next generates (and Vercel bills) a
+    // SEPARATE transformation per format — defaulting to both effectively
+    // doubles the transformation count for every image size/quality combo.
+    formats: ['image/webp'],
+    // Trimmed from Next's defaults (8 entries each) to the widths this app
+    // actually requests (see the `size=`/`sizes` props used across
+    // components) — Next rounds up to the next configured size rather than
+    // erroring on an unlisted one, so this only means a slightly larger
+    // download for an in-between viewport, never a broken image.
+    imageSizes: [48, 64, 96, 128, 256],
+    deviceSizes: [640, 750, 1080, 1200, 1920],
     remotePatterns: [
       {
         protocol: 'http',

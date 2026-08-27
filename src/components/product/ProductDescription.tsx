@@ -1,27 +1,27 @@
 'use client'
 import type { Product, Variant } from '@/payload-types'
 
-import { RichText } from '@/components/RichText'
 import { AddToCart } from '@/components/Cart/AddToCart'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
+import { RichText } from '@/components/RichText'
 import { useCompare } from '@/providers/Compare'
-import { useTranslations } from 'next-intl'
 import { useWishlist } from '@/providers/Wishlist'
 import { cn } from '@/utilities/cn'
 import { CheckIcon, HeartIcon, ScaleIcon, TagIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import Link from 'next/link'
 import posthog from 'posthog-js'
-import React, { Suspense } from 'react'
+import { Suspense } from 'react'
 
-import { VariantSelector } from './VariantSelector'
-import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import { BackInStockForm } from '@/components/product/BackInStockForm'
 import { BulkOrderContact } from '@/components/product/BulkOrderContact'
 import { DeliveryEstimate } from '@/components/product/DeliveryEstimate'
 import { StockIndicator } from '@/components/product/StockIndicator'
 import { TrustBadges } from '@/components/product/TrustBadges'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
+import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
+import { VariantSelector } from './VariantSelector'
 
 type Props = {
   product: Product
@@ -191,7 +191,7 @@ export function ProductDescription({
             <AddToCart product={product} />
           </Suspense>
 
-          {flags.productCompare && (
+          {flags.compareProducts && (
             <button
               aria-label={comparing ? 'Remove from compare' : 'Add to compare'}
               className={cn(

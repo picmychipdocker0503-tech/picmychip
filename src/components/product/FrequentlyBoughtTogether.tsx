@@ -17,11 +17,12 @@ type Props = {
 
 export const FrequentlyBoughtTogether: React.FC<Props> = ({ mainProduct, companions }) => {
   const { currency } = useCurrency()
-  const { addItem, isLoading } = useCart()
+  const { addItem } = useCart()
 
   const items = useMemo(() => [mainProduct, ...companions], [mainProduct, companions])
   const [selectedIds, setSelectedIds] = useState<Set<number>>(() => new Set(items.map((item) => item.id)))
   const [justAdded, setJustAdded] = useState(false)
+  const [isAdding, setIsAdding] = useState(false)
 
   const priceField = `priceIn${currency.code}` as keyof Product
 
@@ -42,11 +43,14 @@ export const FrequentlyBoughtTogether: React.FC<Props> = ({ mainProduct, compani
   }, 0)
 
   const handleAddAll = () => {
-    Promise.all(selectedItems.map((item) => addItem({ product: item.id }))).then(() => {
-      setJustAdded(true)
-      window.setTimeout(() => setJustAdded(false), 1500)
-      toast.success(`${selectedItems.length} item${selectedItems.length === 1 ? '' : 's'} added to cart.`)
-    })
+    setIsAdding(true)
+    Promise.all(selectedItems.map((item) => addItem({ product: item.id })))
+      .then(() => {
+        setJustAdded(true)
+        window.setTimeout(() => setJustAdded(false), 1500)
+        toast.success(`${selectedItems.length} item${selectedItems.length === 1 ? '' : 's'} added to cart.`)
+      })
+      .finally(() => setIsAdding(false))
   }
 
   if (companions.length === 0) return null
@@ -103,7 +107,7 @@ export const FrequentlyBoughtTogether: React.FC<Props> = ({ mainProduct, compani
           </p>
           <button
             className="btn btn-primary"
-            disabled={isLoading || selectedItems.length === 0}
+            disabled={isAdding || selectedItems.length === 0}
             onClick={handleAddAll}
             type="button"
           >

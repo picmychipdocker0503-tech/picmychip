@@ -68,7 +68,7 @@ export const NotifyMeButton: React.FC<Props> = ({ productId, className }) => {
       {stage === 'idle' && (
         <button
           aria-label="Notify me when back in stock"
-          className="border-warning/30 bg-warning/10 text-warning hover:bg-warning/20 flex size-9 items-center justify-center gap-1.5 rounded-full border text-xs font-bold transition-colors sm:w-auto sm:px-4"
+          className="border-warning bg-warning text-warning-content hover:brightness-95 flex size-9 items-center justify-center gap-1.5 rounded-full border text-xs font-bold transition-[filter] sm:w-auto sm:px-4"
           onClick={(e) => {
             e.preventDefault()
             e.stopPropagation()
