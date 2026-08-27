@@ -4,7 +4,7 @@ import { parseFacetFilters } from '@/lib/facetParams'
 import { checkRateLimit, getClientIp } from '@/lib/rateLimit'
 import { searchProducts } from '@/lib/searchProducts'
 import configPromise from '@payload-config'
-import { REST_DELETE, REST_PATCH, REST_POST } from '@payloadcms/next/routes'
+import { REST_DELETE, REST_GET, REST_PATCH, REST_POST } from '@payloadcms/next/routes'
 import { NextRequest, NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 
@@ -24,13 +24,27 @@ export const PATCH = (request: NextRequest) => REST_PATCH(configPromise)(request
 export const DELETE = (request: NextRequest) => REST_DELETE(configPromise)(request, restParams)
 
 export async function GET(request: NextRequest) {
+  const params = request.nextUrl.searchParams
+
+  // The admin panel's DataTable (useServerTable) hits this same path with
+  // Payload-style `where[...]` bracket params — the storefront's shop page
+  // never sends those (it uses `q`/`category`/`sort`/`priceMin`/`priceMax`
+  // instead), so their presence reliably means this is an admin list-view
+  // request, not a public search. Delegating those to Payload's own REST GET
+  // is what actually applies the `where` filter — the custom search logic
+  // below only understands the storefront's own param shape and was
+  // silently ignoring `where` entirely, so the admin search box did nothing.
+  const isAdminTableRequest = [...params.keys()].some((key) => key.startsWith('where'))
+  if (isAdminTableRequest) {
+    return REST_GET(configPromise)(request, restParams)
+  }
+
   const ip = getClientIp(request.headers)
   const { allowed } = checkRateLimit(`products-load-more:${ip}`, 60, 60_000)
   if (!allowed) {
     return NextResponse.json({ error: 'Too many requests.' }, { status: 429 })
   }
 
-  const params = request.nextUrl.searchParams
   const searchValue = params.get('q') ?? undefined
   const sort = params.get('sort') ?? undefined
   const categoryId = params.get('category') ?? undefined

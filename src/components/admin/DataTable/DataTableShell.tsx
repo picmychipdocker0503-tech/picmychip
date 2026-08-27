@@ -69,10 +69,10 @@ export function DataTableShell<T>({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {onSearchChange ? (
-          <div className="relative w-full max-w-xs">
-            <SearchIcon className="text-base-content/35 pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+          <div className="relative w-full max-w-md">
+            <SearchIcon className="text-base-content/35 pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2" />
             <input
-              className="pmc-input pmc-input-sm w-full rounded-full pl-9"
+              className="pmc-input w-full rounded-full pl-10"
               onChange={(e) => onSearchChange(e.target.value)}
               placeholder={searchPlaceholder}
               type="text"
