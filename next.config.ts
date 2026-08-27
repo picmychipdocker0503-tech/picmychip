@@ -51,6 +51,9 @@ const nextConfig: NextConfig = {
       {
         pathname: '/api/media/file/**',
       },
+      {
+        pathname: '/pmc-logo.png',
+      },
     ],
     // The shared Media/Image component (every image on the site) hardcodes
     // quality={90} — 100 was never actually requested anywhere, just extra

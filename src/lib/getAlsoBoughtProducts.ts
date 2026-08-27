@@ -47,7 +47,13 @@ export const getAlsoBoughtProducts = async ({ payload, productId, limit }: Optio
             depth: 1,
             limit: rankedIds.length,
             overrideAccess: true,
-            where: { and: [{ id: { in: rankedIds } }, { stockStatus: { not_equals: 'out-of-stock' } }] },
+            where: {
+              and: [
+                { id: { in: rankedIds } },
+                { stockStatus: { not_equals: 'out-of-stock' } },
+                { _status: { equals: 'published' } },
+              ],
+            },
           })
         ).docs.sort((a, b) => rankedIds.indexOf(a.id) - rankedIds.indexOf(b.id))
       : []
@@ -74,6 +80,7 @@ export const getAlsoBoughtProducts = async ({ payload, productId, limit }: Optio
         { categories: { in: categoryIds } },
         { id: { not_in: excludeIds } },
         { stockStatus: { not_equals: 'out-of-stock' } },
+        { _status: { equals: 'published' } },
       ],
     },
   })

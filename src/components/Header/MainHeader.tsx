@@ -17,10 +17,10 @@ import { useCompare } from '@/providers/Compare'
 import { useWishlist } from '@/providers/Wishlist'
 import { HeartIcon, LogInIcon, ReceiptTextIcon, ScaleIcon, UploadIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import Image from 'next/image'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
-import { Wordmark } from '@/components/icons/Wordmark'
 import { MainNavigationBar } from './MainNavigationBar'
 import { MobileMenu } from './MobileMenu'
 
@@ -57,11 +57,7 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
         <div className="container flex items-center justify-between gap-6 py-4">
           {/* Logo */}
           <Link className="flex shrink-0 items-center" href="/">
-            <Wordmark
-              className="font-semibold tracking-tight text-foreground"
-              iconClassName="text-primary"
-              iconSize={32}
-            />
+            <Image alt="Picmychip" className="h-8 w-auto sm:h-9" height={155} priority src="/pmc-logo.png" width={430} />
           </Link>
 
           {/* Search - Desktop */}

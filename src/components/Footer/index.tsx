@@ -6,13 +6,13 @@ import { FooterMenu } from '@/components/Footer/menu'
 import { NewsletterForm } from '@/components/Footer/NewsletterForm'
 import { PaymentBadges } from '@/components/Footer/PaymentBadges'
 import { ShipToPills } from '@/components/Footer/ShipToPills'
-import { Wordmark } from '@/components/icons/Wordmark'
 import { Newsletter as NewsletterIllustration } from '@/components/illustrations'
 import { ThemeSelector } from '@/providers/Theme/ThemeSelector'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { getSocialIcon } from '@/utilities/getSocialIcon'
 import { Headset } from 'lucide-react'
 import { getTranslations } from 'next-intl/server'
+import Image from 'next/image'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
@@ -66,12 +66,7 @@ export async function Footer() {
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-1.5">
               <Link className="flex items-center" href="/">
-                <Wordmark
-                  className="text-foreground font-semibold tracking-tight"
-                  iconClassName="text-primary"
-                  iconSize={34}
-                  name={SITE_NAME || 'Picmychip'}
-                />
+                <Image alt={SITE_NAME || 'Picmychip'} className="h-9 w-auto sm:h-10" height={155} src="/pmc-logo.png" width={430} />
               </Link>
               <p className="text-primary text-sm font-medium sm:text-base">
                 Everything for your next build.
