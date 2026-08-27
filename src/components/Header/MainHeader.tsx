@@ -7,6 +7,7 @@ import type { CategoryMenuGroup } from '@/utilities/categoryMenuGroups'
 import { Cart } from '@/components/Cart'
 import { OpenCartButton } from '@/components/Cart/OpenCart'
 import { MiniCartPopover } from '@/components/Cart/MiniCartPopover'
+import { MiniWishlistPopover } from '@/components/Wishlist/MiniWishlistPopover'
 import { Media } from '@/components/Media'
 import { Search } from '@/components/Search'
 import { NavIconBadge } from '@/components/ui/nav-icon-badge'
@@ -89,10 +90,13 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
 
           {/* Right Icons */}
           <div className="flex items-center gap-1">
-            <Link aria-label="Favorites" className={iconButtonClass} href="/wishlist">
-              <HeartIcon className="pmc-icon-anim size-5 group-hover:animate-[pmc-icon-pop_0.5s_ease-in-out]" />
-              <NavIconBadge count={wishlistIds.length} />
-            </Link>
+            <div className="relative">
+              <Link aria-label="Favorites" className={iconButtonClass} href="/wishlist">
+                <HeartIcon className="pmc-icon-anim size-5 group-hover:animate-[pmc-icon-pop_0.5s_ease-in-out]" />
+                <NavIconBadge count={wishlistIds.length} />
+              </Link>
+              <MiniWishlistPopover />
+            </div>
             {flags.compareProducts && (
               <Link
                 aria-label="Compare"

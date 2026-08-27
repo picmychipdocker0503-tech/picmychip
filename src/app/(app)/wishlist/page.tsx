@@ -84,7 +84,7 @@ const BuyNowButton: React.FC<{ product: Product }> = ({ product }) => {
       type="button"
     >
       <ZapIcon className="size-3.5 shrink-0" />
-      <span className="hidden sm:inline">{isBuyingNow ? 'Redirecting…' : 'Buy Now'}</span>
+      <span className="hidden whitespace-nowrap sm:inline">{isBuyingNow ? 'Redirecting…' : 'Buy Now'}</span>
     </button>
   )
 }
@@ -282,7 +282,7 @@ export default function WishlistPage() {
                       const className = (header.column.columnDef.meta as { className?: string } | undefined)?.className
 
                       return (
-                        <th className={clsx('px-6 py-4 font-medium', className)} key={header.id}>
+                        <th className={clsx('px-6 py-4 font-medium whitespace-nowrap', className)} key={header.id}>
                           {header.column.getCanSort() ? (
                             <button
                               className="flex cursor-pointer items-center gap-1 select-none"

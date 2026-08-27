@@ -7,6 +7,7 @@ import { RatingStars } from '@/components/RatingStars'
 import { RichText } from '@/components/RichText'
 import { useCompare } from '@/providers/Compare'
 import { useWishlist } from '@/providers/Wishlist'
+import { useWishlistPopover } from '@/providers/WishlistPopover'
 import { cn } from '@/utilities/cn'
 import { CheckIcon, HeartIcon, ScaleIcon, TagIcon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -45,6 +46,7 @@ export function ProductDescription({
   const flags = useFeatureFlags()
   const { toggle, isComparing } = useCompare()
   const { toggle: toggleWishlist, isSaved } = useWishlist()
+  const { showWishlistPopover } = useWishlistPopover()
   const productId = String(product.id)
   const comparing = isComparing(productId)
   const saved = isSaved(productId)
@@ -222,6 +224,7 @@ export function ProductDescription({
                   product_id: product.id,
                   product_title: product.title,
                 })
+                showWishlistPopover(product)
               }
               toggleWishlist(productId)
             }}

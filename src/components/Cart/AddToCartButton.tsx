@@ -208,7 +208,7 @@ export const AddToCartButton: React.FC<Props> = ({
           )}
         />
       </span>
-      <span className="hidden sm:inline">{justAdded ? 'Added' : 'Add to cart'}</span>
+      <span className="hidden whitespace-nowrap sm:inline">{justAdded ? 'Added' : 'Add to cart'}</span>
     </button>
   )
 }

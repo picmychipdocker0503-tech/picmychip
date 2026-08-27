@@ -11,6 +11,7 @@ import { useTilt3D } from '@/lib/useTilt3D'
 import { useCompare } from '@/providers/Compare'
 import { useQuickView } from '@/providers/QuickView'
 import { useWishlist } from '@/providers/Wishlist'
+import { useWishlistPopover } from '@/providers/WishlistPopover'
 import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import clsx from 'clsx'
 import { CheckIcon, HeartIcon, ScaleIcon, SearchIcon, ShieldCheck, TagIcon } from 'lucide-react'
@@ -42,6 +43,7 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
   const flags = useFeatureFlags()
   const { toggle, isComparing } = useCompare()
   const { toggle: toggleWishlist, isSaved } = useWishlist()
+  const { showWishlistPopover } = useWishlistPopover()
   const { open: openQuickView } = useQuickView()
   const { currency } = useCurrency()
   const tilt = useTilt3D<HTMLDivElement>()
@@ -190,6 +192,7 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
+                  if (!saved) showWishlistPopover(product as Product)
                   toggleWishlist(productId)
                 }}
                 type="button"
@@ -222,7 +225,7 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
 
         {/* Content Details */}
         <div className="p-5">
-          <div className="font-bold text-sm text-foreground mb-1.5 line-clamp-2 min-h-[2.5rem] group-hover:text-primary transition-colors leading-snug">
+          <div className="font-bold text-sm text-foreground mb-1.5 line-clamp-3 min-h-[3.75rem] group-hover:text-primary transition-colors leading-snug [text-wrap:pretty]">
             {title}
           </div>
 

@@ -10,6 +10,7 @@ import { useTilt3D } from '@/lib/useTilt3D'
 import { useCartDrawer } from '@/providers/CartDrawer'
 import { useQuickView } from '@/providers/QuickView'
 import { useWishlist } from '@/providers/Wishlist'
+import { useWishlistPopover } from '@/providers/WishlistPopover'
 import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import clsx from 'clsx'
 import { CheckIcon, HeartIcon, SearchIcon, ShoppingCartIcon, TagIcon } from 'lucide-react'
@@ -34,6 +35,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
   const { currency } = useCurrency()
   const { open } = useQuickView()
   const { toggle: toggleWishlist, isSaved } = useWishlist()
+  const { showWishlistPopover } = useWishlistPopover()
   // `isLoading` from useCart() is one shared flag for the whole cart, not
   // per-card — using it here would disable every other product's quick-add
   // button on the page while any one add request is in flight.
@@ -126,7 +128,10 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
           )}
           onClick={(e) => {
             e.preventDefault()
-            if (productId) toggleWishlist(productId)
+            if (productId) {
+              if (!saved) showWishlistPopover(product as Product)
+              toggleWishlist(productId)
+            }
           }}
           type="button"
         >
@@ -140,7 +145,9 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
       </div>
 
       <Link className="flex w-full flex-col items-center gap-3" href={`/products/${product.slug}`}>
-        <h3 className="text-foreground line-clamp-2 min-h-[2.75rem] font-semibold">{product.title}</h3>
+        <h3 className="text-foreground line-clamp-3 min-h-[4rem] font-semibold [text-wrap:pretty]">
+          {product.title}
+        </h3>
 
         {typeof averageRating === 'number' && reviewCount ? (
           <div className="flex items-center gap-1.5">

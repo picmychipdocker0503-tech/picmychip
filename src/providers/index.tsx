@@ -8,6 +8,7 @@ import { QuickViewProvider } from '@/providers/QuickView'
 import { RecentlyViewedProvider } from '@/providers/RecentlyViewed'
 import { ThemeAccountSync } from '@/providers/ThemeAccountSync'
 import { WishlistProvider } from '@/providers/Wishlist'
+import { WishlistPopoverProvider } from '@/providers/WishlistPopover'
 import { EcommerceProvider } from '@payloadcms/plugin-ecommerce/client/react'
 import { payuAdapterClient } from '@/payments/payu/client'
 import dynamic from 'next/dynamic'
@@ -82,12 +83,14 @@ export const Providers: React.FC<{
             <CartDrawerProvider>
               <CompareProvider>
                 <WishlistProvider>
-                  <RecentlyViewedProvider>
-                    <QuickViewProvider>
-                      {children}
-                      <QuickViewModal />
-                    </QuickViewProvider>
-                  </RecentlyViewedProvider>
+                  <WishlistPopoverProvider>
+                    <RecentlyViewedProvider>
+                      <QuickViewProvider>
+                        {children}
+                        <QuickViewModal />
+                      </QuickViewProvider>
+                    </RecentlyViewedProvider>
+                  </WishlistPopoverProvider>
                 </WishlistProvider>
               </CompareProvider>
             </CartDrawerProvider>

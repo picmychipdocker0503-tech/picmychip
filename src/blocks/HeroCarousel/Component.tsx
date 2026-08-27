@@ -68,7 +68,30 @@ export const HeroCarouselBlock: React.FC<
   const { productCount, reviewCount, reviewRatingSum, sideProductsRaw } = await getHeroData()
 
   const sideProductPool = sideProductsRaw.filter((product) => product.stockStatus !== 'out-of-stock')
-  const sideProducts = sideProductPool.slice(8, 10)
+  const sideCandidates = sideProductPool.slice(8)
+
+  // Prefer two products from distinct categories so the side cards never
+  // both show the same category label (e.g. two "RF Cables" in a row).
+  // Falls back to filling remaining slots without that constraint if the
+  // candidate pool doesn't have enough category variety.
+  const sideProducts: typeof sideCandidates = []
+  const seenCategoryIds = new Set<string | number>()
+
+  for (const product of sideCandidates) {
+    const categoryId = product.categories?.find((item) => typeof item === 'object')?.id
+    if (categoryId != null && seenCategoryIds.has(categoryId)) continue
+    if (categoryId != null) seenCategoryIds.add(categoryId)
+    sideProducts.push(product)
+    if (sideProducts.length === 2) break
+  }
+
+  if (sideProducts.length < 2) {
+    for (const product of sideCandidates) {
+      if (sideProducts.includes(product)) continue
+      sideProducts.push(product)
+      if (sideProducts.length === 2) break
+    }
+  }
 
   const averageRating = reviewCount ? reviewRatingSum / reviewCount : 0
 
