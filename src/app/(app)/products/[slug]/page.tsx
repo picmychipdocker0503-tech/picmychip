@@ -26,7 +26,7 @@ import configPromise from '@payload-config'
 import { ImageOffIcon } from 'lucide-react'
 import { Metadata } from 'next'
 import { draftMode } from 'next/headers'
-import { notFound } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import { getPayload } from 'payload'
 import React, { Suspense } from 'react'
 
@@ -34,6 +34,28 @@ type Args = {
   params: Promise<{
     slug: string
   }>
+}
+
+/**
+ * Old Google-indexed product URLs (e.g. from a previous platform) 404 now
+ * that slugs have changed — this turns a dash-separated slug into a search
+ * query for `/shop`, so an old indexed link still lands a visitor on the
+ * matching active product instead of a dead end. Trailing MPN/dimension-
+ * style tokens (e.g. "914mm", "apr405sasa914") are stripped since they're
+ * noise for a text search, not stopped once the whole slug is consumed —
+ * always keeps at least one word, even a numeric-only slug, so there's
+ * still something to search for.
+ */
+const cleanSlugToSearchQuery = (slug: string): string => {
+  const words = slug.split('-').filter(Boolean)
+
+  let end = words.length
+  while (end > 1 && /\d/.test(words[end - 1])) {
+    end -= 1
+  }
+
+  const keywords = end > 0 ? words.slice(0, end) : words
+  return keywords.join(' ')
 }
 
 /**
@@ -115,7 +137,7 @@ export default async function ProductPage({ params }: Args) {
   const { slug } = await params
   const product = await queryProductBySlug({ slug })
 
-  if (!product) return notFound()
+  if (!product) redirect(`/shop?q=${encodeURIComponent(cleanSlugToSearchQuery(slug))}`)
 
   const gallery =
     product.gallery
