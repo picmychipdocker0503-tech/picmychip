@@ -18,6 +18,7 @@ import { GeistMono } from 'geist/font/mono'
 import { NextIntlClientProvider } from 'next-intl'
 import { getLocale, getMessages } from 'next-intl/server'
 import { Inter } from 'next/font/google'
+import { draftMode } from 'next/headers'
 import Script from 'next/script'
 import './globals.css'
 
@@ -73,10 +74,11 @@ const twitterSite = TWITTER_SITE ? ensureStartsWith(TWITTER_SITE, 'https://') : 
 } */
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  const [siteSettings, locale, messages] = await Promise.all([
+  const [siteSettings, locale, messages, { isEnabled: isDraftMode }] = await Promise.all([
     getCachedGlobal('site-settings', 0)(),
     getLocale(),
     getMessages(),
+    draftMode(),
   ])
 
   return (
@@ -131,7 +133,16 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         )}
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>
-            <LivePreviewListener />
+            {/* Only wired up for Payload's live-preview iframe (draft mode) —
+                rendering it unconditionally on every public page caused an
+                infinite request loop on any 404: Next.js retries the RSC
+                payload fetch for router.refresh() against a route that
+                doesn't resolve to real content on a not-found boundary, and
+                each retry 404s and retries again. See
+                https://github.com/vercel/next.js/issues/86197. Regular
+                visitors are never in draft mode, so this never mattered for
+                them anyway — only CMS editors previewing drafts need it. */}
+            {isDraftMode && <LivePreviewListener />}
             <ServiceWorkerRegistration />
             <JsonLd data={buildOrganizationJsonLd(siteSettings)} />
             <JsonLd data={buildWebSiteJsonLd()} />
