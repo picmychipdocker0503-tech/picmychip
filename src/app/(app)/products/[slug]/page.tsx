@@ -36,15 +36,15 @@ type Args = {
   }>
 }
 
-export const dynamic = 'force-dynamic'
-export const revalidate = 0
-
 /**
- * Without this, every product page rendered dynamically on every request —
- * a full set of DB queries (product, reviews, related products, category
- * breadcrumb, "also bought") re-run per visit instead of once at build time.
- * Freshness after publish is handled by revalidateProduct (afterChange hook
- * on the Products collection), the same pattern Pages already uses.
+ * Statically generated at build time (like Pages' /[slug]/page.tsx) so a
+ * full set of DB queries (product, reviews, related products, category
+ * breadcrumb, "also bought") runs once per product instead of on every
+ * request — this was previously forced dynamic via `dynamic =
+ * 'force-dynamic'` / `revalidate = 0`, which meant every page view re-ran
+ * all of those queries and could exhaust the DB connection pool under
+ * concurrent load. Freshness after publish is handled by revalidateProduct
+ * (afterChange hook on the Products collection) calling revalidatePath.
  */
 export async function generateStaticParams() {
   const payload = await getPayload({ config: configPromise })
