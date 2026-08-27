@@ -1,36 +1,41 @@
-'use client'
-
-import Link from 'next/link'
-import React, { useEffect } from 'react'
-
+import { Search } from '@/components/Search'
 import { Button } from '@/components/ui/button'
-
-const REDIRECT_DELAY_MS = 3000
+import { HomeIcon, StoreIcon } from 'lucide-react'
+import Link from 'next/link'
+import { Suspense } from 'react'
 
 export default function NotFound() {
-  useEffect(() => {
-    // A real navigation, not router.push() — the App Router traps a
-    // notFound() boundary in a "not found" router-cache state that a
-    // client-side push() doesn't reliably escape. Confirmed live: it was
-    // repeatedly hard-reloading this same /category URL forever (the
-    // Tawk.to widget script re-injecting on every cycle proved each one was
-    // a genuine full document reload, not a soft nav) and never actually
-    // reaching the homepage.
-    const timer = setTimeout(() => {
-      window.location.href = '/'
-    }, REDIRECT_DELAY_MS)
-    return () => clearTimeout(timer)
-  }, [])
-
   return (
-    <div className="container py-28">
-      <div className="prose max-w-none">
-        <h1 style={{ marginBottom: 0 }}>404</h1>
-        <p className="mb-4">This page could not be found. Redirecting you to the homepage…</p>
+    <div className="container flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
+      <span aria-hidden className="text-primary/15 text-7xl font-black tracking-tight select-none sm:text-8xl">
+        404
+      </span>
+      <h1 className="text-foreground mt-2 text-3xl font-bold tracking-tight sm:text-4xl">Page Not Found</h1>
+      <p className="text-muted-foreground mt-3 max-w-md">
+        The page you&rsquo;re looking for doesn&rsquo;t exist or may have moved. Try searching for what you need
+        below.
+      </p>
+
+      <div className="mt-8 w-full max-w-md">
+        <Suspense fallback={null}>
+          <Search />
+        </Suspense>
       </div>
-      <Button asChild variant="default">
-        <Link href="/">Go home now</Link>
-      </Button>
+
+      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <Button asChild variant="default">
+          <Link href="/shop">
+            <StoreIcon />
+            Browse Catalog
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link href="/">
+            <HomeIcon />
+            Go to Homepage
+          </Link>
+        </Button>
+      </div>
     </div>
   )
 }
