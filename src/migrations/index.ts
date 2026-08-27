@@ -67,6 +67,7 @@ import * as migration_20260825_103500_add_rfq_submissions from './20260825_10350
 import * as migration_20260825_113000_add_rfq_submissions_customer from './20260825_113000_add_rfq_submissions_customer';
 import * as migration_20260825_164500_add_user_theme_preference from './20260825_164500_add_user_theme_preference';
 import * as migration_20260827_103600_add_compare_products_feature_flag from './20260827_103600_add_compare_products_feature_flag';
+import * as migration_20260827_120000_add_organization_address from './20260827_120000_add_organization_address';
 
 export const migrations = [
   {
@@ -413,5 +414,10 @@ export const migrations = [
     up: migration_20260827_103600_add_compare_products_feature_flag.up,
     down: migration_20260827_103600_add_compare_products_feature_flag.down,
     name: '20260827_103600_add_compare_products_feature_flag',
+  },
+  {
+    up: migration_20260827_120000_add_organization_address.up,
+    down: migration_20260827_120000_add_organization_address.down,
+    name: '20260827_120000_add_organization_address',
   },
 ];

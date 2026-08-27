@@ -184,6 +184,8 @@ export default async function ProductPage({ params }: Args) {
     reviewCount,
     brand: typeof product.brand === 'object' ? product.brand?.title : undefined,
     sku: product.sku,
+    mpn: product.googleMerchant?.mpn || product.sku,
+    gtin: product.googleMerchant?.gtin,
   })
 
   const firstCategory = product.categories?.find(

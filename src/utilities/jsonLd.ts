@@ -5,6 +5,11 @@ import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 
 export const buildOrganizationJsonLd = (siteSettings: SiteSetting | null) => {
   const logo = typeof siteSettings?.logo === 'object' ? siteSettings.logo?.url : undefined
+  const address = siteSettings?.officeAddress
+
+  const hasAddress = Boolean(
+    address?.streetAddress || address?.addressLocality || address?.addressRegion || address?.postalCode,
+  )
 
   return {
     '@context': 'https://schema.org',
@@ -13,8 +18,42 @@ export const buildOrganizationJsonLd = (siteSettings: SiteSetting | null) => {
     description: siteSettings?.description || undefined,
     foundingDate: siteSettings?.foundingDate || undefined,
     logo: logo ? `${getServerSideURL()}${logo}` : undefined,
+    email: siteSettings?.supportEmail || undefined,
+    telephone: siteSettings?.supportPhone || undefined,
+    address: hasAddress
+      ? {
+          '@type': 'PostalAddress',
+          streetAddress: address?.streetAddress || undefined,
+          addressLocality: address?.addressLocality || undefined,
+          addressRegion: address?.addressRegion || undefined,
+          postalCode: address?.postalCode || undefined,
+          addressCountry: address?.addressCountry || undefined,
+        }
+      : undefined,
     sameAs: siteSettings?.sameAs?.map((item) => item.url).filter(Boolean),
     url: getServerSideURL(),
+  }
+}
+
+/** WebSite schema with a Sitelinks SearchBox action — lets Google render a
+ * search box directly in this site's search result, pointing at the shop's
+ * search query param. */
+export const buildWebSiteJsonLd = () => {
+  const url = getServerSideURL()
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'Picmychip',
+    url,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${url}/shop?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
   }
 }
 
@@ -127,6 +166,8 @@ type ProductJsonLdArgs = {
   reviewCount?: number
   brand?: string | null
   sku?: string | null
+  mpn?: string | null
+  gtin?: string | null
 }
 
 /** Offers valid for 90 days from generation — long enough that Google won't
@@ -147,6 +188,8 @@ export const buildProductJsonLd = ({
   reviewCount,
   brand,
   sku,
+  mpn,
+  gtin,
 }: ProductJsonLdArgs) => ({
   name: title,
   '@context': 'https://schema.org',
@@ -155,10 +198,13 @@ export const buildProductJsonLd = ({
   image: imageUrl,
   brand: brand ? { '@type': 'Brand', name: brand } : undefined,
   sku: sku || undefined,
+  mpn: mpn || undefined,
+  gtin: gtin || undefined,
   offers: {
     '@type': 'AggregateOffer',
     availability: hasStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
     price,
+    url,
     ...(typeof lowPrice === 'number' && typeof highPrice === 'number' && lowPrice !== highPrice
       ? { lowPrice, highPrice }
       : {}),

@@ -86,6 +86,43 @@ export const SiteSettings: GlobalConfig = {
       },
     },
     {
+      name: 'officeAddress',
+      type: 'group',
+      label: 'Office Address',
+      admin: {
+        description: 'Public office address used in Organization structured data (Schema.org) shown to search engines.',
+      },
+      fields: [
+        {
+          name: 'streetAddress',
+          type: 'text',
+        },
+        {
+          name: 'addressLocality',
+          type: 'text',
+          label: 'City',
+        },
+        {
+          name: 'addressRegion',
+          type: 'select',
+          label: 'State',
+          options: INDIAN_STATES.map((state) => ({ label: state.name, value: state.name })),
+        },
+        {
+          name: 'postalCode',
+          type: 'text',
+        },
+        {
+          name: 'addressCountry',
+          type: 'text',
+          defaultValue: 'IN',
+          admin: {
+            description: 'ISO 3166-1 alpha-2 country code, e.g. "IN".',
+          },
+        },
+      ],
+    },
+    {
       name: 'taxSettings',
       type: 'group',
       label: 'GST / Tax Invoicing',

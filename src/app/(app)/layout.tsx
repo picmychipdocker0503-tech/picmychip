@@ -11,7 +11,7 @@ import { ServiceWorkerRegistration } from '@/components/ServiceWorkerRegistratio
 import { Providers } from '@/providers'
 import { InitTheme } from '@/providers/Theme/InitTheme'
 import { getCachedGlobal } from '@/utilities/getGlobals'
-import { buildOrganizationJsonLd } from '@/utilities/jsonLd'
+import { buildOrganizationJsonLd, buildWebSiteJsonLd } from '@/utilities/jsonLd'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
 import { GeistMono } from 'geist/font/mono'
@@ -134,6 +134,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <LivePreviewListener />
             <ServiceWorkerRegistration />
             <JsonLd data={buildOrganizationJsonLd(siteSettings)} />
+            <JsonLd data={buildWebSiteJsonLd()} />
 
             <a className="skip-link" href="#main-content">
               Skip to content

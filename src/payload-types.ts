@@ -4506,6 +4506,58 @@ export interface SiteSetting {
    */
   foundingDate?: string | null;
   /**
+   * Public office address used in Organization structured data (Schema.org) shown to search engines.
+   */
+  officeAddress?: {
+    streetAddress?: string | null;
+    addressLocality?: string | null;
+    addressRegion?:
+      | (
+          | 'Andaman and Nicobar Islands'
+          | 'Andhra Pradesh'
+          | 'Arunachal Pradesh'
+          | 'Assam'
+          | 'Bihar'
+          | 'Chandigarh'
+          | 'Chhattisgarh'
+          | 'Dadra and Nagar Haveli and Daman and Diu'
+          | 'Delhi'
+          | 'Goa'
+          | 'Gujarat'
+          | 'Haryana'
+          | 'Himachal Pradesh'
+          | 'Jammu and Kashmir'
+          | 'Jharkhand'
+          | 'Karnataka'
+          | 'Kerala'
+          | 'Ladakh'
+          | 'Lakshadweep'
+          | 'Madhya Pradesh'
+          | 'Maharashtra'
+          | 'Manipur'
+          | 'Meghalaya'
+          | 'Mizoram'
+          | 'Nagaland'
+          | 'Odisha'
+          | 'Puducherry'
+          | 'Punjab'
+          | 'Rajasthan'
+          | 'Sikkim'
+          | 'Tamil Nadu'
+          | 'Telangana'
+          | 'Tripura'
+          | 'Uttar Pradesh'
+          | 'Uttarakhand'
+          | 'West Bengal'
+        )
+      | null;
+    postalCode?: string | null;
+    /**
+     * ISO 3166-1 alpha-2 country code, e.g. "IN".
+     */
+    addressCountry?: string | null;
+  };
+  /**
    * Used to generate printable GST tax invoices on orders. Confirm the applicable GST treatment with your tax advisor — this only formats what you configure here.
    */
   taxSettings?: {
@@ -4732,6 +4784,15 @@ export interface SiteSettingsSelect<T extends boolean = true> {
   logo?: T;
   description?: T;
   foundingDate?: T;
+  officeAddress?:
+    | T
+    | {
+        streetAddress?: T;
+        addressLocality?: T;
+        addressRegion?: T;
+        postalCode?: T;
+        addressCountry?: T;
+      };
   taxSettings?:
     | T
     | {
