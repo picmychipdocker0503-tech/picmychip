@@ -8,6 +8,7 @@ import { headers as getHeaders } from 'next/headers'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { LoginForm } from '@/components/forms/LoginForm'
+import { getServerSideURL } from '@/utilities/getURL'
 import { redirect } from 'next/navigation'
 
 export default async function Login() {
@@ -36,10 +37,14 @@ export default async function Login() {
 }
 
 export const metadata: Metadata = {
+  alternates: {
+    canonical: `${getServerSideURL()}/login`,
+  },
   description: 'Login or create an account to get started.',
   openGraph: {
     title: 'Login',
     url: '/login',
   },
+  robots: { index: false, follow: true },
   title: 'Login',
 }

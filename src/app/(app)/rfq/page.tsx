@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
+import { getServerSideURL } from '@/utilities/getURL'
 import { RfqPageClient } from '@/components/rfq/RfqPageClient'
 
 export default function RfqPage() {
@@ -8,6 +9,9 @@ export default function RfqPage() {
 }
 
 export const metadata: Metadata = {
+  alternates: {
+    canonical: `${getServerSideURL()}/rfq`,
+  },
   description: 'Upload a BOM or submit a multi-line RFQ and get pricing, availability, and lead times from our sourcing team.',
   openGraph: mergeOpenGraph({
     title: 'RFQ & BOM Sourcing',
