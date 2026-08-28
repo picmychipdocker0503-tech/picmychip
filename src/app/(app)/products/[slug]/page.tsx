@@ -148,6 +148,7 @@ export default async function ProductPage({ params }: Args) {
       })) || []
 
   const metaImage = typeof product.meta?.image === 'object' ? product.meta?.image : undefined
+  const seoImage = metaImage || (gallery.length ? gallery[0]?.image : undefined)
   const hasStock = product.enableVariants
     ? product?.variants?.docs?.some((variant) => {
         if (typeof variant !== 'object') return false
@@ -196,7 +197,7 @@ export default async function ProductPage({ params }: Args) {
   const productJsonLd = buildProductJsonLd({
     description: richTextToPlainText(product.description),
     hasStock: Boolean(hasStock),
-    imageUrl: metaImage?.url,
+    imageUrl: seoImage?.url,
     price,
     lowPrice,
     highPrice,
