@@ -7,7 +7,7 @@ import { BulkActionsBar, createSelectionColumn } from '@/components/admin/DataTa
 import { DataTableShell } from '@/components/admin/DataTable/DataTableShell'
 import { useServerTable } from '@/components/admin/DataTable/useServerTable'
 import { createColumnHelper } from '@tanstack/react-table'
-import { PlusIcon } from 'lucide-react'
+import { DownloadIcon, PlusIcon } from 'lucide-react'
 import React, { useCallback, useMemo } from 'react'
 
 import type { ListApiResponse } from '../../DataTable/types'
@@ -123,6 +123,10 @@ export const ProductsTable: React.FC<{ initialData: ListApiResponse<Product> }> 
       toolbarRight={
         <div className="flex items-center gap-3">
           <BulkActionsBar collection="products" onDeleted={refetch} table={table} />
+          <a className="pmc-btn pmc-btn-outline pmc-btn-sm rounded-full" href="/api/admin/bulk-products/export">
+            <DownloadIcon className="size-4" />
+            Export to Excel
+          </a>
           <a className="pmc-btn pmc-btn-primary pmc-btn-sm rounded-full" href="/admin/collections/products/create">
             <PlusIcon className="size-4" />
             Create New

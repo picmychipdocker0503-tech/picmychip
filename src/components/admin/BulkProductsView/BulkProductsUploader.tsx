@@ -73,13 +73,22 @@ export const BulkProductsUploader: React.FC = () => {
 
   return (
     <div className="flex max-w-4xl flex-col gap-6">
-      <a
-        className="pmc-btn pmc-btn-outline pmc-btn-sm w-fit rounded-full"
-        href="/api/admin/bulk-products/template"
-      >
-        <DownloadIcon className="size-4" />
-        Download Sample Template
-      </a>
+      <div className="flex flex-wrap gap-3">
+        <a
+          className="pmc-btn pmc-btn-outline pmc-btn-sm w-fit rounded-full"
+          href="/api/admin/bulk-products/template"
+        >
+          <DownloadIcon className="size-4" />
+          Download Sample Template
+        </a>
+        <a
+          className="pmc-btn pmc-btn-outline pmc-btn-sm w-fit rounded-full"
+          href="/api/admin/bulk-products/export"
+        >
+          <DownloadIcon className="size-4" />
+          Export Current Products
+        </a>
+      </div>
 
       <div className="border-base-content/8 flex flex-col gap-3 rounded-2xl border p-5">
         <label className="text-sm font-medium" htmlFor="bulk-products-file">
