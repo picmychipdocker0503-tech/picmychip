@@ -58,7 +58,7 @@ export function MobileMenu({ menu, shopCategoryGroups }: Props) {
         <MenuIcon className="h-4" />
       </SheetTrigger>
 
-      <SheetContent side="left" className="px-4">
+      <SheetContent side="left" className="overflow-y-auto px-4">
         <SheetHeader className="px-0 pt-4 pb-0">
           <SheetTitle>{t('title')}</SheetTitle>
 

@@ -73,7 +73,7 @@ export const NewArrivals: React.FC = async () => {
       <h2 className="mt-2 mb-8 text-2xl font-semibold tracking-tight text-foreground md:text-3xl lg:text-4xl">
         New Arrivals
       </h2>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         {products.map((product, index) => (
           <ScrollReveal className="h-full" index={index} key={product.id} staggerMs={50}>
             <DealProductCard
