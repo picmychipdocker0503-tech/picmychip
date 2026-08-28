@@ -6,16 +6,12 @@ import { AddToCartButton } from '@/components/Cart/AddToCartButton'
 import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
-import { useTilt3D } from '@/lib/useTilt3D'
-import { useCartDrawer } from '@/providers/CartDrawer'
-import { useQuickView } from '@/providers/QuickView'
-import { useWishlist } from '@/providers/Wishlist'
-import { useWishlistPopover } from '@/providers/WishlistPopover'
-import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import clsx from 'clsx'
 import { CheckIcon, HeartIcon, SearchIcon, ShoppingCartIcon, TagIcon } from 'lucide-react'
 import Link from 'next/link'
-import React, { useState } from 'react'
+import React from 'react'
+
+import { useDealProductCardState } from './useDealProductCardState'
 
 type Props = {
   product: Partial<Product>
@@ -24,72 +20,24 @@ type Props = {
   priority?: boolean
 }
 
-const STOCK_LABEL: Record<string, { label: string; className: string }> = {
-  'in-stock': { label: 'In Stock', className: 'text-success' },
-  'out-of-stock': { label: 'Out of Stock', className: 'text-error' },
-  'low-stock': { label: 'Low Stock', className: 'text-warning' },
-  backorder: { label: 'Backorder', className: 'text-warning' },
-}
-
 export const DealProductCard: React.FC<Props> = ({ product, averageRating, reviewCount, priority }) => {
-  const { currency } = useCurrency()
-  const { open } = useQuickView()
-  const { toggle: toggleWishlist, isSaved } = useWishlist()
-  const { showWishlistPopover } = useWishlistPopover()
-  // `isLoading` from useCart() is one shared flag for the whole cart, not
-  // per-card — using it here would disable every other product's quick-add
-  // button on the page while any one add request is in flight.
-  const { addItem } = useCart()
-  const { showMiniCart } = useCartDrawer()
-  const [justAdded, setJustAdded] = useState(false)
-  const [isAdding, setIsAdding] = useState(false)
-  const tilt = useTilt3D<HTMLDivElement>()
-
-  const priceField = `priceIn${currency.code}` as keyof Product
-  const compareAtPriceField = `compareAtPriceIn${currency.code}` as keyof Product
-  const salePriceField = `salePriceIn${currency.code}` as keyof Product
-
-  // Read-only display logic — the underlying price/compareAtPrice/salePrice
-  // fields and their values are never touched here, only how they're shown.
-  const price = product[priceField] as number | null | undefined
-  const compareAtPrice = product[compareAtPriceField] as number | null | undefined
-  const salePrice = product[salePriceField] as number | null | undefined
-
-  const saleExpired = Boolean(product.saleEndDate && new Date(product.saleEndDate).getTime() < Date.now())
-  const isOnSale = Boolean(product.onSale) && !saleExpired && typeof salePrice === 'number'
-  const isClearance = Boolean(product.isClearance)
-
-  const hasDiscount =
-    (isOnSale && typeof price === 'number' && salePrice! < price) ||
-    (typeof compareAtPrice === 'number' && typeof price === 'number' && compareAtPrice > price)
-
-  const displayPrice = isOnSale ? salePrice! : price
-  const strikethroughPrice = isOnSale ? price : hasDiscount ? compareAtPrice : undefined
-  const discountPercent =
-    isOnSale && typeof price === 'number' && price > 0 ? Math.round((1 - salePrice! / price) * 100) : 0
-
-  const stockInfo = STOCK_LABEL[product.stockStatus ?? 'in-stock'] ?? STOCK_LABEL['in-stock']
-  const isOutOfStock = product.stockStatus === 'out-of-stock'
-
-  const image = product.gallery?.[0]?.image && typeof product.gallery[0]?.image !== 'string' ? product.gallery[0]?.image : false
-
-  const productId = product.id ? String(product.id) : undefined
-  const saved = productId ? isSaved(productId) : false
-
-  const handleAddToCart = (e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault()
-    if (!product.id) return
-
-    setJustAdded(true)
-    window.setTimeout(() => setJustAdded(false), 1500)
-
-    setIsAdding(true)
-    addItem({ product: product.id })
-      .then(() => {
-        showMiniCart()
-      })
-      .finally(() => setIsAdding(false))
-  }
+  const {
+    displayPrice,
+    discountPercent,
+    handleAddToCart,
+    handleQuickView,
+    handleToggleWishlist,
+    hasDiscount,
+    image,
+    isAdding,
+    isClearance,
+    isOutOfStock,
+    justAdded,
+    saved,
+    stockInfo,
+    strikethroughPrice,
+    tilt,
+  } = useDealProductCardState({ product, averageRating, reviewCount })
 
   return (
     <div className="group bg-card border-border relative flex h-full flex-col items-center gap-3 sm:gap-4 rounded-2xl border p-4 sm:p-6 text-center transition-colors duration-250 hover:border-primary">
@@ -97,10 +45,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
         <button
           aria-label="Quick view"
           className="group bg-background text-muted-foreground hover:text-foreground flex size-9 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-110"
-          onClick={(e) => {
-            e.preventDefault()
-            if (product.id) open(product as Product)
-          }}
+          onClick={handleQuickView}
           type="button"
         >
           <SearchIcon className="pmc-icon-anim size-4 group-hover:animate-[pmc-icon-tilt_0.5s_ease-in-out]" />
@@ -126,13 +71,7 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
             'group bg-background flex size-9 items-center justify-center rounded-full shadow-sm transition-transform hover:scale-110',
             saved ? 'text-primary' : 'text-muted-foreground hover:text-foreground',
           )}
-          onClick={(e) => {
-            e.preventDefault()
-            if (productId) {
-              if (!saved) showWishlistPopover(product as Product)
-              toggleWishlist(productId)
-            }
-          }}
+          onClick={handleToggleWishlist}
           type="button"
         >
           <HeartIcon

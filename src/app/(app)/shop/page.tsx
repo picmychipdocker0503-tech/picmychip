@@ -32,7 +32,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
       canonical: `${getServerSideURL()}/shop${pageNum > 1 ? `?page=${pageNum}` : ''}`,
     },
     description: 'Search for products in the store.',
-    title: 'Shop',
+    title: pageNum > 1 ? `Shop — Page ${pageNum}` : 'Shop',
   }
 }
 

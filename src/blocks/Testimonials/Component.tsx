@@ -7,6 +7,7 @@ import { getPayload } from 'payload'
 import { MessageSquareHeart } from 'lucide-react'
 import React from 'react'
 
+import { MobileTestimonialsCarousel } from './MobileTestimonialsCarousel'
 import { TestimonialsCarousel, type TestimonialCard as Card } from './TestimonialsCarousel'
 
 export const TestimonialsBlock: React.FC<
@@ -133,8 +134,14 @@ export const TestimonialsBlock: React.FC<
 
         {/* Bottom row: an animated, auto-advancing slide carousel rather
             than a static stack — reads fine whether there's one testimonial
-            or a dozen, and gives the section some motion. */}
-        <TestimonialsCarousel cards={cards} />
+            or a dozen, and gives the section some motion. Mobile gets its
+            own simpler carousel/card (own Embla instance, same `cards`
+            data — no extra fetching) rather than the desktop card shrunk
+            down. */}
+        <div className="hidden md:block">
+          <TestimonialsCarousel cards={cards} />
+        </div>
+        <MobileTestimonialsCarousel cards={cards} />
       </div>
     </section>
   )

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 
 import { RenderParams } from '@/components/RenderParams'
 import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
+import { getServerSideURL } from '@/utilities/getURL'
 import React from 'react'
 import { headers as getHeaders } from 'next/headers'
 import configPromise from '@payload-config'
@@ -29,10 +30,14 @@ export default async function CreateAccount() {
 }
 
 export const metadata: Metadata = {
+  alternates: {
+    canonical: `${getServerSideURL()}/create-account`,
+  },
   description: 'Create an account or log in to your existing account.',
   openGraph: mergeOpenGraph({
     title: 'Account',
     url: '/account',
   }),
+  robots: { index: false, follow: true },
   title: 'Account',
 }

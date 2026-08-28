@@ -21,6 +21,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { Suspense } from 'react'
 
+import { HighlightsCarousel } from './HighlightsCarousel'
 import { MainNavigationBar } from './MainNavigationBar'
 import { MobileHeader } from './MobileHeader'
 
@@ -121,8 +122,11 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
         <div className="container flex items-center justify-between py-2">
           <MainNavigationBar menu={menu} shopCategoryGroups={shopCategoryGroups} />
 
-          <div className="text-muted-foreground flex items-center gap-3 text-sm">
-            {user ? (
+          <div className="flex items-center gap-4">
+            <HighlightsCarousel />
+
+            <div className="text-muted-foreground flex items-center gap-3 text-sm">
+              {user ? (
               <Link
                 className="hover:text-primary group flex items-center gap-2 font-medium transition-colors"
                 href="/account"
@@ -158,7 +162,8 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
                   {t('signIn')}
                 </Link>
               </>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

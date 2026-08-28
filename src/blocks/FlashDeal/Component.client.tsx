@@ -4,6 +4,7 @@ import type { Product } from '@/payload-types'
 
 import { CountdownTimer } from '@/components/CountdownTimer'
 import { DealProductCard } from '@/components/product/DealProductCard'
+import { MobileDealProductCard } from '@/components/product/MobileDealProductCard'
 import { ZapIcon } from 'lucide-react'
 import React, { useState } from 'react'
 
@@ -35,10 +36,23 @@ export const FlashDealClient: React.FC<Props> = ({ title, discountBadge, endDate
         <CountdownTimer endDate={endDate} onExpire={() => setExpired(true)} />
       </div>
 
-      <div className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4">
+      {/* Desktop/tablet */}
+      <div className="hidden md:grid md:grid-cols-2 md:gap-4 lg:grid-cols-4">
         {products.map((product) => (
-          <div className="w-[70%] shrink-0 snap-start sm:w-auto" key={product.id}>
-            <DealProductCard
+          <DealProductCard
+            averageRating={ratings?.[product.id]?.average}
+            key={product.id}
+            product={product}
+            reviewCount={ratings?.[product.id]?.count}
+          />
+        ))}
+      </div>
+
+      {/* Mobile — its own horizontal snap-scroll row with the mobile-sized card */}
+      <div className="-mx-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-6 pb-2 md:hidden">
+        {products.map((product) => (
+          <div className="w-[70%] shrink-0 snap-start" key={product.id}>
+            <MobileDealProductCard
               averageRating={ratings?.[product.id]?.average}
               product={product}
               reviewCount={ratings?.[product.id]?.count}

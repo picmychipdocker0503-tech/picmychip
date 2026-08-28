@@ -4,6 +4,7 @@ import type { Product } from '@/payload-types'
 
 import { Grid } from '@/components/Grid'
 import { DealProductCard } from '@/components/product/DealProductCard'
+import { MobileDealProductCard } from '@/components/product/MobileDealProductCard'
 import { useLoadMoreProducts } from '@/lib/useLoadMoreProducts'
 import { useTranslations } from 'next-intl'
 import { Loader2Icon } from 'lucide-react'
@@ -41,9 +42,23 @@ export const CategoryResults: React.FC<Props> = ({
 
   return (
     <div className="flex flex-col gap-6">
-      <Grid className="grid grid-cols-2 sm:grid-cols-4 gap-4 animate-in fade-in-0 duration-500">
+      {/* Desktop/tablet */}
+      <Grid className="hidden md:grid md:grid-cols-4 gap-4 animate-in fade-in-0 duration-500">
         {items.map((product, index) => (
           <DealProductCard
+            averageRating={product.id ? loadedRatings?.[product.id]?.average : undefined}
+            key={product.id}
+            priority={index < 4}
+            product={product}
+            reviewCount={product.id ? loadedRatings?.[product.id]?.count : undefined}
+          />
+        ))}
+      </Grid>
+
+      {/* Mobile — MobileDealProductCard instead of the desktop card squeezed to fit */}
+      <Grid className="grid-cols-2 gap-4 animate-in fade-in-0 duration-500 md:hidden">
+        {items.map((product, index) => (
+          <MobileDealProductCard
             averageRating={product.id ? loadedRatings?.[product.id]?.average : undefined}
             key={product.id}
             priority={index < 4}

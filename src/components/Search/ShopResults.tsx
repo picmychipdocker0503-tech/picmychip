@@ -5,6 +5,7 @@ import type { Product } from '@/payload-types'
 import { Grid } from '@/components/Grid'
 import { Price } from '@/components/Price'
 import { ProductGridItem } from '@/components/ProductGridItem'
+import { MobileProductGridItem } from '@/components/ProductGridItem/MobileProductGridItem'
 import { ProductMatchingImage } from '@/components/product/ProductMatchingImage'
 import { sorting } from '@/lib/constants'
 import { useLoadMoreProducts } from '@/lib/useLoadMoreProducts'
@@ -108,17 +109,33 @@ export const ShopResults: React.FC<Props> = ({ products, totalDocs, ratings, has
       </div>
 
       {view === 'grid' ? (
-        <Grid className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6 animate-in fade-in-0 duration-300">
-          {items.map((product, index) => (
-            <ProductGridItem
-              averageRating={product.id ? loadedRatings?.[product.id]?.average : undefined}
-              key={product.id}
-              priority={index < 4}
-              product={product}
-              reviewCount={product.id ? loadedRatings?.[product.id]?.count : undefined}
-            />
-          ))}
-        </Grid>
+        <>
+          {/* Desktop/tablet */}
+          <Grid className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6 animate-in fade-in-0 duration-300">
+            {items.map((product, index) => (
+              <ProductGridItem
+                averageRating={product.id ? loadedRatings?.[product.id]?.average : undefined}
+                key={product.id}
+                priority={index < 4}
+                product={product}
+                reviewCount={product.id ? loadedRatings?.[product.id]?.count : undefined}
+              />
+            ))}
+          </Grid>
+
+          {/* Mobile — MobileProductGridItem instead of the desktop card squeezed to fit */}
+          <Grid className="grid-cols-2 gap-4 animate-in fade-in-0 duration-300 md:hidden">
+            {items.map((product, index) => (
+              <MobileProductGridItem
+                averageRating={product.id ? loadedRatings?.[product.id]?.average : undefined}
+                key={product.id}
+                priority={index < 4}
+                product={product}
+                reviewCount={product.id ? loadedRatings?.[product.id]?.count : undefined}
+              />
+            ))}
+          </Grid>
+        </>
       ) : (
         <ul className="animate-in fade-in-0 flex flex-col gap-3 duration-300">
           {items.map((product) => {

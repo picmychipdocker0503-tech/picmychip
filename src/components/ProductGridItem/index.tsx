@@ -6,17 +6,12 @@ import { AddToCartButton } from '@/components/Cart/AddToCartButton'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
 import { ProductMatchingImage } from '@/components/product/ProductMatchingImage'
-import { useFeatureFlags } from '@/lib/useFeatureFlags'
-import { useTilt3D } from '@/lib/useTilt3D'
-import { useCompare } from '@/providers/Compare'
-import { useQuickView } from '@/providers/QuickView'
-import { useWishlist } from '@/providers/Wishlist'
-import { useWishlistPopover } from '@/providers/WishlistPopover'
-import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import clsx from 'clsx'
 import { CheckIcon, HeartIcon, ScaleIcon, SearchIcon, ShieldCheck, TagIcon } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
+
+import { useProductGridItemState } from './useProductGridItemState'
 
 type Props = {
   product: Partial<Product>
@@ -25,88 +20,31 @@ type Props = {
   priority?: boolean
 }
 
-const STOCK_BADGE = {
-  'low-stock': { label: 'Low Stock', variant: 'warning' as const },
-  'out-of-stock': { label: 'Out of Stock', variant: 'destructive' as const },
-  backorder: { label: 'Backorder', variant: 'warning' as const },
-}
-
-const STOCK_LABEL: Record<string, { label: string; className: string; dot: string }> = {
-  'in-stock': { label: 'In Stock', className: 'text-emerald-500', dot: 'bg-emerald-500' },
-  'low-stock': { label: 'Low Stock', className: 'text-amber-500', dot: 'bg-amber-500' },
-  'out-of-stock': { label: 'Out of Stock', className: 'text-red-500', dot: 'bg-red-500' },
-  backorder: { label: 'Backorder', className: 'text-amber-500', dot: 'bg-amber-500' },
-}
-
 export const ProductGridItem: React.FC<Props> = ({ product, averageRating, reviewCount, priority }) => {
-  const { gallery, title, stockStatus, slug, categories } = product
-  const flags = useFeatureFlags()
-  const { toggle, isComparing } = useCompare()
-  const { toggle: toggleWishlist, isSaved } = useWishlist()
-  const { showWishlistPopover } = useWishlistPopover()
-  const { open: openQuickView } = useQuickView()
-  const { currency } = useCurrency()
-  const tilt = useTilt3D<HTMLDivElement>()
-
-  const priceField = `priceIn${currency.code}` as keyof Product
-  const compareAtPriceField = `compareAtPriceIn${currency.code}` as keyof Product
-  const salePriceField = `salePriceIn${currency.code}` as keyof Product
-
-  const stockBadge =
-    stockStatus && stockStatus in STOCK_BADGE
-      ? STOCK_BADGE[stockStatus as keyof typeof STOCK_BADGE]
-      : undefined
-  const stockInfo = STOCK_LABEL[stockStatus ?? 'in-stock'] ?? STOCK_LABEL['in-stock']
-  const isOutOfStock = stockStatus === 'out-of-stock'
-
-  let price = product[priceField] as number | null | undefined
-  const compareAtPrice = product[compareAtPriceField] as number | null | undefined
-  const salePrice = product[salePriceField] as number | null | undefined
-
-  const variants = product.variants?.docs
-  const hasVariants = Boolean(variants && variants.length > 0)
-
-  if (hasVariants) {
-    const variant = variants![0]
-    if (variant && typeof variant === 'object' && typeof variant[priceField as keyof typeof variant] === 'number') {
-      price = variant[priceField as keyof typeof variant] as number
-    }
-  }
-
-  // Sale/clearance pricing is product-level only (no per-variant override
-  // yet), so it's only shown when the card isn't already displaying a
-  // variant-specific price.
-  const saleExpired = Boolean(product.saleEndDate && new Date(product.saleEndDate).getTime() < Date.now())
-  const isOnSale = !hasVariants && Boolean(product.onSale) && !saleExpired && typeof salePrice === 'number'
-  const isClearance = Boolean(product.isClearance)
-
-  const hasDiscount =
-    (isOnSale && typeof price === 'number' && salePrice! < price) ||
-    (!hasVariants && typeof compareAtPrice === 'number' && typeof price === 'number' && compareAtPrice > price)
-
-  const displayPrice = isOnSale ? salePrice! : price
-  const strikethroughPrice = isOnSale ? price : hasDiscount ? compareAtPrice : undefined
-  const discountPercent =
-    isOnSale && typeof price === 'number' && price > 0
-      ? Math.round((1 - salePrice! / price) * 100)
-      : hasDiscount && typeof compareAtPrice === 'number' && typeof price === 'number' && compareAtPrice > 0
-        ? Math.round((1 - price / compareAtPrice) * 100)
-        : 0
-
-  const image =
-    gallery?.[0]?.image && typeof gallery[0]?.image !== 'string' ? gallery[0]?.image : false
-
-  const productId = product.id ? String(product.id) : undefined
-  const comparing = productId ? isComparing(productId) : false
-  const saved = productId ? isSaved(productId) : false
-
-  const firstVariant = variants && variants.length > 0 ? variants[0] : undefined
-  const variantId = firstVariant && typeof firstVariant === 'object' ? firstVariant.id : undefined
-
-  const firstCategory = Array.isArray(categories) && categories[0] ? categories[0] : undefined
-
-  const variantInventory =
-    firstVariant && typeof firstVariant === 'object' ? firstVariant.inventory : undefined
+  const { title, slug, stockStatus } = product
+  const {
+    comparing,
+    discountPercent,
+    displayPrice,
+    firstCategory,
+    flags,
+    handleQuickView,
+    handleToggleCompare,
+    handleToggleWishlist,
+    hasDiscount,
+    hasVariants,
+    image,
+    isClearance,
+    isOutOfStock,
+    productId,
+    saved,
+    stockBadge,
+    stockInfo,
+    strikethroughPrice,
+    tilt,
+    variantId,
+    variantInventory,
+  } = useProductGridItemState({ product })
 
   return (
     <div className="group relative flex h-full w-full flex-col justify-between rounded-3xl border border-border/80 bg-card/75 backdrop-blur-xl transition-all duration-300 hover:border-primary/60 hover:bg-card hover:shadow-xl hover:shadow-primary/10 overflow-hidden">
@@ -171,11 +109,7 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
               <button
                 aria-label="Quick view"
                 className="bg-card/90 flex size-8 items-center justify-center rounded-xl border border-border/80 backdrop-blur-md shadow-sm transition-all duration-200 hover:bg-primary hover:text-primary-foreground text-foreground cursor-pointer"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  openQuickView(product as Product)
-                }}
+                onClick={handleQuickView}
                 type="button"
               >
                 <SearchIcon className="size-3.5" />
@@ -189,12 +123,7 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
                     ? 'border-primary text-primary bg-primary/10'
                     : 'bg-card/90 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card',
                 )}
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  if (!saved) showWishlistPopover(product as Product)
-                  toggleWishlist(productId)
-                }}
+                onClick={handleToggleWishlist}
                 type="button"
               >
                 <HeartIcon className={clsx('size-3.5', saved && 'fill-current')} />
@@ -209,11 +138,7 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
                       ? 'border-primary text-primary bg-primary/10'
                       : 'bg-card/90 border-border/80 text-muted-foreground hover:text-foreground hover:bg-card',
                   )}
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    toggle(productId)
-                  }}
+                  onClick={handleToggleCompare}
                   type="button"
                 >
                   {comparing ? <CheckIcon className="size-3.5 text-primary" /> : <ScaleIcon className="size-3.5" />}

@@ -4,6 +4,7 @@ import { RenderBlocks } from '@/blocks/RenderBlocks'
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb'
 import { getCategoryIcon } from '@/components/illustrations/categoryIcons'
 import { ProductGridItem } from '@/components/ProductGridItem'
+import { MobileProductGridItem } from '@/components/ProductGridItem/MobileProductGridItem'
 import { JsonLd } from '@/components/JsonLd'
 import { Datasheets } from '@/components/product/Datasheets'
 import { FrequentlyBoughtTogether } from '@/components/product/FrequentlyBoughtTogether'
@@ -344,13 +345,21 @@ function RelatedProducts({ heading, products }: { heading: string; products: Pro
   return (
     <div className="py-8">
       <h2 className="mb-5 text-xl font-semibold tracking-tight sm:text-2xl">{heading}</h2>
-      <ul className="flex w-full gap-4 overflow-x-auto pt-1">
+
+      {/* Desktop/tablet */}
+      <ul className="hidden w-full gap-4 overflow-x-auto pt-1 md:flex">
         {products.map((product) => (
-          <li
-            className="w-[70%] flex-none min-[475px]:w-1/2 sm:w-1/3 md:w-1/4 lg:w-1/5"
-            key={product.id}
-          >
+          <li className="w-1/4 flex-none lg:w-1/5" key={product.id}>
             <ProductGridItem product={product} />
+          </li>
+        ))}
+      </ul>
+
+      {/* Mobile — MobileProductGridItem instead of the desktop card squeezed to fit */}
+      <ul className="flex w-full gap-4 overflow-x-auto pt-1 md:hidden">
+        {products.map((product) => (
+          <li className="w-[70%] flex-none min-[475px]:w-1/2 sm:w-1/3" key={product.id}>
+            <MobileProductGridItem product={product} />
           </li>
         ))}
       </ul>
