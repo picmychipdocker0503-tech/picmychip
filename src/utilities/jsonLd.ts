@@ -201,13 +201,11 @@ export const buildProductJsonLd = ({
   mpn: mpn || undefined,
   gtin: gtin || undefined,
   offers: {
-    '@type': 'AggregateOffer',
-    availability: hasStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-    price,
-    url,
     ...(typeof lowPrice === 'number' && typeof highPrice === 'number' && lowPrice !== highPrice
-      ? { lowPrice, highPrice }
-      : {}),
+      ? { '@type': 'AggregateOffer', lowPrice, highPrice }
+      : { '@type': 'Offer', price }),
+    availability: hasStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    url,
     priceCurrency: 'INR',
     priceValidUntil: new Date(Date.now() + OFFER_VALID_DAYS * 24 * 60 * 60 * 1000)
       .toISOString()
