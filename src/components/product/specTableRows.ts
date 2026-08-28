@@ -1,4 +1,4 @@
-import type { Category, Product } from '@/payload-types'
+import type { Product } from '@/payload-types'
 
 export type SpecRow = { label: string; value: string }
 
@@ -24,13 +24,6 @@ const push = (rows: SpecRow[], label: string, value: string | number | null | un
   rows.push({ label, value: String(value) })
 }
 
-const STOCK_LABELS: Record<string, string> = {
-  'in-stock': 'In Stock',
-  'low-stock': 'Low Stock',
-  'out-of-stock': 'Out of Stock',
-  backorder: 'Backorder',
-}
-
 /**
  * Baseline comparison rows built from fields every product has, regardless
  * of `specSchemaType` — brand, category, stock, datasheet availability.
@@ -42,24 +35,11 @@ const STOCK_LABELS: Record<string, string> = {
  * so without this the comparison table would render empty for every real
  * product.
  */
-export const getGeneralComparisonRows = (
-  product: Pick<Product, 'brand' | 'categories' | 'stockStatus' | 'datasheets'>,
-): SpecRow[] => {
+export const getGeneralComparisonRows = (product: Pick<Product, 'brand' | 'datasheets'>): SpecRow[] => {
   const rows: SpecRow[] = []
 
   const brand = typeof product.brand === 'object' ? product.brand?.title : undefined
   push(rows, 'Brand', brand)
-
-  const categories = (product.categories ?? []).filter(
-    (category): category is Category => typeof category === 'object',
-  )
-  if (categories.length > 0) {
-    rows.push({ label: 'Category', value: categories.map((category) => category.title).join(', ') })
-  }
-
-  if (product.stockStatus) {
-    rows.push({ label: 'Availability', value: STOCK_LABELS[product.stockStatus] ?? product.stockStatus })
-  }
 
   const datasheetCount = (product.datasheets ?? []).length
   if (datasheetCount > 0) {
@@ -68,6 +48,17 @@ export const getGeneralComparisonRows = (
 
   return rows
 }
+
+/**
+ * Free-form label/value rows an admin can add to any product regardless of
+ * `specSchemaType` — the only way to show custom specs (resistance,
+ * tolerance, package, etc.) for the real imported catalog, which has none
+ * of the demo maker-store category schemas below.
+ */
+export const getCustomSpecRows = (product: Pick<Product, 'customSpecs'>): SpecRow[] =>
+  (product.customSpecs ?? [])
+    .filter((row) => row.label && row.value)
+    .map((row) => ({ label: row.label!, value: row.value! }))
 
 /**
  * Flattens the conditionally-shown `product.specs.<category>` group into

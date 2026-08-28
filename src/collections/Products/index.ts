@@ -268,6 +268,19 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               relationTo: 'products',
             },
             priceTiers,
+            {
+              name: 'customSpecs',
+              type: 'array',
+              label: 'Specifications',
+              admin: {
+                description:
+                  'Custom label/value specification rows shown in the Specifications table on the product page (e.g. "Resistance" → "475 kΩ"). Available for every product, regardless of category.',
+              },
+              fields: [
+                { name: 'label', type: 'text', required: true },
+                { name: 'value', type: 'text', required: true },
+              ],
+            },
             productSpecsGroup,
           ],
           label: 'Product Details',

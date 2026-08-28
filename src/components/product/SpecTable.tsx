@@ -1,7 +1,7 @@
 import type { Product } from '@/payload-types'
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
-import { getGeneralComparisonRows, getSpecRows } from '@/components/product/specTableRows'
+import { getCustomSpecRows, getGeneralComparisonRows, getSpecRows } from '@/components/product/specTableRows'
 import { ListChecks } from 'lucide-react'
 
 type Props = {
@@ -9,7 +9,7 @@ type Props = {
 }
 
 export const SpecTable: React.FC<Props> = ({ product }) => {
-  const rows = [...getGeneralComparisonRows(product), ...getSpecRows(product)]
+  const rows = [...getGeneralComparisonRows(product), ...getCustomSpecRows(product), ...getSpecRows(product)]
 
   if (!rows.length) return null
 

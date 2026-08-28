@@ -2,6 +2,7 @@
 import type { Product, Variant } from '@/payload-types'
 
 import { AddToCart } from '@/components/Cart/AddToCart'
+import { Badge } from '@/components/ui/badge'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
 import { RichText } from '@/components/RichText'
@@ -159,14 +160,15 @@ export function ProductDescription({
       </a>
 
       {product.highlights?.length ? (
-        <ol className="flex flex-col gap-1.5 text-sm">
+        <ul className="flex flex-wrap gap-2">
           {product.highlights.map((item, index) => (
-            <li className="flex gap-2" key={item.id ?? index}>
-              <span className="text-primary font-semibold">{index + 1}.</span>
-              <span>{item.text}</span>
+            <li key={item.id ?? index}>
+              <Badge variant="secondary" className="py-1 text-sm font-normal">
+                {item.text}
+              </Badge>
             </li>
           ))}
-        </ol>
+        </ul>
       ) : null}
 
       {product.description ? (

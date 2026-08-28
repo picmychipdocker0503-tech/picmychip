@@ -568,6 +568,16 @@ export interface Product {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Custom label/value specification rows shown in the Specifications table on the product page (e.g. "Resistance" → "475 kΩ"). Available for every product, regardless of category.
+   */
+  customSpecs?:
+    | {
+        label: string;
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
   specs?: {
     /**
      * Shown when Spec Schema is set to "Drone Motors".
@@ -3975,6 +3985,13 @@ export interface ProductsSelect<T extends boolean = true> {
     | {
         minQuantity?: T;
         priceInINR?: T;
+        id?: T;
+      };
+  customSpecs?:
+    | T
+    | {
+        label?: T;
+        value?: T;
         id?: T;
       };
   specs?:
