@@ -66,6 +66,7 @@ import { BeforeLogin as BeforeLogin_8a7ab0eb7ab5c511aba12e68480bfe5e } from '@/c
 import { NavSearch as NavSearch_670bf0dafcdb7191345ac3a378f907f5 } from '@/components/admin/NavSearch'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 import { BulkStockView as BulkStockView_8c4a371557f68e4bd543ca87b931cb36 } from '@/components/admin/BulkStockView'
+import { BulkProductsView as BulkProductsView_3ef72eac698c666551e1e47714f98c0a } from '@/components/admin/BulkProductsView'
 import { ReportsView as ReportsView_2700296603fedf8ecc35ba27dbf9f33f } from '@/components/admin/ReportsView'
 import { AbandonedCheckoutsView as AbandonedCheckoutsView_a723158a4ddaa05a932220cd55cf99c3 } from '@/components/admin/AbandonedCheckoutsView'
 import { ReviewRequestsView as ReviewRequestsView_15ae411048dd84dca6a3c027fbdc0c3b } from '@/components/admin/ReviewRequestsView'
@@ -141,6 +142,7 @@ export const importMap = {
   "@/components/admin/NavSearch#NavSearch": NavSearch_670bf0dafcdb7191345ac3a378f907f5,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24,
   "@/components/admin/BulkStockView#BulkStockView": BulkStockView_8c4a371557f68e4bd543ca87b931cb36,
+  "@/components/admin/BulkProductsView#BulkProductsView": BulkProductsView_3ef72eac698c666551e1e47714f98c0a,
   "@/components/admin/ReportsView#ReportsView": ReportsView_2700296603fedf8ecc35ba27dbf9f33f,
   "@/components/admin/AbandonedCheckoutsView#AbandonedCheckoutsView": AbandonedCheckoutsView_a723158a4ddaa05a932220cd55cf99c3,
   "@/components/admin/ReviewRequestsView#ReviewRequestsView": ReviewRequestsView_15ae411048dd84dca6a3c027fbdc0c3b,

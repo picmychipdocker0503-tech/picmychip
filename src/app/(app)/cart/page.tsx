@@ -9,10 +9,11 @@ import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import { setCartItemQuantity } from '@/lib/cart/setCartItemQuantity'
 import { getClientSideURL } from '@/utilities/getURL'
 import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
-import { MinusIcon, PlusIcon, ShoppingCartIcon, Trash2Icon } from 'lucide-react'
+import { ArrowLeftIcon, MinusIcon, PlusIcon, ShoppingCartIcon, Trash2Icon } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import posthog from 'posthog-js'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
 type GalleryItem = NonNullable<Product['gallery']>[number]
@@ -24,6 +25,7 @@ type CartItem = NonNullable<ReturnType<typeof useCart>['cart']>['items'] extends
   : never
 
 export default function CartPage() {
+  const router = useRouter()
   const { cart, clearCart, isLoading, refreshCart } = useCart()
   const { currency } = useCurrency()
   const flags = useFeatureFlags()
@@ -103,8 +105,29 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container flex flex-col gap-6 py-16">
-      <div className="flex items-end justify-between gap-4">
+    <div className="container flex flex-col gap-6 py-6 sm:py-16">
+      {/* Mobile app bar: back / centered title / clear cart */}
+      <div className="border-border -mx-4 flex items-center justify-between border-b px-4 pb-4 sm:hidden">
+        <button
+          aria-label="Back"
+          className="text-foreground flex size-9 items-center justify-center rounded-full"
+          onClick={() => router.back()}
+          type="button"
+        >
+          <ArrowLeftIcon className="size-5" />
+        </button>
+        <h1 className="text-base font-semibold">{t('title')}</h1>
+        <button
+          aria-label={t('clearCart')}
+          className="text-muted-foreground hover:text-error flex size-9 items-center justify-center rounded-full transition-colors"
+          onClick={() => clearCart()}
+          type="button"
+        >
+          <Trash2Icon className="size-5" />
+        </button>
+      </div>
+
+      <div className="hidden items-end justify-between gap-4 sm:flex">
         <h1 className="text-2xl font-bold md:text-3xl">{t('title')}</h1>
         <button
           className="text-primary text-sm font-medium hover:underline"

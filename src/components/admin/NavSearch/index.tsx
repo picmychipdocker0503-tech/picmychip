@@ -57,6 +57,7 @@ const NAV_ITEMS: NavItem[] = [
 
   { label: 'Reports', href: '/admin/reports', group: 'Tools' },
   { label: 'Bulk Stock Update', href: '/admin/bulk-stock', group: 'Tools' },
+  { label: 'Bulk Product Import', href: '/admin/bulk-products', group: 'Tools' },
   { label: 'Abandoned Checkouts', href: '/admin/abandoned-checkouts', group: 'Tools' },
   { label: 'Review Requests', href: '/admin/review-requests', group: 'Tools' },
 ]

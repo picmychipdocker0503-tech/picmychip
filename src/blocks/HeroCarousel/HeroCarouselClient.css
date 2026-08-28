@@ -45,6 +45,10 @@
   box-shadow: 0 16px 48px rgba(0, 0, 0, 0.05);
 }
 
+/* This component only renders at md (768px) and up — MobileHeroCarousel.tsx
+   is the separate component/stylesheet used below that, so this only needs
+   to handle the narrower end of *desktop*: tablets and small laptop windows
+   between 768-900px don't have room for a comfortable 2-column split. */
 @media (max-width: 900px) {
   .pmc-hero {
     grid-template-columns: 1fr;

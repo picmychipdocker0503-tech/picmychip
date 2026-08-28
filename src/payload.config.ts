@@ -132,6 +132,10 @@ export default buildConfig({
           Component: '@/components/admin/BulkStockView#BulkStockView',
           path: '/bulk-stock',
         },
+        bulkProducts: {
+          Component: '@/components/admin/BulkProductsView#BulkProductsView',
+          path: '/bulk-products',
+        },
         reports: {
           Component: '@/components/admin/ReportsView#ReportsView',
           path: '/reports',

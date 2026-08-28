@@ -48,6 +48,6 @@ export const generateMeta = async (args: {
       title: doc?.meta?.title || doc?.title || 'Picmychip',
       url: Array.isArray(doc?.slug) ? doc?.slug.join('/') : '/',
     }),
-    title: doc?.meta?.title || doc?.title || 'Payload Ecommerce Template',
+    title: doc?.meta?.title || doc?.title || 'Electronic Components Store',
   }
 }

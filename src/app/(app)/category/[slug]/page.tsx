@@ -17,6 +17,7 @@ import { getServerSideURL } from '@/utilities/getURL'
 import { buildBreadcrumbListJsonLd, buildCollectionPageJsonLd } from '@/utilities/jsonLd'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import React, { Suspense } from 'react'
 
@@ -155,7 +156,21 @@ export default async function CategoryPage({ params, searchParams }: Args) {
               totalDocs={products.totalDocs}
             />
           ) : (
-            <p className="text-muted-foreground">No products in this category yet.</p>
+            <div className="border-border bg-card flex flex-col items-center gap-4 rounded-3xl border p-10 text-center sm:p-14">
+              <Illustration className="text-muted-foreground/40 size-24" />
+              <div>
+                <h2 className="text-foreground text-lg font-semibold">No products in this category yet</h2>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  We&apos;re still stocking this category — check back soon or browse everything we carry.
+                </p>
+              </div>
+              <Link
+                className="border-border text-foreground hover:border-primary/40 hover:text-primary inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-sm font-medium transition-colors"
+                href="/shop"
+              >
+                Browse all products
+              </Link>
+            </div>
           )}
         </div>
       </div>

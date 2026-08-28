@@ -9,6 +9,7 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import { HeroCarouselClient } from './Component.client'
+import { MobileHeroCarousel } from './MobileHeroCarousel'
 
 const TRUST_ITEMS = [
   { Icon: ShieldCheckIcon, label: 'Genuine Components' },
@@ -107,7 +108,16 @@ export const HeroCarouselBlock: React.FC<
   return (
     <section className="pmc-home-section">
       <div className={`grid grid-cols-1 gap-3 sm:gap-4${sideProducts.length > 0 ? ' lg:grid-cols-[1.6fr_1fr]' : ''}`}>
-        <HeroCarouselClient slides={slides} stats={{ componentCount: productCount, reviewMessage }} />
+        {/* Desktop and mobile are genuinely separate components (own markup,
+            own CSS file) rather than one tree squeezed by media queries —
+            both render server-side and CSS picks which one is visible, so
+            there's no client-side device detection or hydration flicker. */}
+        <div className="hidden md:block">
+          <HeroCarouselClient slides={slides} stats={{ componentCount: productCount, reviewMessage }} />
+        </div>
+        <div className="md:hidden">
+          <MobileHeroCarousel slides={slides} stats={{ componentCount: productCount, reviewMessage }} />
+        </div>
 
         {sideProducts.length > 0 && (
           <div className="flex flex-col gap-3 sm:gap-4 lg:h-full">

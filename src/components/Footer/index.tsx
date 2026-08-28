@@ -3,6 +3,7 @@ import type { Footer, SiteSetting } from '@/payload-types'
 import { CustomerSupport } from '@/components/Footer/CustomerSupport'
 import { FooterColumns } from '@/components/Footer/FooterColumns'
 import { FooterMenu } from '@/components/Footer/menu'
+import { MobileFooter } from '@/components/Footer/MobileFooter'
 import { NewsletterForm } from '@/components/Footer/NewsletterForm'
 import { PaymentBadges } from '@/components/Footer/PaymentBadges'
 import { ShipToPills } from '@/components/Footer/ShipToPills'
@@ -37,6 +38,10 @@ export async function Footer() {
     // everything correctly via the existing CSS variable cascade, no
     // per-component edits needed.
     <footer className="bg-background text-muted-foreground text-sm" data-theme="dark">
+      <MobileFooter copyrightName={copyrightName} footer={footer} menu={menu} siteSettings={siteSettings} socialLinks={socialLinks} />
+
+      {/* Desktop — mobile gets its own composition in MobileFooter above */}
+      <div className="hidden md:block">
       {/* Newsletter */}
       <div className="container pt-16">
         <div className="border-border bg-card relative overflow-hidden rounded-2xl border px-8 py-10 sm:px-12">
@@ -147,6 +152,7 @@ export async function Footer() {
             </div>
           </div>
         </div>
+      </div>
       </div>
     </footer>
   )

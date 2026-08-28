@@ -22,7 +22,7 @@ import Link from 'next/link'
 import { Suspense } from 'react'
 
 import { MainNavigationBar } from './MainNavigationBar'
-import { MobileMenu } from './MobileMenu'
+import { MobileHeader } from './MobileHeader'
 
 type Props = {
   header: Header
@@ -54,14 +54,15 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
         strip's position instead of stacking a second fixed bar underneath it.
       */}
       <nav className="border-border/70 bg-card sticky top-0 z-40 border-b">
-        <div className="container flex items-center justify-between gap-6 py-4">
+        {/* Desktop */}
+        <div className="container hidden items-center justify-between gap-6 py-4 md:flex">
           {/* Logo */}
           <Link className="flex shrink-0 items-center" href="/">
             <Image alt="Picmychip" className="h-8 w-auto sm:h-9" height={155} priority src="/pmc-logo.png" width={430} />
           </Link>
 
           {/* Search - Desktop */}
-          <div className="hidden flex-1 md:flex">
+          <div className="flex flex-1">
             <Suspense fallback={null}>
               <Search className="w-full" />
             </Suspense>
@@ -109,20 +110,10 @@ export function MainHeader({ header, shopCategoryGroups }: Props) {
               </Suspense>
               <MiniCartPopover />
             </div>
-            <div className="md:hidden">
-              <Suspense fallback={null}>
-                <MobileMenu menu={menu} shopCategoryGroups={shopCategoryGroups} />
-              </Suspense>
-            </div>
           </div>
         </div>
 
-        {/* Mobile Search */}
-        <div className="container pb-4 md:hidden">
-          <Suspense fallback={null}>
-            <Search className="w-full" />
-          </Suspense>
-        </div>
+        <MobileHeader menu={menu} shopCategoryGroups={shopCategoryGroups} />
       </nav>
 
       {/* Category Nav - Desktop */}
