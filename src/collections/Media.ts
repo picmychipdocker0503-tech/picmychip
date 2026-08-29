@@ -10,6 +10,7 @@ import { fileURLToPath } from 'url'
 
 import { adminOnly } from '@/access/adminOnly'
 import { isAuthenticated } from '@/access/isAuthenticated'
+import { altFromFilename } from '@/utilities/altFromFilename'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -32,7 +33,19 @@ export const Media: CollectionConfig = {
     {
       name: 'alt',
       type: 'text',
-      required: true,
+      // Not required at the schema level — the beforeValidate hook below
+      // always fills it in from the uploaded filename when left blank, so
+      // marking it required here would only block the admin's upload-dialog
+      // Save button client-side before that hook ever runs server-side.
+      hooks: {
+        beforeValidate: [
+          ({ value, req }) => {
+            if (value) return value
+            const filename = req?.file?.name
+            return filename ? altFromFilename(filename) : value
+          },
+        ],
+      },
     },
     {
       name: 'caption',

@@ -7,31 +7,12 @@ import type { Media, Product } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
 import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 
+import { buildReferenceSheets } from './buildReferenceSheets'
 import { TEMPLATE_COLUMNS } from './templateColumns'
 
 const MAX_EXPORT_ROWS = 5000
 
 const isObject = <T>(value: unknown): value is T => typeof value === 'object' && value !== null
-
-/** Reads a (possibly deeply-nested) path like "mechanical.dimensions.lengthMM"
- * off an arbitrary object, returning undefined if any segment is missing. */
-const getPath = (obj: unknown, path: string[]): unknown =>
-  path.reduce<unknown>(
-    (acc, key) => (isObject<Record<string, unknown>>(acc) ? acc[key] : undefined),
-    obj,
-  )
-
-const DIMENSION_FIELDS = new Set(['lengthMM', 'widthMM', 'heightMM', 'boreDiameterMM'])
-
-function specColumnValue(product: Product, schemaKey: string, fieldKey: string): unknown {
-  const specs = product.specs as Record<string, unknown> | undefined
-  if (!specs) return undefined
-
-  if (schemaKey === 'mechanical' && DIMENSION_FIELDS.has(fieldKey)) {
-    return getPath(specs, ['mechanical', 'dimensions', fieldKey])
-  }
-  return getPath(specs, [schemaKey, fieldKey])
-}
 
 const joinPipe = (values: (string | number | null | undefined)[]): string =>
   values.filter((value) => value !== null && value !== undefined && value !== '').join('|')
@@ -41,6 +22,7 @@ function flattenProductToRow(product: Product, baseUrl: string): Record<string, 
 
   row.sku = product.sku || ''
   row.slug = product.slug || ''
+  row.status = product._status || 'draft'
   row.title = product.title || ''
   row.brand = isObject<{ title?: string | null }>(product.brand) ? product.brand.title || '' : ''
   row.categories = joinPipe(
@@ -48,6 +30,7 @@ function flattenProductToRow(product: Product, baseUrl: string): Record<string, 
   )
   row.tags = joinPipe(product.tags || [])
   row.highlights = joinPipe((product.highlights || []).map((item) => item.text))
+  row.customSpecs = joinPipe((product.customSpecs || []).map((item) => (item.label && item.value ? `${item.label}: ${item.value}` : undefined)))
   row.featured = Boolean(product.featured)
   row.hsnCode = product.hsnCode || ''
   row.description = product.description ? richTextToPlainText(product.description) : ''
@@ -76,30 +59,15 @@ function flattenProductToRow(product: Product, baseUrl: string): Record<string, 
   row.googleMerchant_mpn = product.googleMerchant?.mpn || ''
   row.googleMerchant_condition = product.googleMerchant?.condition || ''
 
+  // Media URLs may already be absolute (CDN-hosted, e.g. assets.picmychip.in)
+  // or relative (local /media/... storage) — only prepend this site's own
+  // domain in the relative case, or an already-absolute CDN URL ends up
+  // double-prefixed (e.g. "https://www.picmychip.inhttps://assets...").
   row.imageUrls = joinPipe(
     (product.gallery || [])
       .map((item) => (isObject<Media>(item.image) ? item.image.url : undefined))
-      .map((url) => (url ? `${baseUrl}${url}` : undefined)),
+      .map((url) => (url ? (/^https?:\/\//i.test(url) ? url : `${baseUrl}${url}`) : undefined)),
   )
-
-  if (product.specSchemaType) row.specSchemaType = product.specSchemaType
-
-  for (const col of TEMPLATE_COLUMNS) {
-    if (!col.key.startsWith('spec_')) continue
-    const withoutPrefix = col.key.slice('spec_'.length)
-    const underscoreIndex = withoutPrefix.indexOf('_')
-    const schemaKey = withoutPrefix.slice(0, underscoreIndex)
-    const fieldKey = withoutPrefix.slice(underscoreIndex + 1)
-
-    const value = specColumnValue(product, schemaKey, fieldKey)
-    if (value === undefined || value === null) continue
-
-    if (Array.isArray(value)) {
-      row[col.key] = joinPipe(value)
-    } else if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-      row[col.key] = value
-    }
-  }
 
   return row
 }
@@ -132,6 +100,11 @@ export async function generateProductsExport(payload: Payload): Promise<ExcelJS.
   for (const product of products) {
     sheet.addRow(flattenProductToRow(product, baseUrl))
   }
+
+  // Same Instructions + Reference Lists sheets as the blank template, so an
+  // exported-then-re-uploaded file carries the same column docs and live
+  // category/brand values, not just raw data with no guidance.
+  await buildReferenceSheets(workbook, payload)
 
   return workbook.xlsx.writeBuffer()
 }

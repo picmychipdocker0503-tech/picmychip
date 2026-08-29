@@ -6,7 +6,7 @@ import React, { useState } from 'react'
 
 type PreviewRow = {
   rowNumber: number
-  action: 'create' | 'update' | 'error'
+  action: 'create' | 'update' | 'unchanged' | 'error'
   sku?: string
   title?: string
   errors: string[]
@@ -20,12 +20,14 @@ type PreviewResponse = {
 type CommitResponse = {
   created: number
   updated: number
+  unchanged: number
   failed: { rowNumber: number; title?: string; error: string }[]
 }
 
 const ACTION_TONE = {
   create: 'success',
   update: 'info',
+  unchanged: 'neutral',
   error: 'error',
 } as const
 
@@ -69,6 +71,7 @@ export const BulkProductsUploader: React.FC = () => {
 
   const createCount = preview?.rows.filter((r) => r.action === 'create').length ?? 0
   const updateCount = preview?.rows.filter((r) => r.action === 'update').length ?? 0
+  const unchangedCount = preview?.rows.filter((r) => r.action === 'unchanged').length ?? 0
   const errorCount = preview?.rows.filter((r) => r.action === 'error').length ?? 0
 
   return (
@@ -143,6 +146,7 @@ export const BulkProductsUploader: React.FC = () => {
           <div className="flex items-center gap-3 text-sm">
             <StatusPill label={`${createCount} to create`} tone="success" />
             <StatusPill label={`${updateCount} to update`} tone="info" />
+            {unchangedCount > 0 && <StatusPill label={`${unchangedCount} unchanged`} tone="neutral" />}
             {errorCount > 0 && <StatusPill label={`${errorCount} errors`} tone="error" />}
             {preview.truncated && (
               <span className="text-warning text-xs">Only the first 500 rows were read — split the file for the rest.</span>
@@ -184,6 +188,7 @@ export const BulkProductsUploader: React.FC = () => {
           <div className="flex items-center gap-3 text-sm">
             <StatusPill label={`${commitResult.created} created`} tone="success" />
             <StatusPill label={`${commitResult.updated} updated`} tone="info" />
+            {commitResult.unchanged > 0 && <StatusPill label={`${commitResult.unchanged} unchanged (skipped)`} tone="neutral" />}
             {commitResult.failed.length > 0 && (
               <StatusPill label={`${commitResult.failed.length} failed`} tone="error" />
             )}

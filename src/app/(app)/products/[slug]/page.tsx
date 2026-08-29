@@ -114,7 +114,7 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
       ? {
           images: [
             {
-              alt: seoImage?.alt,
+              alt: seoImage?.alt || undefined,
               height: seoImage.height!,
               url: seoImage?.url,
               width: seoImage.width!,

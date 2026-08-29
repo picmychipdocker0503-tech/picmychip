@@ -44,7 +44,7 @@ export const Image: React.FC<MediaProps> = (props) => {
 
     width = widthFromProps ?? fullWidth
     height = heightFromProps ?? fullHeight
-    alt = altFromResource
+    alt = altFromResource || undefined
 
     // Use relative URL instead of full URL to avoid Next.js image optimization security issues
     // The Media doc's filename isn't content-hashed (see next.config.ts's

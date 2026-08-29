@@ -19,17 +19,6 @@ export type ColumnDef = {
   notes?: string
 }
 
-// Mirrors src/fields/productSpecs/specSchemaOptions.ts
-export const SPEC_SCHEMA_OPTIONS = [
-  'none',
-  'drone-motors',
-  'sbc',
-  'microcontrollers',
-  'mechanical',
-  'tools',
-  'filaments',
-] as const
-
 export const TEMPLATE_COLUMNS: ColumnDef[] = [
   // Identity / matching
   {
@@ -46,6 +35,13 @@ export const TEMPLATE_COLUMNS: ColumnDef[] = [
   },
 
   // Basics
+  {
+    key: 'status',
+    group: 'Basics',
+    type: 'select',
+    options: ['draft', 'published'],
+    notes: 'Publish status. Defaults to "draft" on a new product if left blank. Leave blank on an update row to keep the current status unchanged.',
+  },
   { key: 'title', group: 'Basics', type: 'text', required: true, notes: 'Required.' },
   { key: 'brand', group: 'Basics', type: 'text', notes: 'Brand name (must match an existing Brand\'s title exactly, case-insensitive) — see the Reference Lists sheet.' },
   { key: 'categories', group: 'Basics', type: 'pipeList', notes: 'One or more category names separated by | (pipe) — e.g. "Connectors|Cables". Must match existing category titles — see Reference Lists.' },
@@ -95,113 +91,12 @@ export const TEMPLATE_COLUMNS: ColumnDef[] = [
 
   // Specifications
   {
-    key: 'specSchemaType',
-    group: 'Specifications',
-    type: 'select',
-    options: [...SPEC_SCHEMA_OPTIONS],
-    notes: 'Determines which spec_* columns below apply to this row. Only fill in the spec_ columns matching the chosen schema.',
-  },
-
-  // spec_droneMotor_*
-  { key: 'spec_droneMotor_motorType', group: 'Specifications', type: 'select', options: ['brushless', 'brushed'] },
-  { key: 'spec_droneMotor_kvRating', group: 'Specifications', type: 'number' },
-  { key: 'spec_droneMotor_statorWidthMM', group: 'Specifications', type: 'number' },
-  { key: 'spec_droneMotor_statorHeightMM', group: 'Specifications', type: 'number' },
-  { key: 'spec_droneMotor_weightG', group: 'Specifications', type: 'number' },
-  {
-    key: 'spec_droneMotor_applications',
+    key: 'customSpecs',
     group: 'Specifications',
     type: 'pipeList',
-    notes: 'One or more of: racing|freestyle|cinematic|industrial-agriculture, separated by |.',
+    notes:
+      'Custom label/value spec rows, separated by | (pipe) — each one written as "Label: Value", e.g. "Resistance: 475 kOhm|Tolerance: 5%|Package: 0603". Shown in the Specifications table on every product regardless of category. Leave blank on an update row to keep existing rows unchanged.',
   },
-
-  // spec_sbc_*
-  {
-    key: 'spec_sbc_modelFamily',
-    group: 'Specifications',
-    type: 'select',
-    options: ['raspberry-pi-zero', 'raspberry-pi-3', 'raspberry-pi-4', 'raspberry-pi-5', 'raspberry-pi-cm', 'other'],
-  },
-  { key: 'spec_sbc_modelFamilyOther', group: 'Specifications', type: 'text' },
-  { key: 'spec_sbc_formFactor', group: 'Specifications', type: 'select', options: ['standard', 'zero', 'compute-module', 'other'] },
-  { key: 'spec_sbc_formFactorOther', group: 'Specifications', type: 'text' },
-  { key: 'spec_sbc_ramMB', group: 'Specifications', type: 'select', options: ['512', '1024', '2048', '4096', '8192', '16384', 'custom'] },
-  { key: 'spec_sbc_ramCustomMB', group: 'Specifications', type: 'number', notes: 'Only used when spec_sbc_ramMB = custom.' },
-  {
-    key: 'spec_sbc_connectivity',
-    group: 'Specifications',
-    type: 'pipeList',
-    notes: 'One or more of: wifi|bluetooth|ethernet|usb-c|usb-a, separated by |.',
-  },
-  { key: 'spec_sbc_gpioPinCount', group: 'Specifications', type: 'number' },
-  { key: 'spec_sbc_gpioLayoutNotes', group: 'Specifications', type: 'text' },
-
-  // spec_microcontroller_*
-  {
-    key: 'spec_microcontroller_family',
-    group: 'Specifications',
-    type: 'select',
-    options: ['arduino', 'esp32', 'esp8266', 'stm32', 'pic', 'teensy', 'rp2040', 'nrf52', 'other'],
-  },
-  { key: 'spec_microcontroller_familyOther', group: 'Specifications', type: 'text' },
-  { key: 'spec_microcontroller_clockSpeedMHz', group: 'Specifications', type: 'number' },
-  { key: 'spec_microcontroller_flashSize', group: 'Specifications', type: 'number' },
-  { key: 'spec_microcontroller_flashUnit', group: 'Specifications', type: 'select', options: ['KB', 'MB'] },
-  { key: 'spec_microcontroller_ramSize', group: 'Specifications', type: 'number' },
-  { key: 'spec_microcontroller_ramUnit', group: 'Specifications', type: 'select', options: ['KB', 'MB'] },
-  { key: 'spec_microcontroller_ioCount', group: 'Specifications', type: 'number' },
-  {
-    key: 'spec_microcontroller_wireless',
-    group: 'Specifications',
-    type: 'pipeList',
-    notes: 'One or more of: wifi|bluetooth|ble|lora|zigbee|none, separated by |.',
-  },
-
-  // spec_mechanical_*
-  {
-    key: 'spec_mechanical_componentType',
-    group: 'Specifications',
-    type: 'select',
-    options: ['gear', 'bearing', 'coupler', 'frame', 'chassis-kit', 'fastener', 'other'],
-  },
-  { key: 'spec_mechanical_componentTypeOther', group: 'Specifications', type: 'text' },
-  {
-    key: 'spec_mechanical_material',
-    group: 'Specifications',
-    type: 'select',
-    options: ['aluminum', 'carbon-fiber', 'abs-plastic', 'nylon', 'steel', 'brass', 'pla', 'other'],
-  },
-  { key: 'spec_mechanical_materialOther', group: 'Specifications', type: 'text' },
-  { key: 'spec_mechanical_lengthMM', group: 'Specifications', type: 'number' },
-  { key: 'spec_mechanical_widthMM', group: 'Specifications', type: 'number' },
-  { key: 'spec_mechanical_heightMM', group: 'Specifications', type: 'number' },
-  { key: 'spec_mechanical_boreDiameterMM', group: 'Specifications', type: 'number' },
-
-  // spec_tool_* (measurementRanges array is intentionally excluded — add
-  // those manually in the admin panel after import, they don't fit a flat row)
-  {
-    key: 'spec_tool_toolType',
-    group: 'Specifications',
-    type: 'select',
-    options: ['soldering-station', 'multimeter', 'oscilloscope', 'hot-air-rework', 'hand-tool', 'other'],
-  },
-  { key: 'spec_tool_powerWattage', group: 'Specifications', type: 'number' },
-  { key: 'spec_tool_voltageSpec', group: 'Specifications', type: 'text' },
-
-  // spec_filament_*
-  {
-    key: 'spec_filament_materialType',
-    group: 'Specifications',
-    type: 'select',
-    options: ['pla', 'petg', 'abs', 'tpu', 'nylon', 'other'],
-  },
-  { key: 'spec_filament_materialTypeOther', group: 'Specifications', type: 'text' },
-  { key: 'spec_filament_diameterMM', group: 'Specifications', type: 'select', options: ['1.75', '2.85'] },
-  { key: 'spec_filament_color', group: 'Specifications', type: 'text' },
-  { key: 'spec_filament_colorHex', group: 'Specifications', type: 'text' },
-  { key: 'spec_filament_spoolWeightG', group: 'Specifications', type: 'number' },
-  { key: 'spec_filament_printTempMinC', group: 'Specifications', type: 'number' },
-  { key: 'spec_filament_printTempMaxC', group: 'Specifications', type: 'number' },
 ]
 
 export const MAX_IMPORT_ROWS = 500

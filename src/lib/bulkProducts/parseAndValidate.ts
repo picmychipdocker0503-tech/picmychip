@@ -2,10 +2,13 @@ import type { Payload } from 'payload'
 
 import ExcelJS from 'exceljs'
 
+import { getServerSideURL } from '@/utilities/getURL'
+import { richTextToPlainText } from '@/utilities/richTextToPlainText'
+
 import { textToLexical } from './textToLexical'
 import { MAX_IMPORT_ROWS, TEMPLATE_COLUMNS, type ColumnDef } from './templateColumns'
 
-export type RowAction = 'create' | 'update' | 'error'
+export type RowAction = 'create' | 'update' | 'unchanged' | 'error'
 
 export type ParsedRow = {
   rowNumber: number
@@ -19,8 +22,6 @@ export type ParsedRow = {
   data?: Record<string, unknown>
   imageUrls: string[]
 }
-
-const DIMENSION_FIELDS = new Set(['lengthMM', 'widthMM', 'heightMM', 'boreDiameterMM'])
 
 const splitPipeList = (value: string): string[] =>
   value
@@ -115,46 +116,95 @@ function coerceScalar(col: ColumnDef, raw: string): { value: unknown; error?: st
   }
 }
 
-function buildSpecs(raw: Record<string, string>, errors: string[]): Record<string, unknown> {
-  const specs: Record<string, Record<string, unknown>> = {}
-
-  for (const col of TEMPLATE_COLUMNS) {
-    if (!col.key.startsWith('spec_')) continue
-    const rawValue = raw[col.key]
-    if (!rawValue) continue
-
-    const withoutPrefix = col.key.slice('spec_'.length)
-    const underscoreIndex = withoutPrefix.indexOf('_')
-    const schemaKey = withoutPrefix.slice(0, underscoreIndex)
-    const fieldKey = withoutPrefix.slice(underscoreIndex + 1)
-
-    const { value, error } = coerceScalar(col, rawValue)
-    if (error) {
-      errors.push(error)
-      continue
-    }
-    if (value === undefined) continue
-
-    specs[schemaKey] = specs[schemaKey] || {}
-
-    if (schemaKey === 'mechanical' && DIMENSION_FIELDS.has(fieldKey)) {
-      const dimensions = (specs.mechanical.dimensions as Record<string, unknown>) || {}
-      dimensions[fieldKey] = value
-      specs.mechanical.dimensions = dimensions
-    } else {
-      specs[schemaKey][fieldKey] = value
-    }
-  }
-
-  return specs
-}
-
 const slugify = (input: string): string =>
   input
     .toLowerCase()
     .trim()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
+
+/** Recursively strips `id` keys (Payload auto-assigns one to every array
+ * sub-row) so a freshly-parsed row can be compared against a stored
+ * document without every array field always looking "changed". */
+const stripIds = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(stripIds)
+  if (value && typeof value === 'object') {
+    const { id: _id, ...rest } = value as Record<string, unknown>
+    return Object.fromEntries(Object.entries(rest).map(([key, val]) => [key, stripIds(val)]))
+  }
+  return value
+}
+
+const relationshipId = (value: unknown): unknown =>
+  value && typeof value === 'object' && 'id' in (value as Record<string, unknown>) ? (value as { id: unknown }).id : value
+
+/**
+ * Subset comparison, not full deep-equality — every key present in
+ * `newValue` must match, but extra keys only present on `currentValue` are
+ * ignored. Needed because Payload's stored group fields (meta,
+ * googleMerchant, specs) always include every sub-field (null when unset),
+ * while a parsed sheet row only includes the sub-fields that were actually
+ * filled in — and `payload.update` only touches keys present in its data,
+ * leaving the rest as-is, so this mirrors what an update would really do.
+ */
+const partialEquals = (newValue: unknown, currentValue: unknown): boolean => {
+  if (Array.isArray(newValue)) {
+    if (!Array.isArray(currentValue) || newValue.length !== currentValue.length) return false
+    return newValue.every((item, i) => partialEquals(item, currentValue[i]))
+  }
+  if (newValue && typeof newValue === 'object') {
+    if (!currentValue || typeof currentValue !== 'object') return false
+    return Object.entries(newValue).every(([key, value]) => partialEquals(value, (currentValue as Record<string, unknown>)[key]))
+  }
+  return newValue === currentValue
+}
+
+/**
+ * True when every field the sheet row actually provided (`data`'s keys —
+ * blank cells never make it into `data` in the first place) already matches
+ * what's stored on `existingDoc`. An exported-then-reuploaded row with no
+ * edits is the common case, and skipping the write entirely (rather than
+ * running a no-op payload.update) avoids its afterChange hooks — revalidate,
+ * search sync, etc. — firing for literally nothing on every import.
+ */
+const toAbsoluteURL = (url: string, baseUrl: string): string => (/^https?:\/\//i.test(url) ? url : `${baseUrl}${url}`)
+
+const isRowUnchanged = (data: Record<string, unknown>, existingDoc: Record<string, unknown>, imageUrls: string[], baseUrl: string): boolean => {
+  // A blank imageUrls cell means "leave the gallery alone" — only a
+  // non-blank cell is a candidate to compare against the current gallery.
+  if (imageUrls.length > 0) {
+    const currentGallery = Array.isArray(existingDoc.gallery) ? (existingDoc.gallery as { image?: unknown }[]) : []
+    const currentImageUrls = currentGallery
+      .map((item) => (item.image && typeof item.image === 'object' && 'url' in item.image ? (item.image as { url?: string }).url : undefined))
+      .filter((url): url is string => Boolean(url))
+      .map((url) => toAbsoluteURL(url, baseUrl))
+
+    if (JSON.stringify(imageUrls) !== JSON.stringify(currentImageUrls)) return false
+  }
+
+  for (const [key, newValue] of Object.entries(data)) {
+    if (key === 'description') {
+      const currentPlain = existingDoc.description ? richTextToPlainText(existingDoc.description) : ''
+      const newPlain = richTextToPlainText(newValue)
+      if (currentPlain.trim() !== newPlain.trim()) return false
+      continue
+    }
+
+    if (key === 'brand') {
+      if (relationshipId(existingDoc.brand) !== newValue) return false
+      continue
+    }
+
+    if (key === 'categories') {
+      const currentIds = Array.isArray(existingDoc.categories) ? existingDoc.categories.map(relationshipId) : []
+      if (JSON.stringify(currentIds) !== JSON.stringify(newValue)) return false
+      continue
+    }
+
+    if (!partialEquals(stripIds(newValue), stripIds(existingDoc[key]))) return false
+  }
+  return true
+}
 
 export async function parseAndValidateBulkProducts(
   payload: Payload,
@@ -164,6 +214,69 @@ export async function parseAndValidateBulkProducts(
   const truncated = allRows.length > MAX_IMPORT_ROWS
   const rows = allRows.slice(0, MAX_IMPORT_ROWS)
 
+  // --- Batch-resolve every lookup upfront (one query each, not one per row
+  // or one per category) — with 500 rows the previous per-row querying meant
+  // thousands of sequential DB round-trips, which is what made the preview
+  // step slow. ---
+  const skus = [...new Set(rows.map((r) => r.raw.sku?.trim()).filter((v): v is string => Boolean(v)))]
+  const slugs = [...new Set(rows.map((r) => r.raw.slug?.trim()).filter((v): v is string => Boolean(v)))]
+
+  const [existingBySkuDocs, existingBySlugDocs, allCategories, allBrands] = await Promise.all([
+    skus.length
+      ? payload.find({
+          collection: 'products',
+          depth: 0,
+          limit: skus.length,
+          overrideAccess: true,
+          pagination: false,
+          select: { sku: true },
+          where: { sku: { in: skus } },
+        })
+      : Promise.resolve({ docs: [] as { id: number; sku?: string | null }[] }),
+    slugs.length
+      ? payload.find({
+          collection: 'products',
+          depth: 0,
+          limit: slugs.length,
+          overrideAccess: true,
+          pagination: false,
+          select: { slug: true },
+          where: { slug: { in: slugs } },
+        })
+      : Promise.resolve({ docs: [] as { id: number; slug?: string | null }[] }),
+    payload.find({
+      collection: 'categories',
+      depth: 0,
+      limit: 1000,
+      overrideAccess: true,
+      pagination: false,
+      select: { title: true, slug: true },
+    }),
+    payload.find({
+      collection: 'brands',
+      depth: 0,
+      limit: 1000,
+      overrideAccess: true,
+      pagination: false,
+      select: { title: true, slug: true },
+    }),
+  ])
+
+  const existingBySku = new Map(existingBySkuDocs.docs.filter((d) => d.sku).map((d) => [d.sku as string, d.id]))
+  const existingBySlug = new Map(existingBySlugDocs.docs.filter((d) => d.slug).map((d) => [d.slug as string, d.id]))
+
+  const categoryByName = new Map<string, number>()
+  for (const category of allCategories.docs) {
+    if (category.title) categoryByName.set(category.title.toLowerCase(), category.id)
+    if (category.slug) categoryByName.set(category.slug.toLowerCase(), category.id)
+  }
+
+  const brandByName = new Map<string, number>()
+  for (const brand of allBrands.docs) {
+    if (brand.title) brandByName.set(brand.title.toLowerCase(), brand.id)
+    if (brand.slug) brandByName.set(brand.slug.toLowerCase(), brand.id)
+  }
+
   const results: ParsedRow[] = []
 
   for (const { rowNumber, raw } of rows) {
@@ -172,29 +285,9 @@ export async function parseAndValidateBulkProducts(
     const titleRaw = raw.title?.trim() || undefined
 
     // --- Match against an existing product ---
-    let existing: { id: number } | undefined
-    if (sku) {
-      const found = await payload.find({
-        collection: 'products',
-        depth: 0,
-        limit: 1,
-        overrideAccess: true,
-        where: { sku: { equals: sku } },
-        select: {},
-      })
-      existing = found.docs[0]
-    }
-    if (!existing && raw.slug?.trim()) {
-      const found = await payload.find({
-        collection: 'products',
-        depth: 0,
-        limit: 1,
-        overrideAccess: true,
-        where: { slug: { equals: raw.slug.trim() } },
-        select: {},
-      })
-      existing = found.docs[0]
-    }
+    let existingId: number | undefined = sku ? existingBySku.get(sku) : undefined
+    if (!existingId && raw.slug?.trim()) existingId = existingBySlug.get(raw.slug.trim())
+    const existing = existingId ? { id: existingId } : undefined
 
     const action: RowAction = existing ? 'update' : 'create'
 
@@ -209,8 +302,7 @@ export async function parseAndValidateBulkProducts(
     const googleMerchant: Record<string, unknown> = {}
 
     for (const col of TEMPLATE_COLUMNS) {
-      if (col.key.startsWith('spec_')) continue
-      if (['brand', 'categories', 'imageUrls', 'slug', 'sku', 'title'].includes(col.key)) continue
+      if (['brand', 'categories', 'imageUrls', 'slug', 'sku', 'status', 'title'].includes(col.key)) continue
 
       const rawValue = raw[col.key]
       if (!rawValue) continue
@@ -239,6 +331,16 @@ export async function parseAndValidateBulkProducts(
     if (titleRaw) data.title = titleRaw
     if (sku) data.sku = sku
 
+    // --- Status (Payload's actual field is `_status`, not `status`) ---
+    if (raw.status?.trim()) {
+      const normalized = raw.status.trim().toLowerCase()
+      if (normalized === 'draft' || normalized === 'published') {
+        data._status = normalized
+      } else {
+        errors.push(`"status" must be "draft" or "published" — got "${raw.status}"`)
+      }
+    }
+
     if (raw.description?.trim()) data.description = textToLexical(raw.description.trim())
 
     if (raw.priceInINR) {
@@ -251,8 +353,16 @@ export async function parseAndValidateBulkProducts(
     }
 
     // --- Slug ---
+    // An explicitly-provided slug is used verbatim, never re-slugified —
+    // Payload's own slugField() may already format slugs differently than
+    // this file's slugify() (e.g. collapsing repeated separators), and for
+    // an update row the value came straight from an export of the current,
+    // already-correct slug. Re-running it through a different algorithm
+    // here would silently change a live product URL on every bulk update.
+    // Auto-derivation only kicks in for a genuinely new product with no
+    // slug column filled in at all.
     if (raw.slug?.trim()) {
-      data.slug = slugify(raw.slug.trim())
+      data.slug = raw.slug.trim()
     } else if (action === 'create' && titleRaw) {
       data.slug = slugify(titleRaw)
     }
@@ -260,15 +370,9 @@ export async function parseAndValidateBulkProducts(
     // --- Brand (resolve by title or slug) ---
     if (raw.brand?.trim()) {
       const brandName = raw.brand.trim()
-      const found = await payload.find({
-        collection: 'brands',
-        depth: 0,
-        limit: 1,
-        overrideAccess: true,
-        where: { or: [{ title: { equals: brandName } }, { slug: { equals: brandName } }] },
-      })
-      if (found.docs[0]) {
-        data.brand = found.docs[0].id
+      const brandId = brandByName.get(brandName.toLowerCase())
+      if (brandId) {
+        data.brand = brandId
       } else {
         errors.push(`Brand "${brandName}" not found — check the Reference Lists sheet.`)
       }
@@ -279,15 +383,9 @@ export async function parseAndValidateBulkProducts(
       const names = splitPipeList(raw.categories)
       const categoryIds: number[] = []
       for (const name of names) {
-        const found = await payload.find({
-          collection: 'categories',
-          depth: 0,
-          limit: 1,
-          overrideAccess: true,
-          where: { or: [{ title: { equals: name } }, { slug: { equals: name } }] },
-        })
-        if (found.docs[0]) {
-          categoryIds.push(found.docs[0].id)
+        const categoryId = categoryByName.get(name.toLowerCase())
+        if (categoryId) {
+          categoryIds.push(categoryId)
         } else {
           errors.push(`Category "${name}" not found — check the Reference Lists sheet.`)
         }
@@ -300,15 +398,31 @@ export async function parseAndValidateBulkProducts(
       data.highlights = splitPipeList(raw.highlights).map((text) => ({ text }))
     }
 
+    // --- Custom Specs (pipeList of "Label: Value" -> array of { label, value }) ---
+    if (raw.customSpecs?.trim()) {
+      const customSpecs: { label: string; value: string }[] = []
+      for (const item of splitPipeList(raw.customSpecs)) {
+        const colonIndex = item.indexOf(':')
+        if (colonIndex === -1) {
+          errors.push(`"customSpecs" entry "${item}" must be in "Label: Value" format.`)
+          continue
+        }
+        const label = item.slice(0, colonIndex).trim()
+        const value = item.slice(colonIndex + 1).trim()
+        if (!label || !value) {
+          errors.push(`"customSpecs" entry "${item}" must be in "Label: Value" format.`)
+          continue
+        }
+        customSpecs.push({ label, value })
+      }
+      if (customSpecs.length > 0) data.customSpecs = customSpecs
+    }
+
     // --- Image URLs (validated for shape only — downloaded during commit) ---
     const imageUrls = raw.imageUrls?.trim() ? splitPipeList(raw.imageUrls) : []
     for (const url of imageUrls) {
       if (!/^https?:\/\//i.test(url)) errors.push(`Image URL "${url}" is not a valid http(s) URL.`)
     }
-
-    // --- Specs ---
-    const specs = buildSpecs(raw, errors)
-    if (Object.keys(specs).length > 0) data.specs = specs
 
     results.push({
       rowNumber,
@@ -320,6 +434,32 @@ export async function parseAndValidateBulkProducts(
       data: errors.length > 0 ? undefined : data,
       imageUrls,
     })
+  }
+
+  // --- Downgrade "update" to "unchanged" wherever the row's data already
+  // matches what's stored — one batch fetch for every update-candidate,
+  // not a query per row. ---
+  const updateCandidateIds = [...new Set(results.filter((r) => r.action === 'update' && r.productId).map((r) => r.productId as number))]
+
+  if (updateCandidateIds.length > 0) {
+    const baseUrl = getServerSideURL()
+    const { docs: existingDocs } = await payload.find({
+      collection: 'products',
+      depth: 1,
+      limit: updateCandidateIds.length,
+      overrideAccess: true,
+      pagination: false,
+      where: { id: { in: updateCandidateIds } },
+    })
+    const existingDocById = new Map(existingDocs.map((doc) => [doc.id, doc as unknown as Record<string, unknown>]))
+
+    for (const row of results) {
+      if (row.action !== 'update' || !row.productId || !row.data) continue
+      const existingDoc = existingDocById.get(row.productId)
+      if (existingDoc && isRowUnchanged(row.data, existingDoc, row.imageUrls, baseUrl)) {
+        row.action = 'unchanged'
+      }
+    }
   }
 
   return { rows: results, truncated }
