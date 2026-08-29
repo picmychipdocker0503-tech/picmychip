@@ -18,6 +18,13 @@ allowBuilds:
 overrides:
   brace-expansion: '>=1.1.18'
   dompurify: '>=3.4.13'
+  # Exact pin, not a range — @payloadcms/db-postgres bundles its own nested
+  # drizzle-orm copy, and without forcing a single version pnpm can resolve
+  # two separate instances. Structurally identical but different module
+  # instances, which TypeScript treats as incompatible types (SQL<unknown>
+  # from one instance isn't assignable to SQLWrapper from the other),
+  # breaking `tsc`/`next build` on migration files that call db.execute(sql`...`).
+  drizzle-orm: '0.45.2'
   esbuild: '>=0.24.3'
   fast-uri: '>=3.1.5'
   # image-size: advisory (GHSA) claims a fix in >=2.0.3, but nothing past

@@ -7,6 +7,7 @@ settings:
 overrides:
   brace-expansion: '>=1.1.18'
   dompurify: '>=3.4.13'
+  drizzle-orm: 0.45.2
   esbuild: '>=0.24.3'
   fast-uri: '>=3.1.5'
   js-yaml: '>=4.3.1'
