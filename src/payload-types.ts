@@ -4656,6 +4656,20 @@ export interface SiteSetting {
      */
     padding?: number | null;
   };
+  /**
+   * Controls the look of the highlight chips shown near the top of every product page.
+   */
+  highlightStyle?: {
+    /**
+     * Hex color code, e.g. #fef9c3 for light yellow.
+     */
+    backgroundColor?: string | null;
+    /**
+     * Hex color code, e.g. #713f12 for dark amber.
+     */
+    textColor?: string | null;
+    bold?: boolean | null;
+  };
   sameAs?:
     | {
         url: string;
@@ -4831,6 +4845,13 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | {
         prefix?: T;
         padding?: T;
+      };
+  highlightStyle?:
+    | T
+    | {
+        backgroundColor?: T;
+        textColor?: T;
+        bold?: T;
       };
   sameAs?:
     | T

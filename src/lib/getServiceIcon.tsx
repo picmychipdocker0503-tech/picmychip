@@ -1,12 +1,11 @@
-import { CircuitBoard, FilamentSpool } from '@/components/illustrations'
-import { BatteryChargingIcon, ScissorsLineDashedIcon, WrenchIcon } from 'lucide-react'
+import { ClipboardCheckIcon, PackageSearchIcon, ShieldCheckIcon, TruckIcon, WrenchIcon } from 'lucide-react'
 import type { ComponentType } from 'react'
 
 const ICON_RULES: { match: RegExp; Icon: ComponentType<{ className?: string }> }[] = [
-  { match: /pcb/i, Icon: CircuitBoard },
-  { match: /3d|print/i, Icon: FilamentSpool },
-  { match: /laser/i, Icon: ScissorsLineDashedIcon },
-  { match: /battery/i, Icon: BatteryChargingIcon },
+  { match: /sourcing|matching/i, Icon: PackageSearchIcon },
+  { match: /rfq|bom|quote/i, Icon: ClipboardCheckIcon },
+  { match: /dispatch|shipping|delivery/i, Icon: TruckIcon },
+  { match: /verified|spec/i, Icon: ShieldCheckIcon },
 ]
 
 /** Best-effort icon for a Service by title keyword — no dedicated icon field on the collection yet. */

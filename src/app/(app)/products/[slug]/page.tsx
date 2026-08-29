@@ -283,6 +283,7 @@ export default async function ProductPage({ params }: Args) {
               averageRating={averageRating}
               categoryName={firstCategory?.title}
               categorySlug={firstCategory?.slug}
+              highlightStyle={siteSettings?.highlightStyle}
               product={product}
               reviewCount={reviewCount}
               supportEmail={siteSettings?.supportEmail}

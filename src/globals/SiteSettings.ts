@@ -229,6 +229,40 @@ export const SiteSettings: GlobalConfig = {
       ],
     },
     {
+      name: 'highlightStyle',
+      type: 'group',
+      label: 'Product Highlights Style',
+      admin: {
+        description: 'Controls the look of the highlight chips shown near the top of every product page.',
+      },
+      fields: [
+        {
+          name: 'backgroundColor',
+          type: 'text',
+          label: 'Background Color',
+          defaultValue: '#fef9c3',
+          admin: {
+            description: 'Hex color code, e.g. #fef9c3 for light yellow.',
+          },
+        },
+        {
+          name: 'textColor',
+          type: 'text',
+          label: 'Text Color',
+          defaultValue: '#713f12',
+          admin: {
+            description: 'Hex color code, e.g. #713f12 for dark amber.',
+          },
+        },
+        {
+          name: 'bold',
+          type: 'checkbox',
+          label: 'Bold Text',
+          defaultValue: true,
+        },
+      ],
+    },
+    {
       name: 'sameAs',
       type: 'array',
       label: 'Social / Profile Links',

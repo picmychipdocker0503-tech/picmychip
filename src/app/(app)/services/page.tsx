@@ -14,8 +14,8 @@ export const metadata: Metadata = {
     canonical: `${getServerSideURL()}/services`,
   },
   description:
-    'PCB manufacturing, 3D printing, laser cutting, and custom battery packs — on-demand fabrication services from PicMyChip.',
-  title: 'Maker Studio — On-Demand Services',
+    'Component sourcing, RFQ & BOM support, and fast, spec-verified dispatch from Picmychip.',
+  title: 'Services — Picmychip',
 }
 
 export default async function ServicesPage() {
@@ -31,12 +31,12 @@ export default async function ServicesPage() {
       <div className="container mb-14 flex flex-col items-center gap-3 text-center">
         <span className="eyebrow inline-flex items-center gap-1.5">
           <SparklesIcon className="size-3.5" />
-          Maker Studio
+          Services
         </span>
-        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">On-Demand Fabrication Services</h1>
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">How We Help You Source Parts</h1>
         <p className="text-muted-foreground max-w-xl">
-          From a single prototype to a production batch — PCB manufacturing, 3D printing, laser cutting, and
-          custom battery packs, built to your spec.
+          From finding the right part to getting it into your hands fast — sourcing, RFQs, and spec verification,
+          built around how makers and engineering teams actually work.
         </p>
       </div>
 

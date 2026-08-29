@@ -34,10 +34,19 @@ export const redirects: NextConfig['redirects'] = async () => {
     { source: '/product-category/:slug*', destination: '/category/:slug*', permanent: true },
     { source: '/collections/:slug*', destination: '/shop', permanent: true },
 
+    // Old Zoho Commerce category URLs (/categories/<slug>/<numeric item id>,
+    // e.g. /categories/drone-parts/1911056000002068577) — "shop" isn't a
+    // real category on this site (it's the general catalog), so that one
+    // goes to /shop specifically; everything else maps slug-for-slug onto
+    // the current /category/[slug] route. More specific "shop" rule first,
+    // so it doesn't fall through to the generic one below.
+    { source: '/categories/shop/:id(\\d+)', destination: '/shop', permanent: true },
+    { source: '/categories/:slug/:id(\\d+)', destination: '/category/:slug', permanent: true },
+
     // Discontinued standalone service pages from a previous site version —
-    // NOT a blanket /services/:path* redirect, since /services/[slug] (Maker
-    // Studio: PCB manufacturing, 3D printing, laser cutting, battery packs)
-    // is a real, currently-live section and that would break it.
+    // NOT a blanket /services/:path* redirect, since /services/[slug]
+    // (component sourcing, RFQ & BOM support, fast dispatch, spec-verified
+    // parts) is a real, currently-live section and that would break it.
     { source: '/pcb-design', destination: '/rfq', permanent: true },
     { source: '/iot-solutions', destination: '/rfq', permanent: true },
     { source: '/iot-product-development', destination: '/rfq', permanent: true },

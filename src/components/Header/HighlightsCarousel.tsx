@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react'
 const HIGHLIGHTS = [
   { Icon: HeadphonesIcon, label: 'Human Support' },
   { Icon: ShieldCheckIcon, label: 'Buyer Protection' },
-  { Icon: RotateCcwIcon, label: '30-Day Returns' },
+  { Icon: RotateCcwIcon, label: '7-Day Returns' },
 ] as const
 
 const ROTATE_MS = 2800

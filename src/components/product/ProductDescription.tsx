@@ -32,6 +32,11 @@ type Props = {
   reviewCount?: number
   categoryName?: string
   categorySlug?: string
+  highlightStyle?: {
+    backgroundColor?: string | null
+    textColor?: string | null
+    bold?: boolean | null
+  } | null
 }
 
 export function ProductDescription({
@@ -41,6 +46,7 @@ export function ProductDescription({
   reviewCount = 0,
   categoryName,
   categorySlug,
+  highlightStyle,
 }: Props) {
   const { currency } = useCurrency()
   const t = useTranslations('product')
@@ -163,7 +169,15 @@ export function ProductDescription({
         <ul className="flex flex-wrap gap-2">
           {product.highlights.map((item, index) => (
             <li key={item.id ?? index}>
-              <Badge variant="secondary" className="py-1 text-sm font-normal">
+              <Badge
+                variant="secondary"
+                className="py-1 text-sm"
+                style={{
+                  backgroundColor: highlightStyle?.backgroundColor || '#fef9c3',
+                  color: highlightStyle?.textColor || '#713f12',
+                  fontWeight: highlightStyle?.bold === false ? 400 : 700,
+                }}
+              >
                 {item.text}
               </Badge>
             </li>
