@@ -10,7 +10,7 @@ import { OpenRoles } from '@/components/illustrations'
 
 export const metadata: Metadata = {
   description: 'Open roles at Picmychip — browse current openings and apply.',
-  title: 'Careers',
+  title: 'Careers — Picmychip: Electronic Components Store',
 }
 
 const EMPLOYMENT_TYPE_LABELS: Record<string, string> = {

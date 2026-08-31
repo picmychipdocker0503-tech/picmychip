@@ -74,7 +74,7 @@ export const metadata: Metadata = {
     title: 'Help Center',
     url: '/help',
   }),
-  title: 'Help Center',
+  title: 'Help Center — Picmychip: Electronic Components Store',
 }
 
 export default async function HelpPage() {

@@ -33,5 +33,5 @@ export const metadata: Metadata = {
     title: 'Returns',
     url: '/returns',
   }),
-  title: 'Returns',
+  title: 'Returns — Picmychip: Electronic Components Store',
 }

@@ -9,7 +9,7 @@ import React from 'react'
 
 export const metadata = {
   description: 'Build guides and component comparisons for makers.',
-  title: 'Guides',
+  title: 'Guides — Picmychip: Electronic Components Store',
 }
 
 export default async function GuidesPage() {

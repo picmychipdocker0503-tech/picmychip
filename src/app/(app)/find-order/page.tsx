@@ -25,5 +25,5 @@ export const metadata: Metadata = {
     title: 'Find order',
     url: '/find-order',
   }),
-  title: 'Find order',
+  title: 'Find Order — Picmychip: Electronic Components Store',
 }

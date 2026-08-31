@@ -24,8 +24,19 @@ export const generateMeta = async (args: {
   // filled in a dedicated SEO one, so the page never ships with an empty
   // snippet. Guarded by typeof since other doc types in this union have an
   // unrelated `description` field that holds richText, not a string.
-  const categoryDescription = doc && 'description' in doc && typeof doc.description === 'string' ? doc.description : undefined
-  const description = doc?.meta?.description || categoryDescription
+  const categoryDescriptionValue: string | null | undefined =
+    doc && 'description' in doc && (doc.description === null || typeof doc.description === 'string') ? doc.description : undefined
+  const isCategoryLikeDoc = categoryDescriptionValue !== undefined
+  const categoryDescription = categoryDescriptionValue || undefined
+  // Most categories have neither a dedicated SEO description nor any
+  // on-page copy at all — rather than shipping an empty <meta
+  // description>, a templated fallback keeps every category page from
+  // going out with no snippet for search results to show.
+  const categoryFallbackDescription =
+    isCategoryLikeDoc && !categoryDescription && doc?.title
+      ? `Shop ${doc.title} at Picmychip — verified specs, fast shipping, and expert support for makers and engineers.`
+      : undefined
+  const description = doc?.meta?.description || categoryDescription || categoryFallbackDescription
 
   return {
     alternates: {
@@ -48,6 +59,18 @@ export const generateMeta = async (args: {
       title: doc?.meta?.title || doc?.title || 'Picmychip',
       url: Array.isArray(doc?.slug) ? doc?.slug.join('/') : '/',
     }),
-    title: doc?.meta?.title || doc?.title || 'Electronic Components Store',
+    // A plain fallback title (no dedicated SEO title set) is left byte-
+    // identical to the page's H1 elsewhere (duplicate H1/title content)
+    // and, for a short doc title like a bare category name ("IC"), too
+    // short on its own — the longer tagline fixes both. A doc title that's
+    // already substantial only gets the brief brand suffix instead, so
+    // this never pushes an already-long title into "too long" territory.
+    title:
+      doc?.meta?.title ||
+      (doc?.title
+        ? doc.title.length < 18
+          ? `${doc.title} — Picmychip: Electronic Components Store`
+          : `${doc.title} — Picmychip`
+        : 'Electronic Components Store'),
   }
 }

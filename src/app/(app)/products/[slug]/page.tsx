@@ -105,11 +105,18 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
 
   const seoImage = metaImage || (gallery.length ? (gallery[0]?.image as Media) : undefined)
 
+  // Falls back to the product's own rich-text description when no
+  // dedicated SEO description is set, so the <meta description> tag is
+  // never shipped empty just because an editor hasn't filled in that
+  // specific field yet.
+  const bodyDescription = product.description ? richTextToPlainText(product.description).trim() : ''
+  const metaDescription = product.meta?.description || (bodyDescription ? bodyDescription.slice(0, 160) : '')
+
   return {
     alternates: {
       canonical: `${getServerSideURL()}/products/${slug}`,
     },
-    description: product.meta?.description || '',
+    description: metaDescription,
     openGraph: seoImage?.url
       ? {
           images: [
@@ -130,7 +137,15 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
       },
       index: canIndex,
     },
-    title: product.meta?.title || product.title,
+    // A plain fallback title left byte-identical to the H1 elsewhere is
+    // what SEMrush flags as duplicate H1/title content, and a bare part
+    // number (e.g. "0638190000") is also too short on its own — the
+    // longer tagline fixes both without pushing an already-descriptive
+    // product name into "too long" territory, or overriding an editor's
+    // explicit meta title.
+    title:
+      product.meta?.title ||
+      (product.title.length < 18 ? `${product.title} — Picmychip: Electronic Components Store` : `${product.title} — Picmychip`),
   }
 }
 
