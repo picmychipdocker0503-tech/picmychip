@@ -184,11 +184,6 @@ export default async function Order({ params, searchParams }: PageProps) {
             </p>
           </div>
 
-          <div className="">
-            <p className="uppercase text-muted-foreground font-semibold tracking-wide mb-1 text-sm">Total</p>
-            {order.amount && <Price className="text-lg" amount={order.amount} />}
-          </div>
-
           {order.status && (
             <div className="grow max-w-1/3">
               <p className="uppercase text-muted-foreground font-semibold tracking-wide mb-1 text-sm">Status</p>
@@ -208,10 +203,9 @@ export default async function Order({ params, searchParams }: PageProps) {
           </div>
         </div>
 
-        {/* Mobile-only itemized cost summary — desktop keeps the single Total
-            field above unchanged. Uses the order's own snapshotted amounts,
+        {/* Itemized cost summary — uses the order's own snapshotted amounts,
             not current product pricing. */}
-        <div className="lg:hidden">
+        <div>
           <h2 className="text-muted-foreground font-semibold tracking-wide mb-3 uppercase text-sm">Order Summary</h2>
           <div className="bg-muted/40 divide-border/60 divide-y overflow-hidden rounded-2xl">
             <div className="flex items-center justify-between px-4 py-3 text-sm">

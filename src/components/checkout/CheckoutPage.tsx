@@ -697,7 +697,7 @@ export const CheckoutPage: React.FC<{
           <hr />
 
           <div className="flex flex-col gap-3">
-            {cart.appliedCouponCode ? (
+            {flags.coupons && (cart.appliedCouponCode ? (
               <div className="flex items-center justify-between text-sm">
                 <span>
                   {tCart('couponLabel')} <span className="font-medium">{cart.appliedCouponCode}</span>{' '}
@@ -739,7 +739,7 @@ export const CheckoutPage: React.FC<{
                 </div>
                 {couponError && <p className="text-error text-xs">{couponError}</p>}
               </div>
-            )}
+            ))}
 
             {flags.giftCards && (cart.appliedGiftCardCode ? (
               <div className="flex items-center justify-between text-sm">
@@ -815,6 +815,10 @@ export const CheckoutPage: React.FC<{
             </div>
           ) : (
             <div className="flex flex-col gap-2">
+              <div className="flex justify-between items-center text-sm">
+                <span>{tCart('subtotal')}</span>
+                <Price amount={subtotalAfterDiscounts} />
+              </div>
               {selectedShippingMethod && (
                 <div className="flex justify-between items-center text-sm text-muted-foreground">
                   <span>{selectedShippingMethod.label}</span>

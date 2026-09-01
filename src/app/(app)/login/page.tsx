@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 
 import { RenderParams } from '@/components/RenderParams'
-import Link from 'next/link'
 import React from 'react'
 
 import { headers as getHeaders } from 'next/headers'
@@ -27,8 +26,7 @@ export default async function Login() {
 
         <h1 className="mb-4 text-[1.8rem]">Log in</h1>
         <p className="mb-8">
-          {`This is where your customers will login to manage their account, review their order history, and more. To manage all users, `}
-          <Link href="/admin/collections/users">login to the admin dashboard</Link>.
+          {'Log in to manage your account, review your order history, and more.'}
         </p>
         <LoginForm />
       </div>

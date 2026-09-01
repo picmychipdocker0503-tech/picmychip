@@ -29,6 +29,10 @@ export const initiatePayment =
     const payload = req.payload
     const { merchantKey, merchantSalt, mode } = props
     const { billingAddress, cart, currency, customerEmail, shippingAddress } = data
+
+    if (!req.user) {
+      throw new Error('Please log in to place an order.')
+    }
     // businessDetails (GSTIN/company/PAN) and shippingMethod aren't part of the plugin's
     // typed `data` shape — initiatePaymentHandler rebuilds `data` from only 5 fixed fields
     // (billingAddress/cart/currency/customerEmail/shippingAddress), silently dropping any

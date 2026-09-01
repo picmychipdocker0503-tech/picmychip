@@ -6,8 +6,20 @@ import React, { Fragment, Suspense } from 'react'
 
 import { CheckoutPage } from '@/components/checkout/CheckoutPage'
 import { getCheckoutShippingMethods } from '@/lib/checkoutShipping'
+import { headers as getHeaders } from 'next/headers'
+import configPromise from '@payload-config'
+import { getPayload } from 'payload'
+import { redirect } from 'next/navigation'
 
 export default async function Checkout() {
+  const headers = await getHeaders()
+  const payload = await getPayload({ config: configPromise })
+  const { user } = await payload.auth({ headers })
+
+  if (!user) {
+    redirect('/login?redirect=/checkout')
+  }
+
   const siteSettings = await getCachedGlobal('site-settings', 0)()
   const tax = siteSettings?.taxSettings
   const shippingMethods = getCheckoutShippingMethods(siteSettings?.shippingSettings ?? undefined)

@@ -28,8 +28,9 @@ export const CheckoutAddresses: React.FC<Props> = ({
   description = 'Please select or add your shipping and billing addresses.',
 }) => {
   const { addresses } = useAddresses()
+  const visibleAddresses = (addresses || []).filter((address) => address.isActive !== false)
 
-  if (!addresses || addresses.length === 0) {
+  if (visibleAddresses.length === 0) {
     return (
       <div>
         <p>No addresses found. Please add an address.</p>
@@ -60,8 +61,9 @@ const AddressesModal: React.FC<Props> = ({ setAddress }) => {
     setOpen(false)
   }
   const { addresses } = useAddresses()
+  const visibleAddresses = (addresses || []).filter((address) => address.isActive !== false)
 
-  if (!addresses || addresses.length === 0) {
+  if (visibleAddresses.length === 0) {
     return <p>No addresses found. Please add an address.</p>
   }
 
@@ -77,7 +79,7 @@ const AddressesModal: React.FC<Props> = ({ setAddress }) => {
 
         <div className="flex flex-col gap-12">
           <ul className="flex flex-col gap-8">
-            {addresses.map((address) => (
+            {visibleAddresses.map((address) => (
               <li key={address.id} className="border-b pb-8 last:border-none">
                 <AddressItem
                   address={address}

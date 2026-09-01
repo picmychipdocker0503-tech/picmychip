@@ -41,6 +41,10 @@ export async function POST(request: NextRequest) {
   const headers = await getHeaders()
   const { user } = await payload.auth({ headers })
 
+  if (!user) {
+    return NextResponse.json({ error: 'Please log in to place an order.' }, { status: 401 })
+  }
+
   try {
     const cart = await payload.findByID({
       collection: 'carts',
