@@ -83,7 +83,15 @@ export const getCategoryTree = async (payload: Payload): Promise<CategoryTree> =
 export const getCategoryTreeSafe = async (payload: Payload): Promise<CategoryTree> => {
   try {
     return await getCategoryTree(payload)
-  } catch {
+  } catch (err) {
+    // Silently returning the empty tree with no logging meant a transient
+    // DB blip here (e.g. during a production build/ISR revalidation) could
+    // bake "no categories" into the header's cached render indefinitely,
+    // with zero trace of why — the header's mega menu would then only
+    // recover on the next full deploy or category edit (which is the only
+    // thing that revalidates the layout). Logging at least makes a real
+    // recurrence diagnosable instead of just "the mega menu is missing".
+    payload.logger.error({ err, msg: 'getCategoryTree failed — falling back to empty category tree' })
     return EMPTY_TREE
   }
 }

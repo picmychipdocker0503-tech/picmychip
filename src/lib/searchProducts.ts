@@ -46,8 +46,77 @@ const toMeiliSort = (sort?: string | null): string[] | undefined => {
 // filter grammar requires inside a quoted string.
 const escapeFilterValue = (value: string): string => value.replace(/\\/g, '\\\\').replace(/"/g, '\\"')
 
+// Categories carry a self-referencing `parent` field, and a product is
+// typically only tagged to its single most-specific (leaf) category, not
+// every ancestor too — so filtering a parent category's page by an exact
+// categoryId match alone showed none of its subcategories' products
+// (clicking "Cables" only ever returned products tagged directly to
+// "Cables", never anything under "USB Cables"/"HDMI Cables"/etc). Resolving
+// a categoryId to "itself + every descendant" here fixes that for every
+// caller (category pages, /api/products) in one place.
+type CategoryParentEdge = { id: number; parent: number | null }
+let categoryTreeCache: { fetchedAt: number; edges: CategoryParentEdge[] } | null = null
+const CATEGORY_TREE_TTL_MS = 60 * 1000
+
+/** Drops the cached category parent/child edges — called from the Categories collection's afterChange/afterDelete hooks. */
+export const invalidateCategoryTreeCache = (): void => {
+  categoryTreeCache = null
+}
+
+const loadCategoryParentEdges = async (): Promise<CategoryParentEdge[]> => {
+  if (categoryTreeCache && Date.now() - categoryTreeCache.fetchedAt < CATEGORY_TREE_TTL_MS) {
+    return categoryTreeCache.edges
+  }
+
+  const payload = await getPayload({ config: configPromise })
+  const { docs } = await payload.find({
+    collection: 'categories',
+    limit: 0,
+    depth: 0,
+    overrideAccess: true,
+    pagination: false,
+    select: { parent: true },
+  })
+
+  const edges = docs.map((c) => ({
+    id: c.id,
+    parent: c.parent ? (typeof c.parent === 'object' ? c.parent.id : c.parent) : null,
+  }))
+  categoryTreeCache = { fetchedAt: Date.now(), edges }
+  return edges
+}
+
+const resolveCategoryIds = async (categoryId?: string): Promise<string[] | undefined> => {
+  if (!categoryId) return undefined
+  const targetId = Number(categoryId)
+  if (!Number.isFinite(targetId)) return [categoryId]
+
+  const edges = await loadCategoryParentEdges()
+  const childrenByParent = new Map<number, number[]>()
+  for (const edge of edges) {
+    if (edge.parent == null) continue
+    const list = childrenByParent.get(edge.parent) ?? []
+    list.push(edge.id)
+    childrenByParent.set(edge.parent, list)
+  }
+
+  const result = new Set<number>([targetId])
+  const queue = [targetId]
+  while (queue.length > 0) {
+    const current = queue.shift() as number
+    for (const childId of childrenByParent.get(current) ?? []) {
+      if (!result.has(childId)) {
+        result.add(childId)
+        queue.push(childId)
+      }
+    }
+  }
+
+  return [...result].map(String)
+}
+
 const buildFilter = (
-  categoryId?: string,
+  categoryIds?: string[],
   facetFilters?: Record<string, FacetFilterValue>,
   priceMin?: number,
   priceMax?: number,
@@ -56,8 +125,9 @@ const buildFilter = (
   // for — keep them out of the shop/category listing and search suggestions.
   const clauses: string[] = ['isGiftCard = false']
 
-  if (categoryId) {
-    clauses.push(`categoryIds = "${escapeFilterValue(categoryId)}"`)
+  if (categoryIds?.length) {
+    const quoted = categoryIds.map((id) => `"${escapeFilterValue(id)}"`).join(', ')
+    clauses.push(`categoryIds IN [${quoted}]`)
   }
 
   if (typeof priceMin === 'number') clauses.push(`priceInINR >= ${priceMin}`)
@@ -101,9 +171,10 @@ const searchViaMeilisearch = async (args: SearchProductsArgs): Promise<SearchPro
 
   const client = getMeiliClient()
   const index = client.index<ProductSearchDocument>(PRODUCTS_INDEX)
+  const categoryIds = await resolveCategoryIds(categoryId)
 
   const response = await index.search(query, {
-    filter: buildFilter(categoryId, facetFilters, priceMin, priceMax).join(' AND ') || undefined,
+    filter: buildFilter(categoryIds, facetFilters, priceMin, priceMax).join(' AND ') || undefined,
     facets: facetAttributes?.length ? facetAttributes : undefined,
     sort: toMeiliSort(sort),
     page,
@@ -353,10 +424,14 @@ const searchViaDatabase = async (args: SearchProductsArgs): Promise<SearchProduc
 
   let pool = await loadCandidatePool()
 
-  if (categoryId) {
-    const categoryIdNum = Number(categoryId)
+  const categoryIds = await resolveCategoryIds(categoryId)
+  if (categoryIds?.length) {
+    const categoryIdNums = new Set(categoryIds.map(Number))
     pool = pool.filter((c) =>
-      (c.product.categories ?? []).some((cat) => (typeof cat === 'object' ? cat?.id : cat) === categoryIdNum),
+      (c.product.categories ?? []).some((cat) => {
+        const id = typeof cat === 'object' ? cat?.id : cat
+        return typeof id === 'number' && categoryIdNums.has(id)
+      }),
     )
   }
   if (typeof priceMin === 'number') {

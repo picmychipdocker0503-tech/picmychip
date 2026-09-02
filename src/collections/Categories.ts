@@ -4,6 +4,7 @@ import type { CollectionAfterChangeHook, CollectionAfterDeleteHook, CollectionCo
 import { revalidatePath } from 'next/cache'
 
 import { adminOnly } from '@/access/adminOnly'
+import { invalidateCategoryTreeCache } from '@/lib/searchProducts'
 import { checkRole } from '@/access/utilities'
 import { CallToAction } from '@/blocks/CallToAction/config'
 import { ComparisonTable } from '@/blocks/ComparisonTable/config'
@@ -42,6 +43,7 @@ function safeRevalidatePath(path: string, type: 'layout' | undefined, logger: { 
 }
 
 const revalidateCategoryNav: CollectionAfterChangeHook = ({ req: { payload, context } }) => {
+  invalidateCategoryTreeCache()
   if (!context.disableRevalidate) {
     payload.logger.info('Revalidating layout after category change')
     safeRevalidatePath('/', 'layout', payload.logger)
@@ -49,6 +51,7 @@ const revalidateCategoryNav: CollectionAfterChangeHook = ({ req: { payload, cont
 }
 
 const revalidateCategoryNavOnDelete: CollectionAfterDeleteHook = ({ req: { payload, context } }) => {
+  invalidateCategoryTreeCache()
   if (!context.disableRevalidate) {
     payload.logger.info('Revalidating layout after category delete')
     safeRevalidatePath('/', 'layout', payload.logger)
