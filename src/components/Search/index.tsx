@@ -8,7 +8,7 @@ import { getClientSideURL } from '@/utilities/getURL'
 import { ArrowRightIcon, Loader2Icon, PackageSearchIcon, SearchIcon } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import React, { useEffect, useRef, useState } from 'react'
 
 type Props = {
@@ -49,6 +49,7 @@ const HighlightedText: React.FC<{ text: string; query: string }> = ({ text, quer
 
 export const Search: React.FC<Props> = ({ className }) => {
   const router = useRouter()
+  const pathname = usePathname()
   const searchParams = useSearchParams()
   const t = useTranslations('search')
 
@@ -95,6 +96,17 @@ export const Search: React.FC<Props> = ({ className }) => {
       controller.abort()
     }
   }, [query])
+
+  useEffect(() => {
+    // The Header persists across navigations (it isn't remounted per page),
+    // so `query` would otherwise keep whatever was last typed forever —
+    // clicking a suggestion navigates straight to /products/[slug] without
+    // clearing it, and the browser Back button doesn't re-run the useState
+    // initializer either. Re-sync from the URL on every route change: empty
+    // off /shop entirely, or whatever `q` that particular /shop history
+    // entry actually has.
+    setQuery(pathname === '/shop' ? searchParams?.get('q') || '' : '')
+  }, [pathname, searchParams])
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
