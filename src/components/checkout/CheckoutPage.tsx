@@ -21,7 +21,7 @@ import { CreateAddressModal } from '@/components/addresses/CreateAddressModal'
 import { getClientSideURL } from '@/utilities/getURL'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import type { CheckoutShippingMethod, CheckoutShippingMethodId } from '@/lib/checkoutShipping'
-import { computeOrderTaxAddOn, type TaxLineItem } from '@/lib/taxCalculation'
+import { computeOrderTaxByRateBucket, type TaxLineItem } from '@/lib/taxCalculation'
 import { Address, Product, Variant } from '@/payload-types'
 
 type GalleryItem = NonNullable<Product['gallery']>[number]
@@ -85,38 +85,32 @@ export const CheckoutPage: React.FC<{
   // added on top here for display only; the server independently computes
   // and charges the authoritative amount (initiatePayment.ts / place-order).
   const customerState = (billingAddressSameAsShipping ? billingAddress : shippingAddress)?.state
-  const taxBreakdown =
+  const taxByRateBucket =
     !cartIsEmpty && cart?.currency === 'INR'
-      ? computeOrderTaxAddOn({
-          items: (() => {
-            const items = (cart.items || []).reduce<TaxLineItem[]>((acc, item) => {
-              if (typeof item.product !== 'object' || !item.product || !item.quantity) return acc
-              const unitPrice =
-                item.variant && typeof item.variant === 'object'
-                  ? (item.variant.priceInINR ?? item.product.priceInINR ?? 0)
-                  : (item.product.priceInINR ?? 0)
-              acc.push({
-                gstPercent: item.product.gstPercent ?? defaultGstPercent,
-                nominal: unitPrice * item.quantity,
-              })
-              return acc
-            }, [])
-            // Shipping is a taxable charge too (SAC 9968) — folded in as its own
-            // line item at the default GST rate so it's taxed exactly like the
-            // server's authoritative computeCheckoutTotal (initiatePayment.ts /
-            // place-order route), keeping this preview and the actual charge in sync.
-            if (shippingAmount > 0) items.push({ gstPercent: defaultGstPercent, nominal: shippingAmount })
-            return items
-          })(),
-          amount: subtotalAfterDiscounts + shippingAmount,
+      ? computeOrderTaxByRateBucket({
+          items: (cart.items || []).reduce<TaxLineItem[]>((acc, item) => {
+            if (typeof item.product !== 'object' || !item.product || !item.quantity) return acc
+            const unitPrice =
+              item.variant && typeof item.variant === 'object'
+                ? (item.variant.priceInINR ?? item.product.priceInINR ?? 0)
+                : (item.product.priceInINR ?? 0)
+            acc.push({
+              gstPercent: item.product.gstPercent ?? defaultGstPercent,
+              nominal: unitPrice * item.quantity,
+            })
+            return acc
+          }, []),
+          // Shipping (SAC 9968) is taxed as its own flat amount at the site's
+          // default GST rate — not proportioned across items by weight — the
+          // same way the server's authoritative computeCheckoutTotal does,
+          // keeping this preview and the actual charge in sync.
+          shippingAmount,
           defaultGstPercent,
           businessState,
           customerState,
         })
       : null
-  const checkoutTotal = taxBreakdown
-    ? subtotalAfterDiscounts + shippingAmount + taxBreakdown.totalTax
-    : (cart?.subtotal ?? 0) + shippingAmount
+  const checkoutTotal = taxByRateBucket ? taxByRateBucket.grandTotal : (cart?.subtotal ?? 0) + shippingAmount
   const fullyCoveredByGiftCard = !cartIsEmpty && checkoutTotal <= 0
 
   const applyDiscount = useCallback(
@@ -787,18 +781,23 @@ export const CheckoutPage: React.FC<{
           </div>
 
           <hr />
-          {taxBreakdown ? (
+          {taxByRateBucket ? (
             <div className="flex flex-col gap-2">
               <div className="flex justify-between items-center text-sm">
                 <span>{tCart('subtotal')}</span>
                 <Price amount={subtotalAfterDiscounts} />
               </div>
-              <div className="flex justify-between items-center text-sm text-muted-foreground">
-                <span>
-                  {t('gst')} ({taxBreakdown.gstRatePercent.toFixed(0)}%)
-                </span>
-                <Price amount={taxBreakdown.totalTax} />
-              </div>
+              {taxByRateBucket.rateBuckets.map((bucket) => (
+                <div
+                  className="flex justify-between items-center text-sm text-muted-foreground"
+                  key={bucket.gstRatePercent}
+                >
+                  <span>
+                    {t('gst')} ({bucket.gstRatePercent.toFixed(0)}%)
+                  </span>
+                  <Price amount={bucket.totalTax} />
+                </div>
+              ))}
               {selectedShippingMethod && (
                 <div className="flex justify-between items-center text-sm text-muted-foreground">
                   <span>{selectedShippingMethod.label}</span>

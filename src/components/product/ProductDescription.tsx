@@ -37,6 +37,10 @@ type Props = {
     textColor?: string | null
     bold?: boolean | null
   } | null
+  skuStyle?: {
+    show?: boolean | null
+    textColor?: string | null
+  } | null
 }
 
 export function ProductDescription({
@@ -47,6 +51,7 @@ export function ProductDescription({
   categoryName,
   categorySlug,
   highlightStyle,
+  skuStyle,
 }: Props) {
   const { currency } = useCurrency()
   const t = useTranslations('product')
@@ -117,7 +122,14 @@ export function ProductDescription({
       )}
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <h1 className="text-foreground text-2xl font-bold tracking-tight sm:text-3xl">{product.title}</h1>
+        <div>
+          <h1 className="text-foreground text-2xl font-bold tracking-tight sm:text-3xl">{product.title}</h1>
+          {skuStyle?.show && product.sku && (
+            <p className="mt-3 text-sm font-bold" style={{ color: skuStyle?.textColor || '#4169e1' }}>
+              SKU: {product.sku}
+            </p>
+          )}
+        </div>
         <div className="flex shrink-0 flex-col items-end gap-1.5">
           {(isClearance || isOnSale) && (
             <span

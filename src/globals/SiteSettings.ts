@@ -263,6 +263,31 @@ export const SiteSettings: GlobalConfig = {
       ],
     },
     {
+      name: 'skuStyle',
+      type: 'group',
+      label: 'Product SKU Style',
+      admin: {
+        description: 'Controls whether and how the SKU is shown under the product title on every product page.',
+      },
+      fields: [
+        {
+          name: 'show',
+          type: 'checkbox',
+          label: 'Show SKU on product page',
+          defaultValue: false,
+        },
+        {
+          name: 'textColor',
+          type: 'text',
+          label: 'Text Color',
+          defaultValue: '#4169e1',
+          admin: {
+            description: 'Hex color code, e.g. #4169e1 for royal blue.',
+          },
+        },
+      ],
+    },
+    {
       name: 'sameAs',
       type: 'array',
       label: 'Social / Profile Links',

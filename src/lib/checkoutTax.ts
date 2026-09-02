@@ -67,10 +67,10 @@ export async function computeCheckoutTotal(args: {
   const { payload, items, baseSubtotal, shippingAmount = 0, businessState, customerState, defaultGstPercent } = args
 
   const lineItems = await resolveTaxLineItems(payload, items, defaultGstPercent)
+  // Shipping (SAC 9968) is taxed as its own flat amount at the site's
+  // default GST rate — not proportioned across items by weight.
   const taxableLineItems =
-    shippingAmount > 0
-      ? [...lineItems, { gstPercent: defaultGstPercent, nominal: shippingAmount }]
-      : lineItems
+    shippingAmount > 0 ? [...lineItems, { gstPercent: defaultGstPercent, nominal: shippingAmount }] : lineItems
   const taxableAmount = baseSubtotal + shippingAmount
 
   const taxBreakdown = computeOrderTaxAddOn({

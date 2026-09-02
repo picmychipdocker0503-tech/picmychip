@@ -301,6 +301,7 @@ export default async function ProductPage({ params }: Args) {
               highlightStyle={siteSettings?.highlightStyle}
               product={product}
               reviewCount={reviewCount}
+              skuStyle={siteSettings?.skuStyle}
               supportEmail={siteSettings?.supportEmail}
             />
           </div>

@@ -4670,6 +4670,16 @@ export interface SiteSetting {
     textColor?: string | null;
     bold?: boolean | null;
   };
+  /**
+   * Controls whether and how the SKU is shown under the product title on every product page.
+   */
+  skuStyle?: {
+    show?: boolean | null;
+    /**
+     * Hex color code, e.g. #4169e1 for royal blue.
+     */
+    textColor?: string | null;
+  };
   sameAs?:
     | {
         url: string;
@@ -4852,6 +4862,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         backgroundColor?: T;
         textColor?: T;
         bold?: T;
+      };
+  skuStyle?:
+    | T
+    | {
+        show?: T;
+        textColor?: T;
       };
   sameAs?:
     | T

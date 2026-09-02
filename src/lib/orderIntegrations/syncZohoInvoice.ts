@@ -293,6 +293,21 @@ export async function syncZohoInvoiceForOrder(payload: Payload, orderId: number 
 
     const lineItems = await buildZohoLineItems(payload, order, taxType, defaultGstPercent)
 
+    // Shipping (SAC 9968) is its own line item taxed at the site's default
+    // GST rate — matching how syncZohoSalesOrder builds it — otherwise the
+    // invoice total falls short of what was actually charged by the
+    // shipping amount (and its tax) entirely.
+    if (order.shippingAmount && order.shippingAmount > 0) {
+      const shippingTaxId = await resolveTaxId(defaultGstPercent, taxType)
+      lineItems.push({
+        name: order.shippingMethod === 'express' ? 'Express Shipping' : 'Standard Shipping',
+        hsn_or_sac: '9968',
+        rate: order.shippingAmount / 100,
+        quantity: 1,
+        tax_id: shippingTaxId,
+      })
+    }
+
     if (lineItems.length === 0) {
       throw new Error('No valid line items to invoice.')
     }
