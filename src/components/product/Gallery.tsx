@@ -132,6 +132,7 @@ export const Gallery: React.FC<Props> = ({ gallery, product }) => {
             className="relative h-full w-full"
             fill
             imgClassName="object-contain p-6 transition-transform duration-300 group-hover:scale-[1.03]"
+            priority={isPrimaryImage}
             size="(max-width: 1024px) 100vw, 50vw"
           />
           <span className="bg-background/90 text-foreground absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium opacity-0 shadow-sm transition-opacity group-hover:opacity-100">

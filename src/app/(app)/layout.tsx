@@ -107,7 +107,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             gtag('config', '${GA_MEASUREMENT_ID}');
           `}
             </Script>
-            <Script id="tawk-to" strategy="afterInteractive">
+            {/* lazyOnload (not afterInteractive) — live chat isn't needed in the
+                first second, and deferring it to idle time keeps it off the
+                main thread during the Core Web Vitals TBT measurement window. */}
+            <Script id="tawk-to" strategy="lazyOnload">
               {`
             var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
             // Mobile already has its own "Chat" tab in the bottom nav (see
