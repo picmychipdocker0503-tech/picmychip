@@ -178,6 +178,20 @@ export default buildConfig({
     pool: {
       connectionString: postgresConnectionString,
       ssl: postgresSSL,
+      // Vercel spins up a separate serverless function instance (and thus a
+      // separate connection pool) per concurrent invocation — `pg`'s default
+      // max of 10 per pool meant a burst of traffic could multiply into far
+      // more connections than RDS actually allows, hitting its
+      // max_connections limit outright ("remaining connection slots are
+      // reserved for roles with privileges of the 'rds_reserved' role",
+      // confirmed live in production logs) and 500ing nearly every route.
+      // Kept low per instance since each one only needs a handful for its
+      // own request's parallel queries, not a pool sized for a long-running
+      // server. idleTimeoutMillis releases unused connections quickly
+      // instead of holding them open between requests.
+      max: 3,
+      idleTimeoutMillis: 10_000,
+      connectionTimeoutMillis: 10_000,
     },
 
     // Schema changes go through `payload migrate:create` + `payload migrate` in every
