@@ -54,6 +54,10 @@ const columns = [
     ),
     header: 'Title',
   }),
+  columnHelper.accessor('sku', {
+    cell: (info) => <span className="text-base-content/60">{info.getValue() || '—'}</span>,
+    header: 'SKU',
+  }),
   columnHelper.display({
     cell: (info) => {
       const brand = info.row.original.brand

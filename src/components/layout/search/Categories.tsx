@@ -18,16 +18,30 @@ async function CategoryList() {
     categories.docs.filter((category) => category.slug !== 'shop' && category.slug !== 'components'),
   )
 
-  const counts = await Promise.all(
-    orderedCategories.map((category) =>
-      payload.count({
-        collection: 'products',
-        where: {
-          and: [{ _status: { equals: 'published' } }, { categories: { contains: category.id } }],
-        },
-      }),
-    ),
-  )
+  // One query for every published product's category assignments, tallied
+  // in memory below — not one payload.count() per category in parallel.
+  // With this many categories, that used to fire a burst of simultaneous
+  // connections from this single sidebar component on every page load
+  // (confirmed live: this was enough on its own to intermittently exceed
+  // what the DB allows at once, causing sporadic 500s).
+  const { docs: publishedProducts } = await payload.find({
+    collection: 'products',
+    depth: 0,
+    limit: 0,
+    overrideAccess: true,
+    pagination: false,
+    select: { categories: true },
+    where: { _status: { equals: 'published' } },
+  })
+
+  const countByCategoryId = new Map<number, number>()
+  for (const product of publishedProducts) {
+    for (const category of product.categories ?? []) {
+      const categoryId = typeof category === 'object' ? category.id : category
+      if (typeof categoryId !== 'number') continue
+      countByCategoryId.set(categoryId, (countByCategoryId.get(categoryId) ?? 0) + 1)
+    }
+  }
 
   return (
     <details className="group" open>
@@ -46,9 +60,9 @@ async function CategoryList() {
         </svg>
       </summary>
       <ul className="menu mt-2 w-full p-0">
-        {orderedCategories.map((category, index) => (
+        {orderedCategories.map((category) => (
           <li key={category.id}>
-            <CategoryItem category={category} count={counts[index]?.totalDocs ?? 0} />
+            <CategoryItem category={category} count={countByCategoryId.get(category.id) ?? 0} />
           </li>
         ))}
       </ul>

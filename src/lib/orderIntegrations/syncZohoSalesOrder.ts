@@ -13,11 +13,11 @@ import {
   convertSalesOrderToInvoice,
   createZohoSalesOrder,
   findExistingSalesOrderByOrderId,
+  formatEcomReferenceNumber,
   getZohoSalesOrder,
 } from '@/lib/zoho/salesOrders'
 import type { ZohoAddress, ZohoLineItem, ZohoSalesOrder } from '@/lib/zoho/types'
 import { IndianState, resolveIndianState } from '@/lib/indianStates'
-import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 
 type AddressLike = {
   addressLine1?: string | null
@@ -130,13 +130,40 @@ export async function buildZohoLineItems(
     // base too, so it's used directly; Zoho adds tax_id's rate on top.
     const rate = ((variant?.priceInINR ?? product?.priceInINR ?? 0) as number) / 100
 
+    // The Zoho item's description is never the full multi-paragraph spec
+    // content — that made both the item record and every invoice line item
+    // referencing it unreadable (confirmed live: a single cable's
+    // description ran to a dozen lines of connector/impedance/frequency
+    // specs, repeated on every invoice). When brand + SKU are both
+    // available, a short two-line "SKU: … / Brand: …" is sent instead;
+    // otherwise the description is left blank entirely — the product's own
+    // richText description is never used here.
+    let shortDescription: string | undefined
+    if (product?.sku && product?.brand) {
+      const brandTitle =
+        typeof product.brand === 'object' && product.brand
+          ? product.brand.title
+          : (
+              await payload
+                .findByID({ collection: 'brands', id: product.brand, depth: 0, overrideAccess: true })
+                .catch(() => undefined)
+            )?.title
+      if (brandTitle) {
+        shortDescription = `SKU: ${product.sku}\nBrand: ${brandTitle}`
+      }
+    }
+
     let itemId: string | undefined
     try {
       const result = await findOrCreateZohoItem({
         zohoItemId: product?.zohoItemId || undefined,
         name: product?.title || 'Product',
         sku: product?.sku || undefined,
-        description: richTextToPlainText(product?.description) || undefined,
+        // Explicit '' (not undefined) when there's no brand/SKU to build the
+        // short form from — an explicit empty string is what actually
+        // clears an existing item's description; omitting the field
+        // entirely would leave a previously-set long description in place.
+        description: shortDescription ?? '',
         hsnCode: product?.hsnCode || undefined,
         taxId,
         rate,
@@ -419,7 +446,7 @@ async function syncZohoSalesOrderForOrderUnguarded(payload: Payload, orderId: nu
 
       const salesOrderArgs = {
         customerId: contactId,
-        referenceNumber: String(orderId),
+        referenceNumber: formatEcomReferenceNumber(orderId),
         date: new Date(order.createdAt || Date.now()).toISOString().slice(0, 10),
         placeOfSupply: customerState?.zohoStateCode,
         gstTreatment,

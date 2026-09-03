@@ -1,6 +1,18 @@
 import { zohoFetch } from './auth'
 import type { ZohoInvoice, ZohoLineItem, ZohoSalesOrder } from './types'
 
+/**
+ * "Ecom0001" style reference number — zero-padded to at least 4 digits,
+ * growing naturally past that for larger ids (e.g. "Ecom12345"). Used both
+ * when creating a sales order and when searching for an existing one
+ * (findExistingSalesOrderByOrderId) — both MUST format the same way, since
+ * reference_number is the idempotency key that stops a retried sync from
+ * creating a duplicate sales order for the same ecommerce order.
+ */
+export function formatEcomReferenceNumber(orderId: string | number): string {
+  return `Ecom${String(orderId).padStart(4, '0')}`
+}
+
 export type CreateZohoSalesOrderArgs = {
   customerId: string
   /** Set to the ecommerce order id — this is the idempotency key used by findExistingSalesOrderByOrderId. */
@@ -67,11 +79,11 @@ export async function createZohoSalesOrder(args: CreateZohoSalesOrderArgs): Prom
  * the caller creates a fresh (correct) one instead of adopting someone
  * else's.
  */
-export async function findExistingSalesOrderByOrderId(
-  orderId: string | number,
+async function findByReferenceNumber(
+  referenceNumber: string,
   expectedTotal: number,
 ): Promise<ZohoSalesOrder | undefined> {
-  const params = new URLSearchParams({ reference_number: String(orderId) })
+  const params = new URLSearchParams({ reference_number: referenceNumber })
   const data = await zohoFetch<{ salesorders: ZohoSalesOrder[] }>(`/salesorders?${params.toString()}`)
   const candidates = data.salesorders ?? []
 
@@ -81,12 +93,26 @@ export async function findExistingSalesOrderByOrderId(
   // one candidate, so this is one extra call in the common case.
   for (const candidate of candidates) {
     const full = await getZohoSalesOrder(candidate.salesorder_id)
-    if (full.reference_number === String(orderId) && Math.abs(full.total - expectedTotal) < 1) {
+    if (full.reference_number === referenceNumber && Math.abs(full.total - expectedTotal) < 1) {
       return full
     }
   }
 
   return undefined
+}
+
+export async function findExistingSalesOrderByOrderId(
+  orderId: string | number,
+  expectedTotal: number,
+): Promise<ZohoSalesOrder | undefined> {
+  const formatted = await findByReferenceNumber(formatEcomReferenceNumber(orderId), expectedTotal)
+  if (formatted) return formatted
+
+  // Falls back to the old raw-numeric reference_number ("80", not
+  // "Ecom0080") — sales orders created before the Ecom-prefixed format was
+  // introduced still carry that, and this keeps them findable so a resync
+  // never creates a duplicate for one of them.
+  return findByReferenceNumber(String(orderId), expectedTotal)
 }
 
 /**

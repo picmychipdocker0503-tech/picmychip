@@ -4,10 +4,11 @@ import type { Product, Variant } from '@/payload-types'
 
 import { Media } from '@/components/Media'
 import { GridTileImage } from '@/components/Grid/tile'
+import { ProtectedZoomableImage } from '@/components/product/ProtectedZoomableImage'
 import { Dialog, DialogClose, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import { useTilt3D } from '@/lib/useTilt3D'
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
-import { ChevronLeftIcon, ChevronRightIcon, XIcon, ZapIcon, ZoomInIcon } from 'lucide-react'
+import { XIcon, ZapIcon, ZoomInIcon } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
@@ -112,6 +113,9 @@ export const Gallery: React.FC<Props> = ({ gallery, product }) => {
     }
   }, [isPrimaryImage, tilt.ref, tilt.glareRef])
 
+  const currentImage = gallery[current]?.image
+  const currentImageObject = typeof currentImage === 'object' ? currentImage : undefined
+
   return (
     <div>
       <div
@@ -122,19 +126,39 @@ export const Gallery: React.FC<Props> = ({ gallery, product }) => {
         ref={isPrimaryImage ? tilt.ref : undefined}
       >
         <button
-          aria-label="Zoom image"
+          aria-label="Show image"
           className="border-border bg-transparent relative block aspect-square w-full cursor-zoom-in overflow-hidden rounded-2xl border"
           onClick={() => setLightboxOpen(true)}
           type="button"
         >
+          {/* What's actually seen — the clean, undisturbed original.
+              Viewing/browsing shows no watermark at all. */}
           <Media
-            resource={gallery[current].image}
+            resource={currentImageObject}
             className="relative h-full w-full"
             fill
             imgClassName="object-contain p-6 transition-transform duration-300 group-hover:scale-[1.03]"
             priority={isPrimaryImage}
             size="(max-width: 1024px) 100vw, 50vw"
           />
+          {/* Invisible (opacity-0) and stacked on top — invisible so the
+              clean photo above is all that's visually seen, but a browser's
+              right-click hit-tests whichever element is topmost, so "Save
+              image as" / "Copy image" land on THIS element and download the
+              watermarked file instead of the clean one behind it. Right-click
+              itself is deliberately left enabled (no onContextMenu block) —
+              the point is for it to work normally and just resolve to the
+              watermarked copy. */}
+          {currentImageObject && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full object-contain p-6 opacity-0"
+              loading="eager"
+              src={`/api/media/watermark/${currentImageObject.id}`}
+            />
+          )}
           <span className="bg-background/90 text-foreground absolute right-3 bottom-3 flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium opacity-0 shadow-sm transition-opacity group-hover:opacity-100">
             <ZoomInIcon className="size-3.5" />
             Zoom
@@ -187,7 +211,12 @@ export const Gallery: React.FC<Props> = ({ gallery, product }) => {
 
       <Dialog onOpenChange={setLightboxOpen} open={lightboxOpen}>
         <DialogContent
-          className="max-w-[calc(100%-2rem)] border-none bg-transparent p-0 shadow-none sm:max-w-3xl"
+          // Overriding the base dialog's zoom-in-95/zoom-out-95 open/close
+          // animation to a no-op (100% — i.e. no scale change) — that pop
+          // effect combined with the backdrop dimming the rest of the page
+          // read as "the whole page zoomed", which is exactly what this
+          // modal exists to avoid. Only the fade animation is kept.
+          className="max-w-[calc(100%-2rem)] border-none bg-background p-4 shadow-lg data-[state=closed]:zoom-out-100 data-[state=open]:zoom-in-100 sm:max-w-3xl sm:p-6 lg:max-w-5xl"
           showCloseButton={false}
         >
           <DialogTitle className="sr-only">Product image</DialogTitle>
@@ -197,39 +226,44 @@ export const Gallery: React.FC<Props> = ({ gallery, product }) => {
           >
             <XIcon className="size-4" />
           </DialogClose>
-          <div className="relative aspect-square w-full">
-            <Media
-              resource={gallery[current].image}
-              className="h-full w-full"
-              fill
-              imgClassName="object-contain"
-              size="(max-width: 640px) 100vw, 768px"
-            />
-          </div>
 
-          {gallery.length > 1 && (
-            <div className="mt-4 flex items-center justify-center gap-4">
-              <button
-                aria-label="Previous image"
-                className="bg-background/90 flex size-9 items-center justify-center rounded-full border shadow-sm"
-                onClick={() => setCurrent((prev) => (prev - 1 + gallery.length) % gallery.length)}
-                type="button"
-              >
-                <ChevronLeftIcon className="size-4" />
-              </button>
-              <span className="bg-background/90 rounded-full border px-3 py-1 text-xs font-medium shadow-sm">
-                {current + 1} / {gallery.length}
-              </span>
-              <button
-                aria-label="Next image"
-                className="bg-background/90 flex size-9 items-center justify-center rounded-full border shadow-sm"
-                onClick={() => setCurrent((prev) => (prev + 1) % gallery.length)}
-                type="button"
-              >
-                <ChevronRightIcon className="size-4" />
-              </button>
+          {/* Amazon-style layout: large zoomable image on the left, every
+              gallery image as a clickable thumbnail grid on the right — no
+              prev/next arrows needed since any thumbnail is one click away. */}
+          <div className="flex flex-col gap-6 lg:flex-row">
+            <div className="lg:basis-2/3">
+              {currentImageObject && (
+                <ProtectedZoomableImage
+                  alt={currentImageObject.alt || ''}
+                  key={currentImageObject.id}
+                  mediaId={currentImageObject.id}
+                  showDownloadButton={false}
+                  sizes="(max-width: 1024px) 100vw, 66vw"
+                  src={currentImageObject.url || ''}
+                />
+              )}
             </div>
-          )}
+
+            {gallery.length > 1 && (
+              <div className="grid grid-cols-4 gap-3 lg:basis-1/3 lg:grid-cols-3 lg:content-start">
+                {gallery.map((item, i) => {
+                  if (typeof item.image !== 'object' || !item.image) return null
+
+                  return (
+                    <button
+                      aria-label={`Show image ${i + 1}`}
+                      className="aspect-square"
+                      key={`${item.image.id}-${i}`}
+                      onClick={() => setCurrent(i)}
+                      type="button"
+                    >
+                      <GridTileImage active={i === current} media={item.image} />
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

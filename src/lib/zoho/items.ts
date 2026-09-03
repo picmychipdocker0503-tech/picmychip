@@ -55,6 +55,12 @@ function itemNeedsUpdate(existing: ZohoItem, args: FindOrCreateZohoItemArgs): bo
   if (args.hsnCode && (existing.hsn_or_sac || '') !== args.hsnCode) return true
   if (args.sku && (existing.sku || '') !== args.sku) return true
   if (typeof args.rate === 'number' && existing.rate !== args.rate) return true
+  // Catches items already synced with the old full-spec-dump description —
+  // the next order for one of those corrects it to the new short form (or
+  // clears it to blank). Checked whenever description was explicitly passed
+  // (including '' to clear) — args.description undefined means the caller
+  // has no opinion on it, so it's left alone rather than treated as "clear".
+  if (args.description !== undefined && (existing.description || '') !== args.description) return true
   return false
 }
 
@@ -84,7 +90,11 @@ function buildItemPayload(args: FindOrCreateZohoItemArgs) {
   return {
     name: args.name,
     sku: args.sku || undefined,
-    description: args.description || undefined,
+    // Passed through as-is, not `|| undefined` — an explicit '' is what
+    // actually clears an existing item's description; collapsing it to
+    // undefined here would drop the key entirely and leave a previously-set
+    // long description in place instead of clearing it.
+    description: args.description,
     hsn_or_sac: args.hsnCode || undefined,
     // Confirmed live against the org: this org doesn't persist a default
     // tax_id on the item record itself (comes back blank on the created

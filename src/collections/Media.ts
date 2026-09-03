@@ -11,6 +11,7 @@ import { fileURLToPath } from 'url'
 import { adminOnly } from '@/access/adminOnly'
 import { isAuthenticated } from '@/access/isAuthenticated'
 import { altFromFilename } from '@/utilities/altFromFilename'
+import { watermarkMediaEndpoint } from '@/endpoints/watermarkMedia'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -29,6 +30,7 @@ export const Media: CollectionConfig = {
     read: () => true,
     update: adminOnly,
   },
+  endpoints: [watermarkMediaEndpoint],
   fields: [
     {
       name: 'alt',

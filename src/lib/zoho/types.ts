@@ -40,6 +40,7 @@ export type ZohoItem = {
   rate: number
   hsn_or_sac?: string
   tax_id?: string
+  description?: string
 }
 
 export type ZohoInvoice = {

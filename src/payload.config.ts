@@ -80,6 +80,25 @@ const postgresConnectionString = (() => {
   }
 })()
 
+// Vercel always sets VERCEL=1 at build and runtime, for every deployment
+// (production or preview) — this is the actual environment check, not
+// NODE_ENV, since `next build`/`next start` set NODE_ENV=production locally
+// too. Vercel spins up a separate serverless function instance (and thus a
+// separate connection pool) per concurrent invocation — `pg`'s default max
+// of 10 per pool meant a burst of traffic could multiply into far more
+// connections than RDS actually allows, hitting its max_connections limit
+// outright ("remaining connection slots are reserved for roles with
+// privileges of the 'rds_reserved' role", confirmed live in production
+// logs) and 500ing nearly every route. A local dev process has no such
+// multiplication (one process, one pool), so capping it the same way there
+// only added queuing for every concurrent request during normal page loads
+// (also confirmed live) — this must stay conditional, not a flat constant,
+// so the same file is correct whether it's running here or on Vercel,
+// without needing to remember to special-case it on every deploy.
+const postgresPoolOptions = process.env.VERCEL
+  ? { max: 3, idleTimeoutMillis: 10_000, connectionTimeoutMillis: 10_000 }
+  : {}
+
 export default buildConfig({
   // Required for any collection's `upload.resizeOptions`/`formatOptions` to
   // actually run (Media.ts sets both) — without this, Payload silently skips
@@ -178,20 +197,7 @@ export default buildConfig({
     pool: {
       connectionString: postgresConnectionString,
       ssl: postgresSSL,
-      // Vercel spins up a separate serverless function instance (and thus a
-      // separate connection pool) per concurrent invocation — `pg`'s default
-      // max of 10 per pool meant a burst of traffic could multiply into far
-      // more connections than RDS actually allows, hitting its
-      // max_connections limit outright ("remaining connection slots are
-      // reserved for roles with privileges of the 'rds_reserved' role",
-      // confirmed live in production logs) and 500ing nearly every route.
-      // Kept low per instance since each one only needs a handful for its
-      // own request's parallel queries, not a pool sized for a long-running
-      // server. idleTimeoutMillis releases unused connections quickly
-      // instead of holding them open between requests.
-      max: 3,
-      idleTimeoutMillis: 10_000,
-      connectionTimeoutMillis: 10_000,
+      ...postgresPoolOptions,
     },
 
     // Schema changes go through `payload migrate:create` + `payload migrate` in every
