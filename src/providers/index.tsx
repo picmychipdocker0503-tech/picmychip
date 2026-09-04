@@ -49,10 +49,12 @@ export const Providers: React.FC<{
                     gallery: true,
                     inventory: true,
                     gstPercent: true,
+                    priceTiers: true,
                   },
                   variants: {
                     title: true,
                     inventory: true,
+                    priceTiers: true,
                   },
                 },
                 // The plugin's own default cart query only selects `items`/`subtotal` — every

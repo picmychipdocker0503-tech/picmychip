@@ -19,6 +19,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { setCartItemQuantity } from '@/lib/cart/setCartItemQuantity'
+import { clampTieredQuantity, getTierStep, resolveTieredUnitPrice } from '@/lib/priceTiers'
 import { FREE_SHIPPING_THRESHOLD } from '@/lib/shipping'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import { Product, Variant } from '@/payload-types'
@@ -154,12 +155,12 @@ const CartModalItem: React.FC<{ item: CartItem }> = ({ item }) => {
     typeof product.gallery?.[0]?.image === 'object' ? product.gallery?.[0]?.image : undefined
 
   let image = firstGalleryImage || metaImage
-  let price = product.priceInINR
+  let basePrice = product.priceInINR
 
   const isVariant = Boolean(variant) && typeof variant === 'object'
 
   if (isVariant) {
-    price = variant?.priceInINR
+    basePrice = variant?.priceInINR
 
     const imageVariant = product.gallery?.find((galleryItem: GalleryItem) => {
       if (!galleryItem.variantOption) return false
@@ -179,11 +180,10 @@ const CartModalItem: React.FC<{ item: CartItem }> = ({ item }) => {
 
   const target = isVariant && variant ? variant : product
   const inventory = target?.inventory
+  const tiers = target?.priceTiers
+  const price = typeof basePrice === 'number' ? resolveTieredUnitPrice(basePrice, tiers, item.quantity ?? 1) : undefined
 
-  const clampQuantity = (next: number) => {
-    const clamped = Math.max(1, Math.floor(next) || 1)
-    return typeof inventory === 'number' && inventory > 0 ? Math.min(inventory, clamped) : clamped
-  }
+  const clampQuantity = (next: number) => clampTieredQuantity(next, tiers, inventory ?? undefined)
 
   const commitQuantity = async () => {
     if (!item.id || !cart?.id) return
@@ -240,7 +240,7 @@ const CartModalItem: React.FC<{ item: CartItem }> = ({ item }) => {
               disabled={isUpdatingQuantity}
               inputMode="numeric"
               max={typeof inventory === 'number' && inventory > 0 ? inventory : undefined}
-              min={1}
+              min={getTierStep(tiers)}
               onBlur={commitQuantity}
               onChange={(e) => setQuantityInput(e.target.value)}
               onKeyDown={(e) => {
@@ -249,6 +249,7 @@ const CartModalItem: React.FC<{ item: CartItem }> = ({ item }) => {
                   e.currentTarget.blur()
                 }
               }}
+              step={getTierStep(tiers)}
               type="number"
               value={quantityInput}
             />

@@ -57,6 +57,18 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Cart is empty.' }, { status: 400 })
     }
 
+    // cart.subtotal is a snapshot, only recomputed by applyTieredPricing/applyCartDiscounts
+    // when the cart document itself is next saved — a price tier edited (or removed) in admin
+    // after the cart was last touched would otherwise leave it stale until the customer changes
+    // quantity again. Re-saving with its own unchanged items forces both hooks to re-run fresh
+    // (in the same order they always run in), so the amount actually charged can never be stale.
+    const refreshedCart = await payload.update({
+      id: cart.id,
+      collection: 'carts',
+      data: { items: cart.items },
+      overrideAccess: true,
+    })
+
     const siteSettings = await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
 
     let selectedShippingMethod
@@ -67,7 +79,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: message }, { status: 400 })
     }
 
-    const baseSubtotal = cart.subtotal ?? 0
+    const baseSubtotal = refreshedCart.subtotal ?? 0
 
     let amount = baseSubtotal + selectedShippingMethod.amount
     if (amount > 0) {

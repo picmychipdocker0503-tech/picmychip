@@ -9,7 +9,6 @@ import { JsonLd } from '@/components/JsonLd'
 import { Datasheets } from '@/components/product/Datasheets'
 import { FrequentlyBoughtTogether } from '@/components/product/FrequentlyBoughtTogether'
 import { Gallery } from '@/components/product/Gallery'
-import { PriceTiers } from '@/components/product/PriceTiers'
 import { ProductDescription } from '@/components/product/ProductDescription'
 import { ProductFaqs } from '@/components/product/ProductFaqs'
 import { ProductReviews } from '@/components/product/ProductReviews'
@@ -22,6 +21,7 @@ import { getCategoryBreadcrumb } from '@/utilities/getCategoryBreadcrumb'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { getServerSideURL } from '@/utilities/getURL'
 import { buildBreadcrumbListJsonLd, buildProductJsonLd } from '@/utilities/jsonLd'
+import { extractKeywordsFromTitle } from '@/utilities/extractKeywordsFromTitle'
 import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 import configPromise from '@payload-config'
 import { ImageOffIcon } from 'lucide-react'
@@ -117,6 +117,9 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
       canonical: `${getServerSideURL()}/products/${slug}`,
     },
     description: metaDescription,
+    // Not a Google ranking signal — kept for internal search/filtering and
+    // structured-data consistency, same as the JSON-LD "keywords" below.
+    keywords: product.keywords?.length ? product.keywords : extractKeywordsFromTitle(product.title),
     openGraph: seoImage?.url
       ? {
           images: [
@@ -225,6 +228,7 @@ export default async function ProductPage({ params }: Args) {
     sku: product.sku,
     mpn: product.googleMerchant?.mpn || product.sku,
     gtin: product.googleMerchant?.gtin,
+    keywords: (product.keywords?.length ? product.keywords : extractKeywordsFromTitle(product.title)).join(', '),
   })
 
   const firstCategory = product.categories?.find(
@@ -309,7 +313,6 @@ export default async function ProductPage({ params }: Args) {
 
         <div className="mt-14 flex flex-col gap-14">
           <SpecTable product={product} />
-          <PriceTiers product={product} />
           <Datasheets product={product} />
           <ProductFaqs product={product} />
           {companions.length > 0 && <FrequentlyBoughtTogether companions={companions} mainProduct={product} />}

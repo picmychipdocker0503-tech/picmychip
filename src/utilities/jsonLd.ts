@@ -168,6 +168,7 @@ type ProductJsonLdArgs = {
   sku?: string | null
   mpn?: string | null
   gtin?: string | null
+  keywords?: string | null
 }
 
 /** Offers valid for 90 days from generation — long enough that Google won't
@@ -190,6 +191,7 @@ export const buildProductJsonLd = ({
   sku,
   mpn,
   gtin,
+  keywords,
 }: ProductJsonLdArgs) => ({
   name: title,
   '@context': 'https://schema.org',
@@ -200,6 +202,7 @@ export const buildProductJsonLd = ({
   sku: sku || undefined,
   mpn: mpn || undefined,
   gtin: gtin || undefined,
+  keywords: keywords || undefined,
   offers: {
     ...(typeof lowPrice === 'number' && typeof highPrice === 'number' && lowPrice !== highPrice
       ? { '@type': 'AggregateOffer', lowPrice, highPrice }

@@ -19,6 +19,7 @@ import { Suspense } from 'react'
 import { BackInStockForm } from '@/components/product/BackInStockForm'
 import { BulkOrderContact } from '@/components/product/BulkOrderContact'
 import { DeliveryEstimate } from '@/components/product/DeliveryEstimate'
+import { PriceTiers } from '@/components/product/PriceTiers'
 import { StockIndicator } from '@/components/product/StockIndicator'
 import { TrustBadges } from '@/components/product/TrustBadges'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
@@ -121,53 +122,13 @@ export function ProductDescription({
         </Link>
       )}
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <h1 className="text-foreground text-2xl font-bold tracking-tight sm:text-3xl">{product.title}</h1>
-          {skuStyle?.show && product.sku && (
-            <p className="mt-3 text-sm font-bold" style={{ color: skuStyle?.textColor || '#4169e1' }}>
-              SKU: {product.sku}
-            </p>
-          )}
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-1.5">
-          {(isClearance || isOnSale) && (
-            <span
-              className={cn(
-                'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase',
-                isClearance ? 'bg-amber-600 text-white' : 'bg-primary text-primary-foreground',
-              )}
-            >
-              <TagIcon className="size-3" />
-              {isClearance ? 'Clearance' : discountPercent > 0 ? `${discountPercent}% Off` : 'Sale'}
-            </span>
-          )}
-
-          <div className="flex items-baseline gap-2">
-            {isOnSale && (
-              <span className="text-muted-foreground text-base line-through">
-                <Price amount={amount} as="span" />
-              </span>
-            )}
-            <div className="text-primary text-2xl font-bold tracking-tight">
-              {hasVariants ? (
-                <Price highestAmount={highestAmount} lowestAmount={lowestAmount} />
-              ) : (
-                <Price amount={displayAmount} />
-              )}
-            </div>
-          </div>
-
-          {isOnSale && amount > displayAmount && (
-            <span className="text-success text-xs font-semibold">
-              You save <Price amount={amount - displayAmount} as="span" />
-            </span>
-          )}
-
-          {isClearance && product.clearanceReason && (
-            <span className="text-muted-foreground max-w-[16rem] text-right text-xs">{product.clearanceReason}</span>
-          )}
-        </div>
+      <div>
+        <h1 className="text-foreground text-2xl font-bold tracking-tight sm:text-3xl">{product.title}</h1>
+        {skuStyle?.show && product.sku && (
+          <p className="mt-3 text-sm font-bold" style={{ color: skuStyle?.textColor || '#4169e1' }}>
+            SKU: {product.sku}
+          </p>
+        )}
       </div>
 
       <a className="-mt-3 flex w-fit items-center gap-2 hover:opacity-80" href="#reviews">
@@ -202,6 +163,47 @@ export function ProductDescription({
       ) : null}
 
       <div className="border-border bg-muted/20 flex flex-col gap-5 rounded-2xl border p-5">
+        <div className="flex flex-col gap-1.5">
+          {(isClearance || isOnSale) && (
+            <span
+              className={cn(
+                'inline-flex w-fit items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide uppercase',
+                isClearance ? 'bg-amber-600 text-white' : 'bg-primary text-primary-foreground',
+              )}
+            >
+              <TagIcon className="size-3" />
+              {isClearance ? 'Clearance' : discountPercent > 0 ? `${discountPercent}% Off` : 'Sale'}
+            </span>
+          )}
+
+          <div className="flex items-baseline gap-2">
+            {isOnSale && (
+              <span className="text-muted-foreground text-base line-through">
+                <Price amount={amount} as="span" />
+              </span>
+            )}
+            <div className="text-primary text-2xl font-bold tracking-tight">
+              {hasVariants ? (
+                <Price highestAmount={highestAmount} lowestAmount={lowestAmount} />
+              ) : (
+                <Price amount={displayAmount} />
+              )}
+            </div>
+          </div>
+
+          {isOnSale && amount > displayAmount && (
+            <span className="text-success text-xs font-semibold">
+              You save <Price amount={amount - displayAmount} as="span" />
+            </span>
+          )}
+
+          {isClearance && product.clearanceReason && (
+            <span className="text-muted-foreground text-xs">{product.clearanceReason}</span>
+          )}
+        </div>
+
+        {!hasVariants && <PriceTiers product={product} />}
+
         {hasVariants && (
           <Suspense fallback={null}>
             <VariantSelector product={product} />

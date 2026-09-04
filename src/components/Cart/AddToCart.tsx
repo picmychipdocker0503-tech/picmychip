@@ -1,10 +1,12 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
+import { Price } from '@/components/Price'
 import { setCartItemQuantity } from '@/lib/cart/setCartItemQuantity'
+import { clampTieredQuantity, getTierStep, resolveTieredUnitPrice } from '@/lib/priceTiers'
 import type { Product, Variant } from '@/payload-types'
 
-import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
+import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
 import { useTranslations } from 'next-intl'
 import { CheckIcon, MinusIcon, PlusIcon, ShoppingCartIcon, ZapIcon } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -22,19 +24,12 @@ export function AddToCart({ product }: Props) {
   // same page) would disable Add to Cart/Buy Now here too. Each action
   // below tracks its own pending state instead.
   const { addItem, cart, refreshCart } = useCart()
+  const { currency } = useCurrency()
   const t = useTranslations('cart')
   const router = useRouter()
   const searchParams = useSearchParams()
   const [justAdded, setJustAdded] = useState(false)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
-  const [quantity, setQuantity] = useState(1)
-  // The input's own text, separate from the committed `quantity` number —
-  // a number input bound straight to a number state can't ever show "" while
-  // you're backspacing a single digit to retype it (nothing changes, so
-  // React never re-renders, but the very next re-render from anything else —
-  // a cart refresh, a parent state change — snaps it straight back to the
-  // old value with nothing typed yet in between).
-  const [quantityInput, setQuantityInput] = useState('1')
   const [isBuyingNow, setIsBuyingNow] = useState(false)
 
   const variants = product.variants?.docs || []
@@ -58,9 +53,33 @@ export function AddToCart({ product }: Props) {
     return undefined
   }, [product.enableVariants, searchParams, variants])
 
+  // Price tiers are entered in INR only (src/fields/priceTiers.ts has no
+  // per-currency variant) — falls back to an empty array (flat pricing, same
+  // as before) for any other currency, same as PayU/Zoho only supporting INR.
+  const tiers = useMemo(() => {
+    if (currency.code !== 'INR') return []
+    const source = product.enableVariants && selectedVariant ? selectedVariant : product
+    return source?.priceTiers ?? []
+  }, [currency.code, product, selectedVariant])
+  const tierStep = getTierStep(tiers)
+
+  const [quantity, setQuantity] = useState(tierStep)
+  // The input's own text, separate from the committed `quantity` number —
+  // a number input bound straight to a number state can't ever show "" while
+  // you're backspacing a single digit to retype it (nothing changes, so
+  // React never re-renders, but the very next re-render from anything else —
+  // a cart refresh, a parent state change — snaps it straight back to the
+  // old value with nothing typed yet in between).
+  const [quantityInput, setQuantityInput] = useState(String(tierStep))
+
   const availableInventory = product.enableVariants
     ? (selectedVariant?.inventory ?? 0)
     : (product.inventory ?? 0)
+
+  const basePrice = product.enableVariants
+    ? (selectedVariant?.[`priceIn${currency.code}` as keyof Variant] as number | undefined)
+    : (product[`priceIn${currency.code}` as keyof Product] as number | undefined)
+  const unitPrice = resolveTieredUnitPrice(basePrice ?? 0, tiers, quantity)
 
   // The line already in the cart for this exact product/variant, if any —
   // used both to pre-fill the quantity box with what's already there (rather
@@ -83,10 +102,10 @@ export function AddToCart({ product }: Props) {
   }, [cart?.items, product, selectedVariant])
 
   useEffect(() => {
-    const next = existingItem?.quantity ?? 1
+    const next = existingItem?.quantity ?? tierStep
     setQuantity(next)
     setQuantityInput(String(next))
-  }, [existingItem?.quantity])
+  }, [existingItem?.quantity, tierStep])
 
   const disabled = useMemo<boolean>(() => {
     if (product.enableVariants) {
@@ -100,11 +119,8 @@ export function AddToCart({ product }: Props) {
   }, [selectedVariant, product])
 
   const clampQuantity = useCallback(
-    (next: number) => {
-      const clamped = Math.max(1, Math.floor(next) || 1)
-      return availableInventory > 0 ? Math.min(availableInventory, clamped) : clamped
-    },
-    [availableInventory],
+    (next: number) => clampTieredQuantity(next, tiers, availableInventory),
+    [availableInventory, tiers],
   )
 
   // If this product/variant is already a line in the cart, pushes the new
@@ -132,8 +148,8 @@ export function AddToCart({ product }: Props) {
     [clampQuantity, syncExistingLine],
   )
 
-  const decreaseQuantity = () => applyQuantity(quantity - 1)
-  const increaseQuantity = () => applyQuantity(quantity + 1)
+  const decreaseQuantity = () => applyQuantity(quantity - tierStep)
+  const increaseQuantity = () => applyQuantity(quantity + tierStep)
 
   const handleQuantityInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Always mirror exactly what's typed, including empty — this is a plain
@@ -232,7 +248,7 @@ export function AddToCart({ product }: Props) {
         <button
           aria-label="Decrease quantity"
           className="text-muted-foreground hover:text-foreground flex size-9 items-center justify-center disabled:opacity-40"
-          disabled={quantity <= 1}
+          disabled={quantity <= tierStep}
           onClick={decreaseQuantity}
           type="button"
         >
@@ -243,10 +259,11 @@ export function AddToCart({ product }: Props) {
           className="w-10 [appearance:textfield] bg-transparent text-center text-sm font-medium [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
           inputMode="numeric"
           max={availableInventory > 0 ? availableInventory : undefined}
-          min={1}
+          min={tierStep}
           onBlur={commitQuantityInput}
           onChange={handleQuantityInputChange}
           onKeyDown={handleQuantityInputKeyDown}
+          step={tierStep}
           type="number"
           value={quantityInput}
         />
@@ -260,6 +277,17 @@ export function AddToCart({ product }: Props) {
           <PlusIcon className="size-4" />
         </button>
       </div>
+
+      {tierStep > 1 && (
+        <div className="flex flex-col text-sm">
+          <span className="text-muted-foreground text-xs">
+            Minimum: {tierStep} &middot; Multiple: {tierStep}
+          </span>
+          <span className="font-semibold">
+            <Price amount={unitPrice} as="span" /> each &middot; Total: <Price amount={unitPrice * quantity} as="span" />
+          </span>
+        </div>
+      )}
 
       <Button
         aria-label="Add to cart"

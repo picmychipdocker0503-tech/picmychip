@@ -559,11 +559,18 @@ export interface Product {
    */
   compatibleProducts?: (number | Product)[] | null;
   /**
-   * Optional bulk/reseller pricing tiers by minimum quantity (e.g. hobbyist vs reseller quantities). Data-only for now — checkout price resolution reads this in a later phase.
+   * Bulk/reseller pricing tiers by quantity (e.g. hobbyist vs reseller quantities). The price actually charged at checkout resolves from these — see src/lib/priceTiers.ts.
    */
   priceTiers?:
     | {
         minQuantity: number;
+        /**
+         * Top of this tier's range — this price only applies to quantities between Min and Max Quantity. You can leave this blank on all but your highest-quantity tier (it'll automatically stop where the next tier's Min Quantity begins). On your HIGHEST tier, this must be filled in for it to price anything at all — a blank Max Quantity there means that tier is inactive, not "open-ended". Any quantity not covered by an active tier falls back to the product's normal per-piece rate.
+         */
+        maxQuantity?: number | null;
+        /**
+         * Enter in rupees (e.g. 500 for ₹500.00) — stored internally in paise.
+         */
         priceInINR: number;
         id?: string | null;
       }[]
@@ -742,6 +749,14 @@ export interface Product {
    * Stock-keeping unit sent to Zoho Books. Falls back to the product slug when left blank.
    */
   sku?: string | null;
+  /**
+   * Auto-syncs from Title on save (internal search/filtering and structured-data consistency — not a Google ranking signal). Check "Override Keywords" below to edit this list manually instead.
+   */
+  keywords?: string[] | null;
+  /**
+   * Stop auto-syncing SEO Keywords from Title, so you can edit the list above by hand.
+   */
+  overrideKeywords?: boolean | null;
   /**
    * HSN/SAC code for GST invoicing — required on every product for a compliant Zoho invoice.
    */
@@ -1890,11 +1905,18 @@ export interface Variant {
   priceInINREnabled?: boolean | null;
   priceInINR?: number | null;
   /**
-   * Optional bulk/reseller pricing tiers by minimum quantity (e.g. hobbyist vs reseller quantities). Data-only for now — checkout price resolution reads this in a later phase.
+   * Bulk/reseller pricing tiers by quantity (e.g. hobbyist vs reseller quantities). The price actually charged at checkout resolves from these — see src/lib/priceTiers.ts.
    */
   priceTiers?:
     | {
         minQuantity: number;
+        /**
+         * Top of this tier's range — this price only applies to quantities between Min and Max Quantity. You can leave this blank on all but your highest-quantity tier (it'll automatically stop where the next tier's Min Quantity begins). On your HIGHEST tier, this must be filled in for it to price anything at all — a blank Max Quantity there means that tier is inactive, not "open-ended". Any quantity not covered by an active tier falls back to the product's normal per-piece rate.
+         */
+        maxQuantity?: number | null;
+        /**
+         * Enter in rupees (e.g. 500 for ₹500.00) — stored internally in paise.
+         */
         priceInINR: number;
         id?: string | null;
       }[]
@@ -3925,6 +3947,7 @@ export interface VariantsSelect<T extends boolean = true> {
     | T
     | {
         minQuantity?: T;
+        maxQuantity?: T;
         priceInINR?: T;
         id?: T;
       };
@@ -3998,6 +4021,7 @@ export interface ProductsSelect<T extends boolean = true> {
     | T
     | {
         minQuantity?: T;
+        maxQuantity?: T;
         priceInINR?: T;
         id?: T;
       };
@@ -4118,6 +4142,8 @@ export interface ProductsSelect<T extends boolean = true> {
   lowStockThreshold?: T;
   weightInGrams?: T;
   sku?: T;
+  keywords?: T;
+  overrideKeywords?: T;
   hsnCode?: T;
   zohoItemId?: T;
   gstPercent?: T;

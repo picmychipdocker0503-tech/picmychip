@@ -1,7 +1,7 @@
 import { formBuilderPlugin } from '@payloadcms/plugin-form-builder'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { Plugin } from 'payload'
-import { GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
+import { GenerateDescription, GenerateTitle, GenerateURL } from '@payloadcms/plugin-seo/types'
 import { FixedToolbarFeature, HeadingFeature, lexicalEditor } from '@payloadcms/richtext-lexical'
 import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
 import { s3Storage } from '@payloadcms/storage-s3'
@@ -21,6 +21,7 @@ import { isAdmin } from '@/access/isAdmin'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
 import { isStrictDocumentOwner } from '@/access/isStrictDocumentOwner'
 import { applyCartDiscounts } from '@/hooks/applyCartDiscounts'
+import { applyTieredPricing } from '@/hooks/applyTieredPricing'
 import { applyOrderDiscountSideEffects } from '@/hooks/applyOrderDiscountSideEffects'
 import { computeGstTaxBreakdown } from '@/hooks/computeGstTaxBreakdown'
 import { createZohoSalesOrder } from '@/hooks/createZohoSalesOrder'
@@ -30,6 +31,8 @@ import { issueGiftCardsForOrder } from '@/hooks/issueGiftCardsForOrder'
 import { restoreInventoryOnCancellation } from '@/hooks/restoreInventoryOnCancellation'
 import { sendOrderLifecycleEmails } from '@/hooks/sendOrderLifecycleEmails'
 import { billingDetailsAddressFields, businessDetailsGroup } from '@/fields/businessDetails'
+import { extractKeywordsFromTitle } from '@/utilities/extractKeywordsFromTitle'
+import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 
 const generateTitle: GenerateTitle<Product | Page | Category | Guide> = ({ doc }) => {
   return doc?.title ? `${doc.title} | Picmychip` : 'Picmychip'
@@ -39,6 +42,29 @@ const generateURL: GenerateURL<Product | Page | Category | Guide> = ({ doc }) =>
   const url = getServerSideURL()
 
   return doc?.slug ? `${url}/${doc.slug}` : url
+}
+
+// Only Products carry a `keywords` field and get keyword-woven descriptions here —
+// `priceInINR` is used purely to type-narrow the union, since Page/Category/Guide
+// don't have it. Other doc types just fall back to their title, same as before this
+// option existed (the SEO plugin only calls this to power the admin's
+// "Auto-generate" button/preview — it never silently overwrites a saved description).
+const generateDescription: GenerateDescription<Product | Page | Category | Guide> = ({ doc }) => {
+  if (!doc || !('priceInINR' in doc)) return doc?.title || 'Picmychip'
+
+  const product = doc as Product
+  const keywords =
+    product.keywords && product.keywords.length > 0
+      ? product.keywords.slice(0, 3)
+      : extractKeywordsFromTitle(product.title).slice(0, 3)
+
+  const base = product.description ? richTextToPlainText(product.description).trim() : ''
+
+  if (!keywords.length) return base || product.title
+
+  const keywordPhrase = keywords.join(', ')
+
+  return (base ? `${base} — ${keywordPhrase}.` : `${product.title} — ${keywordPhrase}.`).slice(0, 300)
 }
 
 // Render's web service disk is ephemeral and rebuilt on every deploy, so locally-uploaded
@@ -55,6 +81,7 @@ const r2PublicURL = (process.env.NEXT_PUBLIC_ASSET_DOMAIN || 'https://assets.pic
 
 export const plugins: Plugin[] = [
   seoPlugin({
+    generateDescription,
     generateTitle,
     generateURL,
   }),
@@ -672,7 +699,14 @@ export const plugins: Plugin[] = [
         },
         hooks: {
           ...defaultCollection.hooks,
-          beforeChange: [...(defaultCollection.hooks?.beforeChange ?? []), applyCartDiscounts],
+          // applyTieredPricing must run before applyCartDiscounts, which nets a
+          // coupon/gift-card discount off of data.subtotal fresh on every save —
+          // discounts need to apply on top of the tier-corrected subtotal.
+          beforeChange: [
+            ...(defaultCollection.hooks?.beforeChange ?? []),
+            applyTieredPricing,
+            applyCartDiscounts,
+          ],
         },
         fields: [
           ...defaultCollection.fields,

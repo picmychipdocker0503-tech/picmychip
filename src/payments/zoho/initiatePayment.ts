@@ -52,6 +52,18 @@ export const initiatePayment =
       throw new Error('A valid customer email is required to make a purchase.')
     }
 
+    // cart.subtotal is a snapshot, only recomputed by applyTieredPricing/applyCartDiscounts
+    // when the cart document itself is next saved — a price tier edited (or removed) in admin
+    // after the cart was last touched would otherwise leave it stale until the customer changes
+    // quantity again. Re-saving with its own unchanged items forces both hooks to re-run fresh
+    // (in the same order they always run in), so the amount actually charged can never be stale.
+    const refreshedCart = await payload.update({
+      id: cart.id,
+      collection: 'carts',
+      data: { items: cart.items },
+      req,
+    })
+
     const siteSettings = await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
     const tax = siteSettings?.taxSettings
     const defaultGstPercent = tax?.gstRatePercent ?? 18
@@ -62,7 +74,7 @@ export const initiatePayment =
     const { finalAmount } = await computeCheckoutTotal({
       payload,
       items: cart.items,
-      baseSubtotal: cart.subtotal ?? 0,
+      baseSubtotal: refreshedCart.subtotal ?? 0,
       shippingAmount: shippingMethod.amount,
       businessState,
       customerState,

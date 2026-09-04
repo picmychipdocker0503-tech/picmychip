@@ -13,6 +13,7 @@ import { notifyWishlistChanges } from '@/hooks/notifyWishlistChanges'
 import { removeProductFromSearchIndex } from '@/hooks/removeProductFromSearchIndex'
 import { syncProductToSearchIndex } from '@/hooks/syncProductToSearchIndex'
 import { revalidateProduct, revalidateProductDelete } from './hooks/revalidateProduct'
+import { populateKeywords } from './hooks/populateKeywords'
 import {
   MetaDescriptionField,
   MetaImageField,
@@ -33,6 +34,7 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
   ...defaultCollection,
   hooks: {
     ...defaultCollection?.hooks,
+    beforeValidate: [...(defaultCollection?.hooks?.beforeValidate ?? []), populateKeywords],
     beforeChange: [...(defaultCollection?.hooks?.beforeChange ?? []), deriveStockStatus, deriveSalePricing],
     afterChange: [
       ...(defaultCollection?.hooks?.afterChange ?? []),
@@ -406,6 +408,26 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
       admin: {
         position: 'sidebar',
         description: 'Stock-keeping unit sent to Zoho Books. Falls back to the product slug when left blank.',
+      },
+    },
+    {
+      name: 'keywords',
+      type: 'text',
+      hasMany: true,
+      admin: {
+        position: 'sidebar',
+        description:
+          'Auto-syncs from Title on save (internal search/filtering and structured-data consistency — not a Google ranking signal). Check "Override Keywords" below to edit this list manually instead.',
+      },
+      label: 'SEO Keywords',
+    },
+    {
+      name: 'overrideKeywords',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description: 'Stop auto-syncing SEO Keywords from Title, so you can edit the list above by hand.',
       },
     },
     {

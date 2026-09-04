@@ -13,6 +13,30 @@ export const PriceTiers: React.FC<Props> = ({ product }) => {
 
   if (!tiers.length) return null
 
+  const sorted = [...tiers].sort((a, b) => (a.minQuantity ?? 0) - (b.minQuantity ?? 0))
+
+  // Mirrors resolveTieredUnitPrice's rules exactly, so this table never shows
+  // a price a customer wouldn't actually be charged: a non-last tier with no
+  // maxQuantity is bounded by the next tier's minQuantity, but the highest
+  // tier needs an explicit maxQuantity to price anything at all — left
+  // blank, it's inactive and simply isn't shown (quantities that high fall
+  // back to the flat base price, same as anything below the first tier).
+  const rows: { key: string; label: string; priceInINR: number | null | undefined }[] = []
+
+  sorted.forEach((tier, index) => {
+    const next = sorted[index + 1]
+    const isLast = !next
+    const max = tier.maxQuantity ?? next?.minQuantity
+
+    if (isLast && !tier.maxQuantity) return
+
+    rows.push({
+      key: tier.id ?? String(tier.minQuantity),
+      label: max ? `${tier.minQuantity} - ${max}` : `${tier.minQuantity}+`,
+      priceInINR: tier.priceInINR,
+    })
+  })
+
   return (
     <div className="border-border bg-card rounded-3xl border p-6 sm:p-8">
       <h2 className="mb-5 flex items-center gap-3">
@@ -29,11 +53,11 @@ export const PriceTiers: React.FC<Props> = ({ product }) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tiers.map((tier) => (
-            <TableRow key={tier.id ?? tier.minQuantity}>
-              <TableCell className="font-medium">{tier.minQuantity}+</TableCell>
+          {rows.map((row) => (
+            <TableRow key={row.key}>
+              <TableCell className="font-medium">{row.label}</TableCell>
               <TableCell className="text-primary font-semibold">
-                {typeof tier.priceInINR === 'number' && <Price amount={tier.priceInINR} as="span" />}
+                {typeof row.priceInINR === 'number' && <Price amount={row.priceInINR} as="span" />}
               </TableCell>
             </TableRow>
           ))}

@@ -5,6 +5,7 @@ import type { Product, Variant } from '@/payload-types'
 
 import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
+import { resolveTieredUnitPrice } from '@/lib/priceTiers'
 import { useCartDrawer } from '@/providers/CartDrawer'
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
 import { CheckCircle2Icon, XIcon } from 'lucide-react'
@@ -117,12 +118,14 @@ const MiniCartItem: React.FC<{ item: CartItem }> = ({ item }) => {
     typeof product.gallery?.[0]?.image === 'object' ? product.gallery?.[0]?.image : undefined
 
   let image = firstGalleryImage || metaImage
-  let price = product.priceInINR
+  let basePrice = product.priceInINR
+  let tiers = product.priceTiers
 
   const isVariant = Boolean(variant) && typeof variant === 'object'
 
   if (isVariant) {
-    price = variant?.priceInINR
+    basePrice = variant?.priceInINR
+    tiers = variant?.priceTiers
 
     const imageVariant = product.gallery?.find((galleryItem: GalleryItem) => {
       if (!galleryItem.variantOption) return false
@@ -139,6 +142,9 @@ const MiniCartItem: React.FC<{ item: CartItem }> = ({ item }) => {
       image = imageVariant.image
     }
   }
+
+  const price =
+    typeof basePrice === 'number' ? resolveTieredUnitPrice(basePrice, tiers, item.quantity ?? 1) : undefined
 
   return (
     <li className="flex items-center gap-3 py-2">

@@ -75,6 +75,9 @@ import * as migration_20260902_000000_add_sku_style_settings from './20260902_00
 import * as migration_20260902_010000_add_sku_style_show_toggle from './20260902_010000_add_sku_style_show_toggle';
 import * as migration_20260903_000000_add_zoho_payments from './20260903_000000_add_zoho_payments';
 import * as migration_20260904_010000_add_zoho_payments_feature_flag from './20260904_010000_add_zoho_payments_feature_flag';
+import * as migration_20260904_020000_add_price_tiers_max_quantity from './20260904_020000_add_price_tiers_max_quantity';
+import * as migration_20260904_030000_add_price_tiers_max_quantity_versions from './20260904_030000_add_price_tiers_max_quantity_versions';
+import * as migration_20260904_040000_add_product_override_keywords from './20260904_040000_add_product_override_keywords';
 
 export const migrations = [
   {
@@ -461,5 +464,20 @@ export const migrations = [
     up: migration_20260904_010000_add_zoho_payments_feature_flag.up,
     down: migration_20260904_010000_add_zoho_payments_feature_flag.down,
     name: '20260904_010000_add_zoho_payments_feature_flag',
+  },
+  {
+    up: migration_20260904_020000_add_price_tiers_max_quantity.up,
+    down: migration_20260904_020000_add_price_tiers_max_quantity.down,
+    name: '20260904_020000_add_price_tiers_max_quantity',
+  },
+  {
+    up: migration_20260904_030000_add_price_tiers_max_quantity_versions.up,
+    down: migration_20260904_030000_add_price_tiers_max_quantity_versions.down,
+    name: '20260904_030000_add_price_tiers_max_quantity_versions',
+  },
+  {
+    up: migration_20260904_040000_add_product_override_keywords.up,
+    down: migration_20260904_040000_add_product_override_keywords.down,
+    name: '20260904_040000_add_product_override_keywords',
   },
 ];

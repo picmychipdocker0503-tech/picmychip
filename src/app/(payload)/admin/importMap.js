@@ -46,6 +46,7 @@ import { FormSubmissionsListView as FormSubmissionsListView_aee5ae7a0c665b95bceb
 import { VariantOptionsSelector as VariantOptionsSelector_b91672ccd6e8b071c11142ab941fedfb } from '@payloadcms/plugin-ecommerce/rsc'
 import { PriceCell as PriceCell_e27bf7b8cc50640dcdd584767b8eac3c } from '@payloadcms/plugin-ecommerce/client'
 import { PriceInput as PriceInput_b91672ccd6e8b071c11142ab941fedfb } from '@payloadcms/plugin-ecommerce/rsc'
+import { RupeeRateField as RupeeRateField_fd7a8dffb6516a8018b4ff4bc9ab1926 } from '@/components/admin/RupeeRateField'
 import { ProductTitleCell as ProductTitleCell_8a7e9b1ab9d828f2ebd540cf92e5fed2 } from '@/components/admin/cells/ProductTitleCell'
 import { HorizontalRuleFeatureClient as HorizontalRuleFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ProductStockCell as ProductStockCell_535a2924fcd2b7bd635f6789d83e85e6 } from '@/components/admin/cells/ProductStockCell'
@@ -122,6 +123,7 @@ export const importMap = {
   "@payloadcms/plugin-ecommerce/rsc#VariantOptionsSelector": VariantOptionsSelector_b91672ccd6e8b071c11142ab941fedfb,
   "@payloadcms/plugin-ecommerce/client#PriceCell": PriceCell_e27bf7b8cc50640dcdd584767b8eac3c,
   "@payloadcms/plugin-ecommerce/rsc#PriceInput": PriceInput_b91672ccd6e8b071c11142ab941fedfb,
+  "@/components/admin/RupeeRateField#RupeeRateField": RupeeRateField_fd7a8dffb6516a8018b4ff4bc9ab1926,
   "@/components/admin/cells/ProductTitleCell#ProductTitleCell": ProductTitleCell_8a7e9b1ab9d828f2ebd540cf92e5fed2,
   "@payloadcms/richtext-lexical/client#HorizontalRuleFeatureClient": HorizontalRuleFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/admin/cells/ProductStockCell#ProductStockCell": ProductStockCell_535a2924fcd2b7bd635f6789d83e85e6,

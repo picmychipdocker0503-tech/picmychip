@@ -16,6 +16,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 
 import { redirectToPayU, type PayuRedirectFields } from '@/lib/redirectToPayU'
 import { createZohoPaymentsInstance } from '@/lib/loadZohoPaymentsWidget'
+import { resolveTieredUnitPrice } from '@/lib/priceTiers'
 import { useAddresses, useCart, usePayments } from '@payloadcms/plugin-ecommerce/client/react'
 import { CheckoutAddresses } from '@/components/checkout/CheckoutAddresses'
 import { CreateAddressModal } from '@/components/addresses/CreateAddressModal'
@@ -91,10 +92,12 @@ export const CheckoutPage: React.FC<{
       ? computeOrderTaxByRateBucket({
           items: (cart.items || []).reduce<TaxLineItem[]>((acc, item) => {
             if (typeof item.product !== 'object' || !item.product || !item.quantity) return acc
-            const unitPrice =
-              item.variant && typeof item.variant === 'object'
-                ? (item.variant.priceInINR ?? item.product.priceInINR ?? 0)
-                : (item.product.priceInINR ?? 0)
+            const isVariant = item.variant && typeof item.variant === 'object'
+            const basePrice = isVariant
+              ? (item.variant.priceInINR ?? item.product.priceInINR ?? 0)
+              : (item.product.priceInINR ?? 0)
+            const tiers = isVariant ? item.variant.priceTiers : item.product.priceTiers
+            const unitPrice = resolveTieredUnitPrice(basePrice, tiers, item.quantity)
             acc.push({
               gstPercent: item.product.gstPercent ?? defaultGstPercent,
               nominal: unitPrice * item.quantity,
@@ -740,12 +743,14 @@ export const CheckoutPage: React.FC<{
               if (!quantity) return null
 
               let image = gallery?.[0]?.image || meta?.image
-              let price = product?.priceInINR
+              let basePrice = product?.priceInINR
+              let tiers = product?.priceTiers
 
               const isVariant = Boolean(variant) && typeof variant === 'object'
 
               if (isVariant) {
-                price = variant?.priceInINR
+                basePrice = variant?.priceInINR
+                tiers = variant?.priceTiers
 
                 const imageVariant = product.gallery?.find((item: GalleryItem) => {
                   if (!item.variantOption) return false
@@ -766,6 +771,8 @@ export const CheckoutPage: React.FC<{
                   image = imageVariant.image
                 }
               }
+
+              const price = typeof basePrice === 'number' ? resolveTieredUnitPrice(basePrice, tiers, quantity) : undefined
 
               return (
                 <div className="relative flex items-start gap-3" key={index}>
