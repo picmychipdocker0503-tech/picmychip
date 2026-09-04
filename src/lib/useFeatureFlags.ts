@@ -18,6 +18,7 @@ const DEFAULTS: FeatureFlag = {
   rewardsProgram: false,
   freeShippingBanner: false,
   compareProducts: true,
+  zohoPayments: false,
   updatedAt: '',
   createdAt: '',
 }

@@ -150,6 +150,7 @@ const hitToProduct = (hit: ProductSearchDocument): Partial<Product> => ({
   id: Number(hit.id),
   title: hit.title,
   slug: hit.slug,
+  sku: hit.sku ?? undefined,
   priceInINR: hit.priceInINR,
   compareAtPriceInINR: hit.compareAtPriceInINR,
   onSale: hit.onSale,

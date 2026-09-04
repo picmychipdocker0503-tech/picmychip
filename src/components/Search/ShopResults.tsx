@@ -9,6 +9,7 @@ import { MobileProductGridItem } from '@/components/ProductGridItem/MobileProduc
 import { ProductMatchingImage } from '@/components/product/ProductMatchingImage'
 import { sorting } from '@/lib/constants'
 import { useLoadMoreProducts } from '@/lib/useLoadMoreProducts'
+import { useSkuStyle } from '@/lib/useSkuStyle'
 import { useTranslations } from 'next-intl'
 import { createUrl } from '@/utilities/createUrl'
 import { useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
@@ -29,6 +30,7 @@ export const ShopResults: React.FC<Props> = ({ products, totalDocs, ratings, has
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const t = useTranslations('search')
+  const skuStyle = useSkuStyle()
   const { currency } = useCurrency()
   const priceField = `priceIn${currency.code}` as keyof Product
   const [view, setView] = useState<'grid' | 'list'>('grid')
@@ -119,6 +121,7 @@ export const ShopResults: React.FC<Props> = ({ products, totalDocs, ratings, has
                 priority={index < 4}
                 product={product}
                 reviewCount={product.id ? loadedRatings?.[product.id]?.count : undefined}
+                skuStyle={skuStyle}
               />
             ))}
           </Grid>
@@ -132,6 +135,7 @@ export const ShopResults: React.FC<Props> = ({ products, totalDocs, ratings, has
                 priority={index < 4}
                 product={product}
                 reviewCount={product.id ? loadedRatings?.[product.id]?.count : undefined}
+                skuStyle={skuStyle}
               />
             ))}
           </Grid>
@@ -165,6 +169,11 @@ export const ShopResults: React.FC<Props> = ({ products, totalDocs, ratings, has
                       <div className="font-bold text-sm text-foreground group-hover:text-primary transition-colors truncate">
                         {product.title}
                       </div>
+                      {skuStyle.show && product.sku && (
+                        <p className="text-[11px] font-bold" style={{ color: skuStyle.textColor }}>
+                          SKU: {product.sku}
+                        </p>
+                      )}
                       <div className="flex items-center gap-2 mt-1">
                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-500">
                           <ShieldCheck className="size-3" />

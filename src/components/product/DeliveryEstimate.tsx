@@ -1,15 +1,19 @@
 'use client'
 
-import { TruckIcon } from 'lucide-react'
+import { Loader2Icon, TruckIcon } from 'lucide-react'
 import React, { useState } from 'react'
 
 const PINCODE_PATTERN = /^\d{6}$/
 
+type PostOffice = { Name?: string; District?: string; State?: string }
+type PincodeApiResponse = { Status?: string; PostOffice?: PostOffice[] | null }[]
+
 export const DeliveryEstimate: React.FC = () => {
   const [pincode, setPincode] = useState('')
+  const [isChecking, setIsChecking] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null)
 
-  const checkPincode = (e: React.FormEvent) => {
+  const checkPincode = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!PINCODE_PATTERN.test(pincode)) {
@@ -17,12 +21,32 @@ export const DeliveryEstimate: React.FC = () => {
       return
     }
 
-    // No live courier API is wired up yet — this is a general estimate,
-    // not a real-time serviceability check against a specific pincode.
-    setResult({
-      ok: true,
-      message: `Estimated delivery in 3–5 business days to ${pincode}.`,
-    })
+    setIsChecking(true)
+    setResult(null)
+
+    try {
+      // Same India Post reverse pincode API AddressForm uses to auto-fill
+      // State/District from a typed pincode — confirms the pincode is real
+      // (rather than just correctly-shaped) before estimating delivery.
+      const res = await fetch(`https://api.postalpincode.in/pincode/${pincode}`)
+      const data = (await res.json()) as PincodeApiResponse
+      const postOffice = data?.[0]?.PostOffice?.[0]
+
+      if (data?.[0]?.Status !== 'Success' || !postOffice) {
+        setResult({ ok: false, message: "We couldn't find that pincode. Please check and try again." })
+        return
+      }
+
+      const place = [postOffice.District, postOffice.State].filter(Boolean).join(', ')
+      setResult({
+        ok: true,
+        message: `Estimated delivery in 3–5 business days to ${place || pincode}.`,
+      })
+    } catch {
+      setResult({ ok: false, message: 'Could not check that pincode right now — please try again.' })
+    } finally {
+      setIsChecking(false)
+    }
   }
 
   return (
@@ -40,8 +64,8 @@ export const DeliveryEstimate: React.FC = () => {
           placeholder="Pincode"
           value={pincode}
         />
-        <button className="btn btn-outline btn-sm" type="submit">
-          Check
+        <button className="btn btn-outline btn-sm" disabled={isChecking} type="submit">
+          {isChecking ? <Loader2Icon className="size-4 animate-spin" /> : 'Check'}
         </button>
       </form>
       {result && (

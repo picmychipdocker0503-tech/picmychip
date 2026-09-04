@@ -89,5 +89,15 @@ export const FeatureFlags: GlobalConfig = {
       defaultValue: true,
       label: 'Enable product comparison (header icon, "Add to compare" buttons, compare bar)',
     },
+    {
+      name: 'zohoPayments',
+      type: 'checkbox',
+      admin: {
+        description:
+          'Off until ZOHO_PAYMENTS_ACCOUNT_ID/API_KEY/CLIENT_ID/CLIENT_SECRET/REFRESH_TOKEN are set in the environment — turning this on before then just shows customers a payment option that will fail to initiate.',
+      },
+      defaultValue: false,
+      label: 'Enable Zoho Payments at checkout',
+    },
   ],
 }

@@ -15,6 +15,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import React, { useCallback, useEffect, useState } from 'react'
 
 import { redirectToPayU, type PayuRedirectFields } from '@/lib/redirectToPayU'
+import { createZohoPaymentsInstance } from '@/lib/loadZohoPaymentsWidget'
 import { useAddresses, useCart, usePayments } from '@payloadcms/plugin-ecommerce/client/react'
 import { CheckoutAddresses } from '@/components/checkout/CheckoutAddresses'
 import { CreateAddressModal } from '@/components/addresses/CreateAddressModal'
@@ -52,13 +53,13 @@ export const CheckoutPage: React.FC<{
   const [email, setEmail] = useState('')
   const [emailEditable, setEmailEditable] = useState(true)
   const [isInitiatingPayment, setIsInitiatingPayment] = useState(false)
-  const { initiatePayment } = usePayments()
+  const { confirmOrder, initiatePayment } = usePayments()
   const { addresses } = useAddresses()
   const [shippingAddress, setShippingAddress] = useState<Partial<Address>>()
   const [billingAddress, setBillingAddress] = useState<Partial<Address>>()
   const [billingAddressSameAsShipping, setBillingAddressSameAsShipping] = useState(true)
   const [isProcessingPayment, setProcessingPayment] = useState(false)
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'cod'>('card')
+  const [paymentMethod, setPaymentMethod] = useState<'cod' | 'payu' | 'zoho'>('payu')
   const [checkoutStep, setCheckoutStep] = useState<'address' | 'dispatch' | 'review'>('address')
   const [shippingMethodId, setShippingMethodId] = useState<CheckoutShippingMethodId | null>(null)
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
@@ -232,7 +233,7 @@ export const CheckoutPage: React.FC<{
       // Also corrects the case where this effect's own first run (before the
       // async flag fetch resolves) latched onto 'cod' via the optimistic
       // cashOnDelivery: true default in useFeatureFlags.
-      setPaymentMethod('card')
+      setPaymentMethod('payu')
     }
   }, [cardPaymentAvailable, flags.cashOnDelivery])
 
@@ -275,6 +276,107 @@ export const CheckoutPage: React.FC<{
       setIsInitiatingPayment(false)
     }
   }, [billingAddress, billingAddressSameAsShipping, businessDetails, email, initiatePayment, shippingAddress, shippingMethodId, t])
+
+  const payWithZoho = useCallback(async () => {
+    setIsInitiatingPayment(true)
+    try {
+      const session = (await initiatePayment('zoho', {
+        additionalData: {
+          ...(email ? { customerEmail: email } : {}),
+          billingAddress,
+          shippingAddress: billingAddressSameAsShipping ? billingAddress : shippingAddress,
+          shippingMethod: shippingMethodId,
+          ...(businessDetails ? { businessDetails } : {}),
+        },
+      })) as unknown as {
+        accountId: string
+        address: { email?: string; name?: string; phone?: string }
+        amount: string
+        apiKey: string
+        business: string
+        currencyCode: string
+        currencySymbol: string
+        description: string
+        domain: string
+        paymentsSessionID: string
+      }
+
+      posthog.capture('payment_submitted', { payment_provider: 'zoho' })
+      setIsInitiatingPayment(false)
+      setProcessingPayment(true)
+
+      const instance = await createZohoPaymentsInstance({
+        accountId: session.accountId,
+        apiKey: session.apiKey,
+        domain: session.domain,
+      })
+
+      try {
+        const result = await instance.requestPaymentMethod({
+          address: session.address,
+          amount: session.amount,
+          business: session.business,
+          currency_code: session.currencyCode,
+          currency_symbol: session.currencySymbol,
+          description: session.description,
+          payments_session_id: session.paymentsSessionID,
+          transaction_type: 'payment',
+        })
+
+        const confirmResult = (await confirmOrder('zoho', {
+          additionalData: { paymentID: result.payment_id },
+        })) as unknown as { accessToken?: string; orderID: string }
+
+        clearCart()
+        router.push(
+          `/orders/${confirmResult.orderID}${email ? `?email=${email}&accessToken=${confirmResult.accessToken}` : ''}`,
+        )
+      } catch (widgetError) {
+        // Per Zoho's docs, the customer closing the widget without paying isn't an error.
+        if ((widgetError as { code?: string })?.code === 'widget_closed') {
+          setProcessingPayment(false)
+          return
+        }
+        throw widgetError
+      } finally {
+        await instance.close()
+      }
+    } catch (error) {
+      // Unlike payWithPayu's catch (which only ever wraps the plugin's own JSON-error
+      // initiatePayment call), this also wraps the widget SDK and confirmOrder — either of which
+      // can throw a plain Error whose message isn't JSON, so JSON.parse must be guarded here.
+      let errorData: { cause?: { code?: string } } = {}
+      if (error instanceof Error) {
+        try {
+          errorData = JSON.parse(error.message)
+        } catch {
+          // Not a JSON-formatted error — fall through with the generic message below.
+        }
+      }
+      let errorMessage = t('paymentInitError')
+
+      if (errorData?.cause?.code === 'OutOfStock') {
+        errorMessage = t('outOfStockError')
+      }
+
+      setError(errorMessage)
+      toast.error(errorMessage)
+      setIsInitiatingPayment(false)
+      setProcessingPayment(false)
+    }
+  }, [
+    billingAddress,
+    billingAddressSameAsShipping,
+    businessDetails,
+    clearCart,
+    confirmOrder,
+    email,
+    initiatePayment,
+    router,
+    shippingAddress,
+    shippingMethodId,
+    t,
+  ])
 
   if (cartIsEmpty && isProcessingPayment) {
     return (
@@ -531,16 +633,29 @@ export const CheckoutPage: React.FC<{
           <h2 className="font-medium text-3xl">{t('paymentMethod.heading')}</h2>
           <div className="flex flex-col gap-2 sm:flex-row">
             <label
-              className={`flex flex-1 items-center gap-3 rounded-lg border p-4 ${!cardPaymentAvailable ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${paymentMethod === 'card' ? 'border-primary bg-primary/5' : 'border-border'}`}
+              className={`flex flex-1 items-center gap-3 rounded-lg border p-4 ${!cardPaymentAvailable ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${paymentMethod === 'payu' ? 'border-primary bg-primary/5' : 'border-border'}`}
             >
               <input
-                checked={paymentMethod === 'card'}
+                checked={paymentMethod === 'payu'}
                 disabled={!cardPaymentAvailable}
-                onChange={() => setPaymentMethod('card')}
+                onChange={() => setPaymentMethod('payu')}
                 type="radio"
               />
               <span>{t('paymentMethod.cardUpiNetbanking')}</span>
             </label>
+            {flags.zohoPayments && (
+              <label
+                className={`flex flex-1 items-center gap-3 rounded-lg border p-4 ${!cardPaymentAvailable ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'} ${paymentMethod === 'zoho' ? 'border-primary bg-primary/5' : 'border-border'}`}
+              >
+                <input
+                  checked={paymentMethod === 'zoho'}
+                  disabled={!cardPaymentAvailable}
+                  onChange={() => setPaymentMethod('zoho')}
+                  type="radio"
+                />
+                <span>{t('paymentMethod.cardUpiNetbankingZoho')}</span>
+              </label>
+            )}
             {flags.cashOnDelivery && (
               <label
                 className={`flex flex-1 cursor-pointer items-center gap-3 rounded-lg border p-4 ${paymentMethod === 'cod' ? 'border-primary bg-primary/5' : 'border-border'}`}
@@ -563,7 +678,7 @@ export const CheckoutPage: React.FC<{
 
           <Button
             className="self-start"
-            disabled={!canGoToPayment || isPlacingOrder || isInitiatingPayment}
+            disabled={!canGoToPayment || isPlacingOrder || isInitiatingPayment || isProcessingPayment}
             onClick={(e) => {
               e.preventDefault()
               posthog.capture('checkout_started', {
@@ -573,6 +688,8 @@ export const CheckoutPage: React.FC<{
               })
               if (paymentMethod === 'cod') {
                 void placeDirectOrder()
+              } else if (paymentMethod === 'zoho') {
+                void payWithZoho()
               } else {
                 void payWithPayu()
               }

@@ -48,7 +48,7 @@ export const ContentFeedBlock: React.FC<
           return (
             <Link
               className="card-hover group border-border w-[75%] shrink-0 snap-start overflow-hidden rounded-2xl border sm:w-auto"
-              href={`/guides/${guide.slug}`}
+              href={guide.authorName ? `/blog/${guide.slug}` : `/guides/${guide.slug}`}
               key={guide.id}
             >
               <div className="from-orange/25 to-orange/10 relative aspect-video overflow-hidden bg-gradient-to-br">

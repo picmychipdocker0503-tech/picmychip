@@ -6,6 +6,7 @@ import { Grid } from '@/components/Grid'
 import { DealProductCard } from '@/components/product/DealProductCard'
 import { MobileDealProductCard } from '@/components/product/MobileDealProductCard'
 import { useLoadMoreProducts } from '@/lib/useLoadMoreProducts'
+import { useSkuStyle } from '@/lib/useSkuStyle'
 import { useTranslations } from 'next-intl'
 import { Loader2Icon } from 'lucide-react'
 import React from 'react'
@@ -26,6 +27,7 @@ export const CategoryResults: React.FC<Props> = ({
   categoryId,
 }) => {
   const t = useTranslations('search')
+  const skuStyle = useSkuStyle()
   const {
     items,
     ratings: loadedRatings,
@@ -51,6 +53,7 @@ export const CategoryResults: React.FC<Props> = ({
             priority={index < 4}
             product={product}
             reviewCount={product.id ? loadedRatings?.[product.id]?.count : undefined}
+            skuStyle={skuStyle}
           />
         ))}
       </Grid>
@@ -64,6 +67,7 @@ export const CategoryResults: React.FC<Props> = ({
             priority={index < 4}
             product={product}
             reviewCount={product.id ? loadedRatings?.[product.id]?.count : undefined}
+            skuStyle={skuStyle}
           />
         ))}
       </Grid>

@@ -6,6 +6,7 @@ import { AddToCartButton } from '@/components/Cart/AddToCartButton'
 import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
+import type { SkuStyle } from '@/lib/useSkuStyle'
 import clsx from 'clsx'
 import { CheckIcon, HeartIcon, SearchIcon, ShoppingCartIcon, TagIcon } from 'lucide-react'
 import Link from 'next/link'
@@ -18,6 +19,7 @@ type Props = {
   averageRating?: number
   reviewCount?: number
   priority?: boolean
+  skuStyle?: SkuStyle
 }
 
 /**
@@ -28,7 +30,13 @@ type Props = {
  * so there's exactly one implementation of price/discount/cart/wishlist
  * logic behind the two.
  */
-export const MobileDealProductCard: React.FC<Props> = ({ product, averageRating, reviewCount, priority }) => {
+export const MobileDealProductCard: React.FC<Props> = ({
+  product,
+  averageRating,
+  reviewCount,
+  priority,
+  skuStyle,
+}) => {
   const {
     displayPrice,
     discountPercent,
@@ -86,6 +94,12 @@ export const MobileDealProductCard: React.FC<Props> = ({ product, averageRating,
         <h3 className="text-foreground line-clamp-2 min-h-[2.5rem] text-sm font-semibold [text-wrap:pretty]">
           {product.title}
         </h3>
+
+        {skuStyle?.show && product.sku && (
+          <p className="text-[11px] font-bold" style={{ color: skuStyle.textColor }}>
+            SKU: {product.sku}
+          </p>
+        )}
 
         {typeof averageRating === 'number' && reviewCount ? (
           <div className="flex items-center gap-1">

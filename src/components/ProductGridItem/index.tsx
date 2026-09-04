@@ -6,6 +6,7 @@ import { AddToCartButton } from '@/components/Cart/AddToCartButton'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
 import { ProductMatchingImage } from '@/components/product/ProductMatchingImage'
+import type { SkuStyle } from '@/lib/useSkuStyle'
 import clsx from 'clsx'
 import { CheckIcon, HeartIcon, ScaleIcon, SearchIcon, ShieldCheck, TagIcon } from 'lucide-react'
 import Link from 'next/link'
@@ -18,9 +19,10 @@ type Props = {
   averageRating?: number
   reviewCount?: number
   priority?: boolean
+  skuStyle?: SkuStyle
 }
 
-export const ProductGridItem: React.FC<Props> = ({ product, averageRating, reviewCount, priority }) => {
+export const ProductGridItem: React.FC<Props> = ({ product, averageRating, reviewCount, priority, skuStyle }) => {
   const { title, slug, stockStatus } = product
   const {
     comparing,
@@ -153,6 +155,12 @@ export const ProductGridItem: React.FC<Props> = ({ product, averageRating, revie
           <div className="font-bold text-sm text-foreground mb-1.5 line-clamp-3 min-h-[3.75rem] group-hover:text-primary transition-colors leading-snug [text-wrap:pretty]">
             {title}
           </div>
+
+          {skuStyle?.show && product.sku && (
+            <p className="text-[11px] font-bold mb-1.5" style={{ color: skuStyle.textColor }}>
+              SKU: {product.sku}
+            </p>
+          )}
 
           {typeof averageRating === 'number' && reviewCount ? (
             <div className="mb-2 flex items-center gap-1.5">

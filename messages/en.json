@@ -118,6 +118,7 @@
     "paymentMethod": {
       "heading": "Payment method",
       "cardUpiNetbanking": "Card / UPI / NetBanking (PayU)",
+      "cardUpiNetbankingZoho": "Card / UPI / NetBanking (Zoho Payments)",
       "cashOnDelivery": "Cash on Delivery",
       "cardUnavailable": "Card / UPI checkout is only available for INR orders — this cart is in {currency}. Choose Cash on Delivery to continue.",
       "placeOrderCod": "Place order (Pay on delivery)",

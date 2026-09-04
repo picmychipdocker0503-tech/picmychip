@@ -6,6 +6,7 @@ import { AddToCartButton } from '@/components/Cart/AddToCartButton'
 import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
+import type { SkuStyle } from '@/lib/useSkuStyle'
 import clsx from 'clsx'
 import { CheckIcon, HeartIcon, SearchIcon, ShoppingCartIcon, TagIcon } from 'lucide-react'
 import Link from 'next/link'
@@ -18,9 +19,10 @@ type Props = {
   averageRating?: number
   reviewCount?: number
   priority?: boolean
+  skuStyle?: SkuStyle
 }
 
-export const DealProductCard: React.FC<Props> = ({ product, averageRating, reviewCount, priority }) => {
+export const DealProductCard: React.FC<Props> = ({ product, averageRating, reviewCount, priority, skuStyle }) => {
   const {
     displayPrice,
     discountPercent,
@@ -87,6 +89,12 @@ export const DealProductCard: React.FC<Props> = ({ product, averageRating, revie
         <h3 className="text-foreground line-clamp-3 min-h-[4rem] font-semibold [text-wrap:pretty]">
           {product.title}
         </h3>
+
+        {skuStyle?.show && product.sku && (
+          <p className="text-xs font-bold" style={{ color: skuStyle.textColor }}>
+            SKU: {product.sku}
+          </p>
+        )}
 
         {typeof averageRating === 'number' && reviewCount ? (
           <div className="flex items-center gap-1.5">

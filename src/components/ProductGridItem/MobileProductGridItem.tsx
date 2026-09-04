@@ -6,6 +6,7 @@ import { AddToCartButton } from '@/components/Cart/AddToCartButton'
 import { Price } from '@/components/Price'
 import { RatingStars } from '@/components/RatingStars'
 import { ProductMatchingImage } from '@/components/product/ProductMatchingImage'
+import type { SkuStyle } from '@/lib/useSkuStyle'
 import clsx from 'clsx'
 import { CheckIcon, HeartIcon, ScaleIcon, SearchIcon, ShieldCheck, TagIcon } from 'lucide-react'
 import Link from 'next/link'
@@ -18,6 +19,7 @@ type Props = {
   averageRating?: number
   reviewCount?: number
   priority?: boolean
+  skuStyle?: SkuStyle
 }
 
 /**
@@ -29,7 +31,13 @@ type Props = {
  * so there's exactly one implementation of price/discount/stock/wishlist
  * logic behind the two.
  */
-export const MobileProductGridItem: React.FC<Props> = ({ product, averageRating, reviewCount, priority }) => {
+export const MobileProductGridItem: React.FC<Props> = ({
+  product,
+  averageRating,
+  reviewCount,
+  priority,
+  skuStyle,
+}) => {
   const { title, slug, stockStatus } = product
   const {
     comparing,
@@ -132,6 +140,12 @@ export const MobileProductGridItem: React.FC<Props> = ({ product, averageRating,
           <div className="text-foreground mb-1 line-clamp-2 min-h-[2.5rem] text-xs font-bold leading-snug [text-wrap:pretty]">
             {title}
           </div>
+
+          {skuStyle?.show && product.sku && (
+            <p className="text-[10px] font-bold mb-1" style={{ color: skuStyle.textColor }}>
+              SKU: {product.sku}
+            </p>
+          )}
 
           {typeof averageRating === 'number' && reviewCount ? (
             <div className="mb-1.5 flex items-center gap-1">

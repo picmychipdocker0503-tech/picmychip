@@ -7,6 +7,7 @@ import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
 import { s3Storage } from '@payloadcms/storage-s3'
 
 import { payuAdapter } from '@/payments/payu'
+import { zohoAdapter } from '@/payments/zoho'
 import { currenciesConfig } from '@/lib/currencies'
 
 import { Category, Guide, Page, Product } from '@/payload-types'
@@ -748,6 +749,12 @@ export const plugins: Plugin[] = [
           merchantKey: process.env.PAYU_MERCHANT_KEY!,
           merchantSalt: process.env.PAYU_MERCHANT_SALT!,
           mode: process.env.PAYU_MODE === 'production' ? 'production' : 'test',
+        }),
+        zohoAdapter({
+          accountId: process.env.ZOHO_PAYMENTS_ACCOUNT_ID!,
+          apiKey: process.env.ZOHO_PAYMENTS_API_KEY!,
+          domain: process.env.ZOHO_PAYMENTS_DOMAIN || 'IN',
+          webhookSigningKey: process.env.ZOHO_PAYMENTS_WEBHOOK_SIGNING_KEY!,
         }),
       ],
     },

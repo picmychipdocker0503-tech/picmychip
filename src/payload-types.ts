@@ -1918,10 +1918,24 @@ export interface Transaction {
         id?: string | null;
       }[]
     | null;
-  paymentMethod?: 'payu' | null;
+  paymentMethod?: ('payu' | 'zoho') | null;
   payu?: {
     txnid?: string | null;
     mihpayid?: string | null;
+    status?: string | null;
+    shippingAddressSnapshot?:
+      | {
+          [k: string]: unknown;
+        }
+      | unknown[]
+      | string
+      | number
+      | boolean
+      | null;
+  };
+  zoho?: {
+    paymentsSessionID?: string | null;
+    paymentID?: string | null;
     status?: string | null;
     shippingAddressSnapshot?:
       | {
@@ -4307,6 +4321,14 @@ export interface TransactionsSelect<T extends boolean = true> {
         status?: T;
         shippingAddressSnapshot?: T;
       };
+  zoho?:
+    | T
+    | {
+        paymentsSessionID?: T;
+        paymentID?: T;
+        status?: T;
+        shippingAddressSnapshot?: T;
+      };
   billingAddress?:
     | T
     | {
@@ -4709,6 +4731,10 @@ export interface FeatureFlag {
   rewardsProgram?: boolean | null;
   freeShippingBanner?: boolean | null;
   productCompare?: boolean | null;
+  /**
+   * Off until ZOHO_PAYMENTS_ACCOUNT_ID/API_KEY/CLIENT_ID/CLIENT_SECRET/REFRESH_TOKEN are set in the environment — turning this on before then just shows customers a payment option that will fail to initiate.
+   */
+  zohoPayments?: boolean | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -4896,6 +4922,7 @@ export interface FeatureFlagsSelect<T extends boolean = true> {
   rewardsProgram?: T;
   freeShippingBanner?: T;
   productCompare?: T;
+  zohoPayments?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

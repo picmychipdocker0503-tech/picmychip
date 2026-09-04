@@ -63,10 +63,6 @@ const dirname = path.dirname(filename)
 // rejectUnauthorized: false otherwise (e.g. Neon, which doesn't need one and
 // was presumably only "working" because its cert already chains to a
 // publicly-trusted CA regardless of this setting).
-const postgresSSL = process.env.POSTGRES_CA_CERT
-  ? { ca: fs.readFileSync(path.resolve(process.cwd(), process.env.POSTGRES_CA_CERT)).toString(), rejectUnauthorized: true }
-  : { rejectUnauthorized: false }
-
 const postgresConnectionString = (() => {
   const raw = process.env.DATABASE_URL || ''
   if (!raw) return raw
@@ -79,6 +75,28 @@ const postgresConnectionString = (() => {
     return raw
   }
 })()
+
+// A local Postgres install (localhost/127.0.0.1 — e.g. for dev when Neon's network
+// round-trip is too slow) normally has `ssl = off` in postgresql.conf, unlike every
+// remote target this app connects to (Neon, RDS). Passing an `ssl` object unconditionally
+// forces an SSL handshake attempt regardless — against a server that doesn't support it,
+// `pg` fails outright with "The server does not support SSL connections" rather than
+// falling back, so this must be skipped entirely for a local host, not just given a
+// permissive cert check.
+const isLocalDatabaseHost = (() => {
+  try {
+    const hostname = new URL(process.env.DATABASE_URL || '').hostname
+    return hostname === 'localhost' || hostname === '127.0.0.1'
+  } catch {
+    return false
+  }
+})()
+
+const postgresSSL = isLocalDatabaseHost
+  ? false
+  : process.env.POSTGRES_CA_CERT
+    ? { ca: fs.readFileSync(path.resolve(process.cwd(), process.env.POSTGRES_CA_CERT)).toString(), rejectUnauthorized: true }
+    : { rejectUnauthorized: false }
 
 // Vercel always sets VERCEL=1 at build and runtime, for every deployment
 // (production or preview) — this is the actual environment check, not
