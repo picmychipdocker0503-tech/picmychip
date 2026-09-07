@@ -78,6 +78,7 @@ import * as migration_20260904_010000_add_zoho_payments_feature_flag from './202
 import * as migration_20260904_020000_add_price_tiers_max_quantity from './20260904_020000_add_price_tiers_max_quantity';
 import * as migration_20260904_030000_add_price_tiers_max_quantity_versions from './20260904_030000_add_price_tiers_max_quantity_versions';
 import * as migration_20260904_040000_add_product_override_keywords from './20260904_040000_add_product_override_keywords';
+import * as migration_20260907_183600_add_tawk_business_hours_settings from './20260907_183600_add_tawk_business_hours_settings';
 
 export const migrations = [
   {
@@ -479,5 +480,10 @@ export const migrations = [
     up: migration_20260904_040000_add_product_override_keywords.up,
     down: migration_20260904_040000_add_product_override_keywords.down,
     name: '20260904_040000_add_product_override_keywords',
+  },
+  {
+    up: migration_20260907_183600_add_tawk_business_hours_settings.up,
+    down: migration_20260907_183600_add_tawk_business_hours_settings.down,
+    name: '20260907_183600_add_tawk_business_hours_settings',
   },
 ];

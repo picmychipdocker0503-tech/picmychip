@@ -4,6 +4,7 @@ import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
 import { CheckIcon, MinusIcon, PlusIcon, ShoppingCartIcon } from 'lucide-react'
 import React, { useEffect, useMemo, useState } from 'react'
 
+import { useGuestCartAddNotification } from '@/hooks/useGuestCartAddNotification'
 import { setCartItemQuantity } from '@/lib/cart/setCartItemQuantity'
 import { useCartDrawer } from '@/providers/CartDrawer'
 import { cn } from '@/utilities/cn'
@@ -44,6 +45,7 @@ export const AddToCartButton: React.FC<Props> = ({
   // product's Add to Cart button on the page too while any one request is
   // in flight. Each control here tracks its own busy state instead.
   const { addItem, cart, decrementItem, incrementItem, refreshCart } = useCart()
+  const { notifyGuestAddedToCart } = useGuestCartAddNotification()
   const { showMiniCart } = useCartDrawer()
   const [justAdded, setJustAdded] = useState(false)
   const [isAdding, setIsAdding] = useState(false)
@@ -108,6 +110,7 @@ export const AddToCartButton: React.FC<Props> = ({
     addItem({ product: productId, variant: variantId })
       .then(() => {
         showMiniCart()
+        notifyGuestAddedToCart()
       })
       .finally(() => setIsAdding(false))
   }

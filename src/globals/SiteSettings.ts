@@ -299,5 +299,34 @@ export const SiteSettings: GlobalConfig = {
         },
       ],
     },
+    {
+      name: 'tawkBusinessHours',
+      type: 'group',
+      label: 'Tawk Chat Business Hours',
+      admin: {
+        description:
+          'Controls when a guest adding an item to their cart proactively opens the Tawk chat widget and posts a Slack alert to the team. Always evaluated in India Standard Time (IST), Monday–Saturday, regardless of the visitor’s own timezone. Leave blank to use the default (09:00–18:30).',
+      },
+      fields: [
+        {
+          name: 'startTime',
+          type: 'text',
+          label: 'Start Time (IST, 24-hour)',
+          defaultValue: '09:00',
+          admin: {
+            description: 'Format HH:mm, e.g. 09:00',
+          },
+        },
+        {
+          name: 'endTime',
+          type: 'text',
+          label: 'End Time (IST, 24-hour)',
+          defaultValue: '18:30',
+          admin: {
+            description: 'Format HH:mm, e.g. 18:30',
+          },
+        },
+      ],
+    },
   ],
 }

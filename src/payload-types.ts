@@ -4734,6 +4734,19 @@ export interface SiteSetting {
         id?: string | null;
       }[]
     | null;
+  /**
+   * Controls when a guest adding an item to their cart proactively opens the Tawk chat widget and posts a Slack alert to the team. Always evaluated in India Standard Time (IST), Monday–Saturday, regardless of the visitor’s own timezone. Leave blank to use the default (09:00–18:30).
+   */
+  tawkBusinessHours?: {
+    /**
+     * Format HH:mm, e.g. 09:00
+     */
+    startTime?: string | null;
+    /**
+     * Format HH:mm, e.g. 18:30
+     */
+    endTime?: string | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -4926,6 +4939,12 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | {
         url?: T;
         id?: T;
+      };
+  tawkBusinessHours?:
+    | T
+    | {
+        startTime?: T;
+        endTime?: T;
       };
   updatedAt?: T;
   createdAt?: T;

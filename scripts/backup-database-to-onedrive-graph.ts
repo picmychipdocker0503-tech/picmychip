@@ -33,7 +33,14 @@ function requireEnv(name: string): string {
   return value
 }
 
-function buildSSLConfig(caCertPath?: string) {
+// A local Postgres install normally has `ssl = off` — passing any `ssl` object
+// (even a permissive one) still forces an SSL handshake attempt and fails
+// outright against a non-SSL server. Same fix as src/payload.config.ts's
+// isLocalDatabaseHost check: skip SSL entirely for a localhost target.
+function buildSSLConfig(connectionString: string, caCertPath?: string) {
+  const hostname = new URL(connectionString).hostname
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return false
+
   if (!caCertPath) return { rejectUnauthorized: false }
   return {
     ca: fs.readFileSync(path.resolve(process.cwd(), caCertPath)).toString(),
@@ -166,7 +173,7 @@ async function uploadToOneDrive(args: {
 async function main() {
   const useRds = process.argv.includes('--target=rds')
   const connectionString = useRds ? requireEnv('RDS_DATABASE_URL') : requireEnv('DATABASE_URL')
-  const ssl = useRds ? buildSSLConfig(process.env.POSTGRES_CA_CERT) : buildSSLConfig()
+  const ssl = buildSSLConfig(connectionString, useRds ? process.env.POSTGRES_CA_CERT : undefined)
 
   console.log(`Exporting ${useRds ? 'production (RDS)' : 'dev (Neon)'} database...`)
   const gzippedContent = await exportDatabaseAsGzippedJSON(connectionString, ssl)

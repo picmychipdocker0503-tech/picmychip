@@ -34,6 +34,9 @@ const inter = Inter({
 })
 
 const GA_MEASUREMENT_ID = 'G-65M0W91R3Q'
+// Falls back to the widget already live in Tawk.to if the env vars aren't set.
+const TAWK_PROPERTY_ID = process.env.NEXT_PUBLIC_TAWK_PROPERTY_ID || '6a880f991e47873444f4db0f'
+const TAWK_WIDGET_ID = process.env.NEXT_PUBLIC_TAWK_WIDGET_ID || '1k0hnpsg3'
 const enableThirdPartyScripts = process.env.NODE_ENV === 'production'
 
 export const viewport: Viewport = {
@@ -125,7 +128,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             (function(){
             var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
             s1.async=true;
-            s1.src='https://embed.tawk.to/6a880f991e47873444f4db0f/1k0hnpsg3';
+            s1.src='https://embed.tawk.to/${TAWK_PROPERTY_ID}/${TAWK_WIDGET_ID}';
             s1.charset='UTF-8';
             s1.setAttribute('crossorigin','*');
             s0.parentNode.insertBefore(s1,s0);

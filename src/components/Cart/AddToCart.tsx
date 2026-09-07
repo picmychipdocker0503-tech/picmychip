@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { Price } from '@/components/Price'
+import { useGuestCartAddNotification } from '@/hooks/useGuestCartAddNotification'
 import { setCartItemQuantity } from '@/lib/cart/setCartItemQuantity'
 import { clampTieredQuantity, getTierStep, resolveTieredUnitPrice } from '@/lib/priceTiers'
 import type { Product, Variant } from '@/payload-types'
@@ -25,6 +26,7 @@ export function AddToCart({ product }: Props) {
   // below tracks its own pending state instead.
   const { addItem, cart, refreshCart } = useCart()
   const { currency } = useCurrency()
+  const { notifyGuestAddedToCart } = useGuestCartAddNotification()
   const t = useTranslations('cart')
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -212,10 +214,11 @@ export function AddToCart({ product }: Props) {
       commitQuantity()
         .then(() => {
           toast.success('Item added to cart.')
+          notifyGuestAddedToCart()
         })
         .finally(() => setIsAddingToCart(false))
     },
-    [commitQuantity, product, selectedVariant, quantity],
+    [commitQuantity, notifyGuestAddedToCart, product, selectedVariant, quantity],
   )
 
   const buyNow = useCallback(
