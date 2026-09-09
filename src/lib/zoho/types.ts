@@ -5,7 +5,8 @@ export type ZohoAddress = {
   city: string
   state: string
   state_code?: string
-  zip: string
+  /** Optional — omitted for Sales Order/Invoice addresses to dodge a Zoho bug, see toZohoAddress. */
+  zip?: string
   country?: string
   phone?: string
 }
@@ -74,4 +75,6 @@ export type ZohoSalesOrder = {
   total: number
   /** Present once the sales order has been converted (fully or partially) to one or more invoices — the source of truth for detecting a Zoho-side acceptance. */
   invoices?: ZohoLinkedInvoice[]
+  /** Only present on the full-detail fetch (getZohoSalesOrder), not the list response — used to detect line items removed/reduced by editing the sales order directly in Zoho Books. */
+  line_items?: ZohoLineItem[]
 }

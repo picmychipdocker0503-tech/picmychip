@@ -174,9 +174,12 @@ const searchViaMeilisearch = async (args: SearchProductsArgs): Promise<SearchPro
   const index = client.index<ProductSearchDocument>(PRODUCTS_INDEX)
   const categoryIds = await resolveCategoryIds(categoryId)
 
+  // categoryIds is always requested (not just the schema-specific spec
+  // facets) so the category sidebar can show counts scoped to the current
+  // search/filters instead of always reflecting the whole catalog.
   const response = await index.search(query, {
     filter: buildFilter(categoryIds, facetFilters, priceMin, priceMax).join(' AND ') || undefined,
-    facets: facetAttributes?.length ? facetAttributes : undefined,
+    facets: [...new Set([...(facetAttributes ?? []), 'categoryIds'])],
     sort: toMeiliSort(sort),
     page,
     hitsPerPage: limit,
@@ -497,13 +500,27 @@ const searchViaDatabase = async (args: SearchProductsArgs): Promise<SearchProduc
   const start = (page - 1) * limit
   const docs = ranked.slice(start, start + limit).map((r) => r.product)
 
+  // Category counts scoped to the full matched set (before pagination),
+  // mirroring what the Meilisearch path's `categoryIds` facet gives —
+  // keeps the category sidebar's scoped counts working even when the
+  // Meilisearch fallback is active.
+  const categoryIdCounts: Record<string, number> = {}
+  for (const { product } of ranked) {
+    for (const category of product.categories ?? []) {
+      const id = typeof category === 'object' ? category?.id : category
+      if (typeof id !== 'number') continue
+      const key = String(id)
+      categoryIdCounts[key] = (categoryIdCounts[key] ?? 0) + 1
+    }
+  }
+
   return {
     docs,
     totalDocs,
     totalPages,
     hasNextPage: page < totalPages,
     hasPrevPage: page > 1,
-    facetDistribution: undefined,
+    facetDistribution: { categoryIds: categoryIdCounts },
     source: 'fallback',
   }
 }

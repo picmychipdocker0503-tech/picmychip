@@ -6,7 +6,18 @@ import React, { Suspense } from 'react'
 import { CategoryItem } from './Categories.client'
 import { sortCategoriesBySequence } from '@/utilities/categoryOrdering'
 
-async function CategoryList() {
+type CategoryListProps = {
+  /**
+   * When provided (an active search/filter on /shop), counts are scoped to
+   * the current results instead of the whole catalog, and any category with
+   * no matches is hidden rather than shown as a dead-end 0. `undefined`
+   * (the default "just browsing" case) falls back to the original
+   * always-global counts so every category stays visible to browse into.
+   */
+  scopedCounts?: Record<string, number>
+}
+
+async function CategoryList({ scopedCounts }: CategoryListProps) {
   const payload = await getPayload({ config: configPromise })
 
   const categories = await payload.find({
@@ -18,30 +29,40 @@ async function CategoryList() {
     categories.docs.filter((category) => category.slug !== 'shop' && category.slug !== 'components'),
   )
 
-  // One query for every published product's category assignments, tallied
-  // in memory below — not one payload.count() per category in parallel.
-  // With this many categories, that used to fire a burst of simultaneous
-  // connections from this single sidebar component on every page load
-  // (confirmed live: this was enough on its own to intermittently exceed
-  // what the DB allows at once, causing sporadic 500s).
-  const { docs: publishedProducts } = await payload.find({
-    collection: 'products',
-    depth: 0,
-    limit: 0,
-    overrideAccess: true,
-    pagination: false,
-    select: { categories: true },
-    where: { _status: { equals: 'published' } },
-  })
+  let countByCategoryId: Map<number, number>
 
-  const countByCategoryId = new Map<number, number>()
-  for (const product of publishedProducts) {
-    for (const category of product.categories ?? []) {
-      const categoryId = typeof category === 'object' ? category.id : category
-      if (typeof categoryId !== 'number') continue
-      countByCategoryId.set(categoryId, (countByCategoryId.get(categoryId) ?? 0) + 1)
+  if (scopedCounts) {
+    countByCategoryId = new Map(Object.entries(scopedCounts).map(([id, count]) => [Number(id), count]))
+  } else {
+    // One query for every published product's category assignments, tallied
+    // in memory below — not one payload.count() per category in parallel.
+    // With this many categories, that used to fire a burst of simultaneous
+    // connections from this single sidebar component on every page load
+    // (confirmed live: this was enough on its own to intermittently exceed
+    // what the DB allows at once, causing sporadic 500s).
+    const { docs: publishedProducts } = await payload.find({
+      collection: 'products',
+      depth: 0,
+      limit: 0,
+      overrideAccess: true,
+      pagination: false,
+      select: { categories: true },
+      where: { _status: { equals: 'published' } },
+    })
+
+    countByCategoryId = new Map()
+    for (const product of publishedProducts) {
+      for (const category of product.categories ?? []) {
+        const categoryId = typeof category === 'object' ? category.id : category
+        if (typeof categoryId !== 'number') continue
+        countByCategoryId.set(categoryId, (countByCategoryId.get(categoryId) ?? 0) + 1)
+      }
     }
   }
+
+  const visibleCategories = scopedCounts
+    ? orderedCategories.filter((category) => (countByCategoryId.get(category.id) ?? 0) > 0)
+    : orderedCategories
 
   return (
     <details className="group" open>
@@ -60,7 +81,7 @@ async function CategoryList() {
         </svg>
       </summary>
       <ul className="menu mt-2 w-full p-0">
-        {orderedCategories.map((category) => (
+        {visibleCategories.map((category) => (
           <li key={category.id}>
             <CategoryItem category={category} count={countByCategoryId.get(category.id) ?? 0} />
           </li>
@@ -74,7 +95,7 @@ const skeleton = 'mb-3 h-4 w-5/6 animate-pulse rounded'
 const activeAndTitles = 'bg-neutral-800 dark:bg-neutral-300'
 const items = 'bg-neutral-400 dark:bg-neutral-700'
 
-export function Categories() {
+export function Categories({ scopedCounts }: CategoryListProps) {
   return (
     <Suspense
       fallback={
@@ -92,7 +113,7 @@ export function Categories() {
         </div>
       }
     >
-      <CategoryList />
+      <CategoryList scopedCounts={scopedCounts} />
     </Suspense>
   )
 }

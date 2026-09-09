@@ -80,6 +80,7 @@ export interface Config {
     guides: Guide;
     jobs: Job;
     brands: Brand;
+    couriers: Courier;
     reviews: Review;
     services: Service;
     'community-feedback': CommunityFeedback;
@@ -129,6 +130,7 @@ export interface Config {
     guides: GuidesSelect<false> | GuidesSelect<true>;
     jobs: JobsSelect<false> | JobsSelect<true>;
     brands: BrandsSelect<false> | BrandsSelect<true>;
+    couriers: CouriersSelect<false> | CouriersSelect<true>;
     reviews: ReviewsSelect<false> | ReviewsSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
     'community-feedback': CommunityFeedbackSelect<false> | CommunityFeedbackSelect<true>;
@@ -244,9 +246,18 @@ export interface User {
     totalDocs?: number;
   };
   /**
-   * Zoho Books contact id — checked first when matching this customer on future orders.
+   * One Zoho Books contact per billing identity this customer has ordered under (Individual / Unregistered Business / a specific Registered Business GSTIN) — checked first, by identity, when matching this customer on future orders. Never shared or overwritten across identities.
    */
-  zohoCustomerId?: string | null;
+  zohoContacts?:
+    | {
+        /**
+         * "individual", "business_none", or "business_gst:<GSTIN>".
+         */
+        identityKey: string;
+        contactId: string;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Storefront theme this account last chose — set automatically from the theme switcher so it follows them across devices. Blank means "Auto" (match system setting).
    */
@@ -385,17 +396,27 @@ export interface Order {
    */
   trackingNumber?: string | null;
   /**
-   * Courier handling this shipment, entered manually (e.g. "Delhivery", "Blue Dart").
+   * Courier handling this shipment — manage the list at Sales > Couriers.
    */
-  courierName?: string | null;
+  courierName?: (number | null) | Courier;
   /**
-   * The courier's own tracking page for this shipment — shown to the customer as a link on the courier name.
+   * Auto-filled from the selected courier's tracking URL template + tracking number once both are set — shown to the customer as a link on the courier name.
    */
   courierTrackingUrl?: string | null;
   /**
-   * Current shipment status, entered manually (e.g. "Picked Up", "In Transit", "Delivered").
+   * Current shipment status.
    */
-  shipmentStatus?: string | null;
+  shipmentStatus?:
+    | (
+        | 'picked-up'
+        | 'in-transit'
+        | 'out-for-delivery'
+        | 'delivered'
+        | 'delayed'
+        | 'failed-delivery-attempt'
+        | 'returned-to-origin'
+      )
+    | null;
   paymentMethod?: ('card' | 'cod' | 'gift-card') | null;
   shippingMethod?: ('express' | 'standard') | null;
   /**
@@ -452,6 +473,10 @@ export interface Order {
    * Optional GST/company details provided at checkout, used for the Zoho tax invoice.
    */
   businessDetails?: {
+    /**
+     * Drives the Zoho contact's GST treatment — Individual maps to "consumer" (shows as "Individual" on Zoho invoices/PDFs), Company maps to business_gst/business_none depending on whether a GSTIN was given.
+     */
+    customerType?: ('individual' | 'company') | null;
     companyName?: string | null;
     gstin?: string | null;
     panNumber?: string | null;
@@ -1993,6 +2018,10 @@ export interface Transaction {
    * Optional GST/company details provided at checkout, used for the Zoho tax invoice.
    */
   businessDetails?: {
+    /**
+     * Drives the Zoho contact's GST treatment — Individual maps to "consumer" (shows as "Individual" on Zoho invoices/PDFs), Company maps to business_gst/business_none depending on whether a GSTIN was given.
+     */
+    customerType?: ('individual' | 'company') | null;
     companyName?: string | null;
     gstin?: string | null;
     panNumber?: string | null;
@@ -2042,6 +2071,20 @@ export interface Cart {
    * Set once the abandoned-cart recovery email has been sent, so it only ever goes out once.
    */
   abandonedRecoveryEmailSentAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "couriers".
+ */
+export interface Courier {
+  id: number;
+  name: string;
+  /**
+   * The courier's tracking page. Include {trackingNumber} where the AWB/tracking number goes — e.g. https://example.com/track?awb={trackingNumber}. Leave the placeholder out to just link to a generic tracking page.
+   */
+  trackingUrlTemplate?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2526,7 +2569,7 @@ export interface ReturnRequest {
   order: number | Order;
   customerEmail: string;
   product?: (number | null) | Product;
-  reason: 'damaged' | 'wrong-item' | 'not-as-described' | 'no-longer-needed' | 'other';
+  reason: 'damaged' | 'wrong-item' | 'not-as-described' | 'no-longer-needed' | 'zoho-void' | 'other';
   description?: string | null;
   status?: ('requested' | 'approved' | 'rejected' | 'completed') | null;
   /**
@@ -2701,6 +2744,10 @@ export interface PayloadLockedDocument {
         value: number | Brand;
       } | null)
     | ({
+        relationTo: 'couriers';
+        value: number | Courier;
+      } | null)
+    | ({
         relationTo: 'reviews';
         value: number | Review;
       } | null)
@@ -2841,7 +2888,13 @@ export interface UsersSelect<T extends boolean = true> {
   orders?: T;
   cart?: T;
   addresses?: T;
-  zohoCustomerId?: T;
+  zohoContacts?:
+    | T
+    | {
+        identityKey?: T;
+        contactId?: T;
+        id?: T;
+      };
   themePreference?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -3523,6 +3576,16 @@ export interface BrandsSelect<T extends boolean = true> {
   description?: T;
   generateSlug?: T;
   slug?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "couriers_select".
+ */
+export interface CouriersSelect<T extends boolean = true> {
+  name?: T;
+  trackingUrlTemplate?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4293,6 +4356,7 @@ export interface OrdersSelect<T extends boolean = true> {
   businessDetails?:
     | T
     | {
+        customerType?: T;
         companyName?: T;
         gstin?: T;
         panNumber?: T;
@@ -4380,6 +4444,7 @@ export interface TransactionsSelect<T extends boolean = true> {
   businessDetails?:
     | T
     | {
+        customerType?: T;
         companyName?: T;
         gstin?: T;
         panNumber?: T;

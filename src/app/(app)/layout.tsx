@@ -2,7 +2,7 @@ import type { Viewport } from 'next'
 import type { ReactNode } from 'react'
 
 import { Footer } from '@/components/Footer'
-import { CompareBar, InstallPrompt } from '@/components/GlobalOverlays'
+import { CompareBar, InstallPrompt, TawkCartOffsetSync } from '@/components/GlobalOverlays'
 import { Header } from '@/components/Header'
 import { JsonLd } from '@/components/JsonLd'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
@@ -164,6 +164,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <Footer />
             <CompareBar />
             <InstallPrompt />
+            <TawkCartOffsetSync />
             <MobileTabBar />
           </Providers>
         </NextIntlClientProvider>

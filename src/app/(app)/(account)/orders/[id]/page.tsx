@@ -256,8 +256,9 @@ export default async function Order({ params, searchParams }: PageProps) {
           <OrderTrackingTimeline
             status={order.status}
             trackingNumber={order.trackingNumber}
-            courierName={order.courierName}
+            courierName={typeof order.courierName === 'object' ? order.courierName?.name : undefined}
             courierTrackingUrl={order.courierTrackingUrl}
+            shipmentStatus={order.shipmentStatus}
           />
         </div>
 

@@ -31,14 +31,13 @@ export const ProductReviews: React.FC<Props> = async ({ productId }) => {
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-semibold tracking-tight">Customer Reviews</h2>
-        {reviews.length > 0 && (
-          <div className="flex items-center gap-2">
-            <RatingStars rating={averageRating} size="md" />
-            <span className="text-muted-foreground text-sm">
-              {averageRating.toFixed(1)} ({reviews.length} review{reviews.length === 1 ? '' : 's'})
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          {reviews.length > 0 && <RatingStars rating={averageRating} size="md" />}
+          <span className="text-muted-foreground text-sm">
+            {reviews.length > 0 ? `${averageRating.toFixed(1)} ` : ''}({reviews.length} review
+            {reviews.length === 1 ? '' : 's'})
+          </span>
+        </div>
       </div>
 
       <div className="border-border bg-muted/20 rounded-lg border p-4">

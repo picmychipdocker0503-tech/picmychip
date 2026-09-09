@@ -149,7 +149,8 @@ export const confirmOrder =
       data: {
         amount: transaction.amount,
         currency: transaction.currency,
-        ...(customer ? { customer } : { customerEmail: transaction.customerEmail }),
+        ...(customer ? { customer } : {}),
+        customerEmail: transaction.customerEmail,
         items: transaction.items,
         shippingAddress: Object.keys(shippingAddress).length ? (shippingAddress as Address) : undefined,
         billingAddress: transaction.billingAddress,

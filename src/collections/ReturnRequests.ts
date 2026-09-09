@@ -51,6 +51,7 @@ export const ReturnRequests: CollectionConfig = {
         { label: 'Wrong item received', value: 'wrong-item' },
         { label: 'Not as described', value: 'not-as-described' },
         { label: 'No longer needed', value: 'no-longer-needed' },
+        { label: 'Order voided in Zoho Books', value: 'zoho-void' },
         { label: 'Other', value: 'other' },
       ],
     },

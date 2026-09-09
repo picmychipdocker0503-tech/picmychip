@@ -26,6 +26,12 @@ import type { CheckoutShippingMethod, CheckoutShippingMethodId } from '@/lib/che
 import { computeOrderTaxByRateBucket, type TaxLineItem } from '@/lib/taxCalculation'
 import { Address, Product, Variant } from '@/payload-types'
 
+// AddressForm's customerType toggle isn't a real Address collection field —
+// same transient, local-only treatment as isDefaultAddress there — it just
+// rides along on the billingAddress object handed to this page's callback,
+// purely to drive the businessDetails derived below.
+type BillingAddressWithCustomerType = Partial<Address> & { customerType?: 'individual' | 'company' | null }
+
 type GalleryItem = NonNullable<Product['gallery']>[number]
 type VariantOptionItem = NonNullable<Variant['options']>[number]
 import { Checkbox } from '@/components/ui/checkbox'
@@ -57,19 +63,37 @@ export const CheckoutPage: React.FC<{
   const { confirmOrder, initiatePayment } = usePayments()
   const { addresses } = useAddresses()
   const [shippingAddress, setShippingAddress] = useState<Partial<Address>>()
-  const [billingAddress, setBillingAddress] = useState<Partial<Address>>()
+  const [billingAddress, setBillingAddress] = useState<BillingAddressWithCustomerType>()
   const [billingAddressSameAsShipping, setBillingAddressSameAsShipping] = useState(true)
   const [isProcessingPayment, setProcessingPayment] = useState(false)
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'payu' | 'zoho'>('payu')
   const [checkoutStep, setCheckoutStep] = useState<'address' | 'dispatch' | 'review'>('address')
   const [shippingMethodId, setShippingMethodId] = useState<CheckoutShippingMethodId | null>(null)
   const [isPlacingOrder, setIsPlacingOrder] = useState(false)
-  // Derived, not separately captured — GSTIN/company come from the billing
-  // address itself (see AddressForm's gstin field and the existing company field).
-  const businessDetails =
-    billingAddress?.gstin || billingAddress?.company
-      ? { companyName: billingAddress?.company || undefined, gstin: billingAddress?.gstin || undefined }
-      : undefined
+  // Derived, not separately captured — customerType/GSTIN/company come from
+  // the billing address itself (see AddressForm's Individual/Company toggle,
+  // gstin field, and the existing company field). Always sent (even for a
+  // plain Individual with neither) so the Zoho contact sync can tell "no
+  // GST details given" (individual) apart from "unregistered business" —
+  // see getZohoGstTreatment in src/lib/zoho/customers.ts.
+  //
+  // customerType itself isn't a real Address field — it's only computed
+  // when AddressForm is actually opened (see its defaultValues). Picking an
+  // already-saved address at checkout without opening it never attaches
+  // one, so falling back straight to 'individual' would misclassify any
+  // saved address that already has a company name on file (confirmed live:
+  // several real orders had a company name but customerType: 'individual'
+  // regardless, because the address was selected, not edited, at checkout —
+  // which then merged them into the wrong Zoho contact identity). Falling
+  // back to inferring from billingAddress.company (a real, persisted field)
+  // instead keeps that case correct.
+  const businessDetails = {
+    customerType: (billingAddress?.customerType || (billingAddress?.company ? 'company' : 'individual')) as
+      | 'individual'
+      | 'company',
+    companyName: billingAddress?.company || undefined,
+    gstin: billingAddress?.gstin || undefined,
+  }
   const [couponInput, setCouponInput] = useState('')
   const [giftCardInput, setGiftCardInput] = useState('')
   const [couponError, setCouponError] = useState<string | null>(null)

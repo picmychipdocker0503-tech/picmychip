@@ -17,3 +17,8 @@ export const InstallPrompt = dynamic(
   () => import('@/components/InstallPrompt').then((mod) => mod.InstallPrompt),
   { ssr: false },
 )
+
+export const TawkCartOffsetSync = dynamic(
+  () => import('@/components/TawkCartOffsetSync').then((mod) => mod.TawkCartOffsetSync),
+  { ssr: false },
+)

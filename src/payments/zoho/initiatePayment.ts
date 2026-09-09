@@ -38,7 +38,7 @@ export const initiatePayment =
     // read from req.data rather than the plugin's typed `data` (which drops extra keys).
     const requestData = req.data as Record<string, unknown> | undefined
     const businessDetails = requestData?.businessDetails as
-      | { companyName?: string; gstin?: string; panNumber?: string }
+      | { customerType?: 'individual' | 'company'; companyName?: string; gstin?: string; panNumber?: string }
       | undefined
     const shippingMethodId = requestData?.shippingMethod as string | undefined
 
@@ -124,7 +124,8 @@ export const initiatePayment =
       const transaction = await payload.create({
         collection: transactionsSlug as 'transactions',
         data: {
-          ...(req.user ? { customer: req.user.id } : { customerEmail }),
+          ...(req.user ? { customer: req.user.id } : {}),
+          customerEmail,
           amount: amountInPaise,
           billingAddress,
           ...(businessDetails ? { businessDetails } : {}),

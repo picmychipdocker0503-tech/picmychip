@@ -146,7 +146,12 @@ async function main() {
             email,
             name: primary.name || undefined,
             roles: ['customer'],
-            zohoCustomerId: primary.zohoContactId || undefined,
+            // These rows are all GST Treatment = consumer (per the filter this
+            // script's source export used) — 'individual' is the matching
+            // identity key, see src/lib/zoho/customers.ts's getZohoIdentityKey.
+            ...(primary.zohoContactId
+              ? { zohoContacts: [{ identityKey: 'individual', contactId: primary.zohoContactId }] }
+              : {}),
             password: randomPassword(),
             // Marks the account already-verified in the DB (doesn't by itself
             // stop the email — that's the top-level option below).

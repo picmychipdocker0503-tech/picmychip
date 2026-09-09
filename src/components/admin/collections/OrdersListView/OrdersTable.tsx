@@ -72,10 +72,29 @@ const columns = [
 ]
 
 export const OrdersTable: React.FC<{ initialData: ListApiResponse<Order> }> = ({ initialData }) => {
-  const buildWhere = useCallback(
-    (search: string) => (search ? { customerEmail: { contains: search } } : undefined),
-    [],
-  )
+  const buildWhere = useCallback((search: string) => {
+    const trimmed = search.trim()
+    if (!trimmed) return undefined
+
+    const or: Record<string, unknown>[] = [
+      { customerEmail: { contains: trimmed } },
+      { 'customer.name': { contains: trimmed } },
+      { 'customer.email': { contains: trimmed } },
+    ]
+
+    // orderNumber (ECOM0001…) is a virtual field derived from `id` — not a
+    // real column, so it can't be queried directly. Strip any non-digit
+    // prefix/leading zeros the customer-facing format adds (see
+    // src/plugins/index.ts's orderNumber field) and match the underlying id
+    // instead, so searching "ECOM0004", "0004", or "4" all find order #4.
+    const digits = trimmed.match(/\d+/)?.[0]
+    if (digits) {
+      const id = Number(digits)
+      if (!Number.isNaN(id)) or.push({ id: { equals: id } })
+    }
+
+    return { or }
+  }, [])
 
   const { data, isLoading, refetch, searchInput, setSearchInput, table } = useServerTable<Order>({
     buildWhere,
@@ -91,7 +110,7 @@ export const OrdersTable: React.FC<{ initialData: ListApiResponse<Order> }> = ({
       isLoading={isLoading}
       onSearchChange={setSearchInput}
       searchInput={searchInput}
-      searchPlaceholder="Search by customer email…"
+      searchPlaceholder="Search by order number, customer name, or email…"
       table={table}
       toolbarRight={<BulkActionsBar collection="orders" onDeleted={refetch} table={table} />}
       totalDocs={data.totalDocs}

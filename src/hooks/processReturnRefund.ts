@@ -27,6 +27,23 @@ export const processReturnRefund: CollectionAfterChangeHook = async ({ doc, prev
 
     const refundAmount = doc.refundAmount ?? order.amount ?? 0
 
+    // PayU rejects a zero/missing amount outright ("amount is empty") —
+    // failing fast here skips a doomed network round-trip and gives a
+    // clearer reason than PayU's own error would.
+    if (!refundAmount || refundAmount <= 0) {
+      await req.payload.update({
+        collection: 'return-requests',
+        id: doc.id,
+        data: {
+          refundStatus: 'failed',
+          refundNote: 'No refund amount to process — the order has no amount recorded and none was entered above. Set Refund Amount and approve again, or refund manually.',
+        },
+        overrideAccess: true,
+        req,
+      })
+      return doc
+    }
+
     if (order.paymentMethod !== 'card') {
       await req.payload.update({
         collection: 'return-requests',
@@ -36,6 +53,7 @@ export const processReturnRefund: CollectionAfterChangeHook = async ({ doc, prev
           refundNote: `Order was paid via ${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'gift card'} — no electronic payment to auto-reverse. Refund the customer manually.`,
         },
         overrideAccess: true,
+        req,
       })
       return doc
     }
@@ -66,6 +84,7 @@ export const processReturnRefund: CollectionAfterChangeHook = async ({ doc, prev
           refundNote: 'No PayU payment found on this order — refund manually.',
         },
         overrideAccess: true,
+        req,
       })
       return doc
     }
@@ -81,6 +100,7 @@ export const processReturnRefund: CollectionAfterChangeHook = async ({ doc, prev
           refundNote: `Refunded ${order.currency || 'INR'} ${refundAmount} via PayU.`,
         },
         overrideAccess: true,
+        req,
       }),
       req.payload.update({
         collection: 'orders',
@@ -100,6 +120,7 @@ export const processReturnRefund: CollectionAfterChangeHook = async ({ doc, prev
           refundNote: err instanceof Error ? err.message : 'Refund failed — see server logs.',
         },
         overrideAccess: true,
+        req,
       })
       .catch(() => {})
   }

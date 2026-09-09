@@ -1,11 +1,12 @@
 import type { Payload } from 'payload'
 
 import { zohoIsConfigured } from '@/lib/zoho/auth'
-import { findOrCreateZohoCustomer } from '@/lib/zoho/customers'
+import { findOrCreateZohoCustomer, getZohoGstTreatment, getZohoIdentityKey } from '@/lib/zoho/customers'
 import { resolveTaxId } from '@/lib/zoho/taxes'
 import { createZohoInvoice, findExistingInvoiceByOrderId, getInvoicePdfUrl, getZohoInvoice } from '@/lib/zoho/invoices'
 import { recordCustomerPayment } from '@/lib/zoho/payments'
-import type { ZohoAddress, ZohoInvoice, ZohoLineItem } from '@/lib/zoho/types'
+import { toZohoAddress } from './syncZohoSalesOrder'
+import type { ZohoInvoice, ZohoLineItem } from '@/lib/zoho/types'
 import { IndianState, resolveIndianState } from '@/lib/indianStates'
 
 type AddressLike = {
@@ -19,21 +20,6 @@ type AddressLike = {
   postalCode?: string | null
   state?: string | null
 } | null | undefined
-
-const toZohoAddress = (address: AddressLike, state?: IndianState): ZohoAddress | undefined => {
-  if (!address) return undefined
-  return {
-    attention: `${address.firstName || ''} ${address.lastName || ''}`.trim() || undefined,
-    address: address.addressLine1 || '',
-    street2: address.addressLine2 || undefined,
-    city: address.city || '',
-    state: state?.name || address.state || '',
-    state_code: state?.zohoStateCode,
-    zip: address.postalCode || '',
-    country: address.country || 'India',
-    phone: address.phone || undefined,
-  }
-}
 
 /**
  * PayU's own transaction id (mihpayid — assigned once PayU confirms the
@@ -246,12 +232,14 @@ export async function syncZohoInvoiceForOrder(payload: Payload, orderId: number 
 
     const gstin: string | undefined = order.businessDetails?.gstin || undefined
     const companyName: string | undefined = order.businessDetails?.companyName || undefined
+    const customerType: 'individual' | 'company' | undefined = order.businessDetails?.customerType || undefined
 
     const customerName =
       `${billing?.firstName || ''} ${billing?.lastName || ''}`.trim() || order.customerEmail || 'Customer'
 
     const customerId = typeof order.customer === 'object' ? order.customer?.id : order.customer
-    let existingContactId: string | undefined
+    const identityKey = getZohoIdentityKey({ customerType, gstin })
+    let zohoContacts: { identityKey: string; contactId: string }[] = []
     if (customerId) {
       const customerDoc = await payload.findByID({
         collection: 'users',
@@ -259,29 +247,37 @@ export async function syncZohoInvoiceForOrder(payload: Payload, orderId: number 
         depth: 0,
         overrideAccess: true,
       })
-      existingContactId = (customerDoc as { zohoCustomerId?: string })?.zohoCustomerId || undefined
+      zohoContacts =
+        (customerDoc as { zohoContacts?: { identityKey: string; contactId: string }[] })?.zohoContacts ?? []
     }
+    const existingContactId = zohoContacts.find((c) => c.identityKey === identityKey)?.contactId
 
     const { contact } = await findOrCreateZohoCustomer({
       existingContactId,
+      localCustomerId: customerId,
       contactName: customerName,
       companyName,
       email: order.customerEmail || undefined,
       phone: billing?.phone || shipping?.phone || undefined,
       gstin,
+      customerType,
       billingAddress: toZohoAddress(billing, billingState),
       shippingAddress: toZohoAddress(shipping, shippingState),
     })
 
-    if (customerId && contact.contact_id) {
+    if (customerId && existingContactId !== contact.contact_id) {
+      const nextZohoContacts = [
+        ...zohoContacts.filter((c) => c.identityKey !== identityKey),
+        { identityKey, contactId: contact.contact_id },
+      ]
       await payload
         .update({
           collection: 'users',
           id: customerId,
-          data: { zohoCustomerId: contact.contact_id } as never,
+          data: { zohoContacts: nextZohoContacts } as never,
           overrideAccess: true,
         })
-        .catch((err) => payload.logger.warn({ msg: 'Could not save zohoCustomerId on user', err, customerId }))
+        .catch((err) => payload.logger.warn({ msg: 'Could not save zohoContacts on user', err, customerId }))
     }
 
     const siteSettings = await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
@@ -312,7 +308,7 @@ export async function syncZohoInvoiceForOrder(payload: Payload, orderId: number 
       throw new Error('No valid line items to invoice.')
     }
 
-    const gstTreatment = gstin ? 'business_gst' : companyName ? 'business_none' : 'consumer'
+    const gstTreatment = getZohoGstTreatment({ customerType, gstin })
 
     const invoice = await createZohoInvoice({
       customerId: contact.contact_id,

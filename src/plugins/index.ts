@@ -21,16 +21,19 @@ import { isAdmin } from '@/access/isAdmin'
 import { isDocumentOwner } from '@/access/isDocumentOwner'
 import { isStrictDocumentOwner } from '@/access/isStrictDocumentOwner'
 import { applyCartDiscounts } from '@/hooks/applyCartDiscounts'
+import { applyCourierTrackingUrl } from '@/hooks/applyCourierTrackingUrl'
 import { applyTieredPricing } from '@/hooks/applyTieredPricing'
 import { applyOrderDiscountSideEffects } from '@/hooks/applyOrderDiscountSideEffects'
 import { computeGstTaxBreakdown } from '@/hooks/computeGstTaxBreakdown'
 import { createZohoSalesOrder } from '@/hooks/createZohoSalesOrder'
+import { backfillAddressEmail } from '@/hooks/backfillAddressEmail'
 import { enforceSingleDefaultAddress } from '@/hooks/enforceSingleDefaultAddress'
 import { flagPotentialFraud } from '@/hooks/flagPotentialFraud'
 import { issueGiftCardsForOrder } from '@/hooks/issueGiftCardsForOrder'
 import { restoreInventoryOnCancellation } from '@/hooks/restoreInventoryOnCancellation'
 import { sendOrderLifecycleEmails } from '@/hooks/sendOrderLifecycleEmails'
 import { billingDetailsAddressFields, businessDetailsGroup } from '@/fields/businessDetails'
+import { SHIPMENT_STATUS_OPTIONS } from '@/lib/shipmentStatusOptions'
 import { extractKeywordsFromTitle } from '@/utilities/extractKeywordsFromTitle'
 import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 
@@ -186,7 +189,11 @@ export const plugins: Plugin[] = [
         },
         hooks: {
           ...defaultCollection.hooks,
-          beforeChange: [...(defaultCollection.hooks?.beforeChange ?? []), computeGstTaxBreakdown],
+          beforeChange: [
+            ...(defaultCollection.hooks?.beforeChange ?? []),
+            computeGstTaxBreakdown,
+            applyCourierTrackingUrl,
+          ],
           afterChange: [
             ...(defaultCollection.hooks?.afterChange ?? []),
             applyOrderDiscountSideEffects,
@@ -274,10 +281,11 @@ export const plugins: Plugin[] = [
           },
           {
             name: 'courierName',
-            type: 'text',
+            type: 'relationship',
+            relationTo: 'couriers',
             admin: {
               position: 'sidebar',
-              description: 'Courier handling this shipment, entered manually (e.g. "Delhivery", "Blue Dart").',
+              description: 'Courier handling this shipment — manage the list at Sales > Couriers.',
             },
           },
           {
@@ -285,15 +293,18 @@ export const plugins: Plugin[] = [
             type: 'text',
             admin: {
               position: 'sidebar',
-              description: "The courier's own tracking page for this shipment — shown to the customer as a link on the courier name.",
+              readOnly: true,
+              description:
+                "Auto-filled from the selected courier's tracking URL template + tracking number once both are set — shown to the customer as a link on the courier name.",
             },
           },
           {
             name: 'shipmentStatus',
-            type: 'text',
+            type: 'select',
+            options: SHIPMENT_STATUS_OPTIONS,
             admin: {
               position: 'sidebar',
-              description: 'Current shipment status, entered manually (e.g. "Picked Up", "In Transit", "Delivered").',
+              description: 'Current shipment status.',
             },
           },
           {
@@ -583,6 +594,7 @@ export const plugins: Plugin[] = [
         },
         hooks: {
           ...defaultCollection.hooks,
+          beforeValidate: [...(defaultCollection.hooks?.beforeValidate ?? []), backfillAddressEmail],
           beforeChange: [...(defaultCollection.hooks?.beforeChange ?? []), enforceSingleDefaultAddress],
         },
         fields: [

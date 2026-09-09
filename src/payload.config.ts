@@ -21,6 +21,7 @@ import sharp from 'sharp'
 import { fileURLToPath } from 'url'
 
 import { Brands } from '@/collections/Brands'
+import { Couriers } from '@/collections/Couriers'
 import { Categories } from '@/collections/Categories'
 import { CommunityFeedback } from '@/collections/CommunityFeedback'
 import { Coupons } from '@/collections/Coupons'
@@ -198,6 +199,7 @@ export default buildConfig({
     Guides,
     Jobs,
     Brands,
+    Couriers,
     Reviews,
     Services,
     CommunityFeedback,

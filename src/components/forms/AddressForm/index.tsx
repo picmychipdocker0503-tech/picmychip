@@ -7,11 +7,14 @@ import { defaultCountries as supportedCountries } from '@payloadcms/plugin-ecomm
 import { Address, Config } from '@/payload-types'
 import { SearchableSelect } from '@/components/ui/searchable-select'
 
+import { ADDRESS_LINE_MAX_LENGTH, PHONE_MAX_LENGTH } from '@/lib/addressLimits'
 import { INDIAN_STATES, resolveIndianState, resolveStateByGstin } from '@/lib/indianStates'
 import {
+  fetchByPincode,
   fetchDistricts,
   fetchOffices,
   findStateSlug,
+  toSlug,
   type PincodeApiDistrict,
   type PincodeApiOffice,
 } from '@/lib/indiaPincodeApi'
@@ -21,6 +24,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { deepMergeSimple } from 'payload/shared'
 import { FloatingField, floatingFieldInputClassName } from '@/components/forms/FloatingField'
 import { useAuth } from '@/providers/Auth'
+import { cn } from '@/utilities/cn'
 import { toast } from 'sonner'
 
 type AddressFormValues = {
@@ -38,6 +42,13 @@ type AddressFormValues = {
   phone?: string | null
   /** Not part of the Address collection — carried through to the parent (see CheckoutPage) for the order's GST invoice. */
   gstin?: string | null
+  /**
+   * Not part of the Address collection either — same pass-through as gstin.
+   * Individual hides/clears company+gstin below and maps to Zoho's
+   * "consumer" GST treatment (shows as "Individual" on Zoho invoices);
+   * Company requires a company name and maps to business_gst/business_none.
+   */
+  customerType?: 'individual' | 'company' | null
   /** Local-only: maps to both isDefaultBilling and isDefaultShipping on submit — see onSubmit. */
   isDefaultAddress?: boolean
 }
@@ -73,6 +84,7 @@ export const AddressForm: React.FC<Props> = ({
     defaultValues: {
       country: 'IN',
       ...initialData,
+      customerType: initialData?.company ? 'company' : 'individual',
       isDefaultAddress: Boolean(initialData?.isDefaultBilling || initialData?.isDefaultShipping),
     },
   })
@@ -92,6 +104,18 @@ export const AddressForm: React.FC<Props> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.email])
+
+  const customerType = watch('customerType') || 'individual'
+
+  // Individual customers never carry a company name/GSTIN — clears any
+  // value left over from a prior "Company" selection so it can't silently
+  // ride along on submit once the fields are hidden below.
+  useEffect(() => {
+    if (customerType === 'individual') {
+      setValue('company', '')
+      setValue('gstin', '')
+    }
+  }, [customerType, setValue])
 
   const stateName = watch('state')
   const [districts, setDistricts] = useState<PincodeApiDistrict[]>([])
@@ -179,27 +203,56 @@ export const AddressForm: React.FC<Props> = ({
         // Editing an existing address: city/pincode are already on file, but
         // the Address collection has no district field to restore, so the
         // District select (and, disabled behind it, City) would otherwise
-        // stay empty forever — there's no reverse pincode/city -> district
-        // lookup in this API, so every district's office list is checked for
-        // a match instead. One-time cost on first load only, never on a
-        // manual state change.
+        // stay empty forever. Resolved via a direct pincode lookup (one
+        // request) when the pincode is on file — falls back to the slower
+        // brute-force "check every district's offices" search only when
+        // there's no pincode to key off of (city name alone).
         const existingCity = initialData?.city
         const existingPostalCode = initialData?.postalCode
         if (keepExistingSelection && !selectedDistrictSlug && (existingCity || existingPostalCode)) {
-          const matches = await Promise.all(
-            districtList.map(async (district) => ({
-              district,
-              offices: await fetchOffices(slug, district.slug).catch(() => []),
-            })),
-          )
-          const found = matches.find(({ offices }) =>
-            offices.some(
-              (office) =>
-                (existingPostalCode && office.pincode === existingPostalCode) ||
-                (existingCity && office.officeName === existingCity),
-            ),
-          )
-          if (found && !cancelled) setSelectedDistrictSlug(found.district.slug)
+          let foundSlug: string | undefined
+
+          if (existingPostalCode) {
+            const direct = await fetchByPincode(existingPostalCode)
+            const directMatch = direct && districtList.find((d) => toSlug(d.name) === toSlug(direct.district))
+            if (directMatch) {
+              foundSlug = directMatch.slug
+              // The city cascade (step 2 below) only auto-selects when
+              // triggered by a manual pincode entry (pendingPincodeMatchRef)
+              // — it doesn't know this district was just reverse-resolved,
+              // so it would otherwise populate the City select with the
+              // district's full office list but leave nothing chosen. Set
+              // directly here instead, using the exact saved city name (a
+              // pincode can cover several offices — matching by name avoids
+              // landing on the wrong one of them).
+              const offices = direct.offices
+              const matchedOffice = offices.find((o) => o.officeName === existingCity) ?? offices[0]
+              if (matchedOffice && !cancelled) {
+                setOffices(offices)
+                setSelectedCity(matchedOffice.officeName)
+                setValue('city', matchedOffice.officeName, { shouldValidate: true })
+              }
+            }
+          }
+
+          if (!foundSlug) {
+            const matches = await Promise.all(
+              districtList.map(async (district) => ({
+                district,
+                offices: await fetchOffices(slug, district.slug).catch(() => []),
+              })),
+            )
+            const found = matches.find(({ offices }) =>
+              offices.some(
+                (office) =>
+                  (existingPostalCode && office.pincode === existingPostalCode) ||
+                  (existingCity && office.officeName === existingCity),
+              ),
+            )
+            foundSlug = found?.district.slug
+          }
+
+          if (foundSlug && !cancelled) setSelectedDistrictSlug(foundSlug)
         }
       })
       .catch(() => {
@@ -431,14 +484,48 @@ export const AddressForm: React.FC<Props> = ({
           </FloatingField>
         </div>
 
-        <FloatingField label="Company (optional)" htmlFor="company">
-          <Input
-            id="company"
-            autoComplete="organization"
-            className={floatingFieldInputClassName}
-            {...register('company')}
-          />
-        </FloatingField>
+        <div className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium">Customer Type</span>
+          <div className="border-border inline-flex w-fit rounded-lg border p-1">
+            <button
+              className={cn(
+                'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                customerType === 'individual'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+              onClick={() => setValue('customerType', 'individual', { shouldValidate: true })}
+              type="button"
+            >
+              Individual
+            </button>
+            <button
+              className={cn(
+                'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                customerType === 'company'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+              onClick={() => setValue('customerType', 'company', { shouldValidate: true })}
+              type="button"
+            >
+              Company
+            </button>
+          </div>
+        </div>
+
+        {customerType === 'company' && (
+          <FloatingField label="Company" htmlFor="company" required error={errors.company?.message}>
+            <Input
+              id="company"
+              autoComplete="organization"
+              className={floatingFieldInputClassName}
+              {...register('company', {
+                required: customerType === 'company' ? 'Company name is required for a business address.' : false,
+              })}
+            />
+          </FloatingField>
+        )}
 
         <div>
           <FloatingField label="Email" htmlFor="email" required error={errors.email?.message}>
@@ -455,36 +542,65 @@ export const AddressForm: React.FC<Props> = ({
           </p>
         </div>
 
+        {customerType === 'company' && (
+          <div>
+            <FloatingField label="GSTIN (optional)" htmlFor="gstin">
+              <Input
+                id="gstin"
+                maxLength={15}
+                className={floatingFieldInputClassName}
+                {...register('gstin')}
+                onChange={(e) => handleGstinChange(e.target.value)}
+              />
+            </FloatingField>
+            <p className="text-muted-foreground text-xs mt-1">State is auto-selected once a valid GSTIN is entered.</p>
+          </div>
+        )}
+
         <div>
-          <FloatingField label="GSTIN (optional)" htmlFor="gstin">
+          <FloatingField label="Address" htmlFor="addressLine1" required error={errors.addressLine1?.message}>
             <Input
-              id="gstin"
-              maxLength={15}
+              id="addressLine1"
+              autoComplete="address-line1"
               className={floatingFieldInputClassName}
-              {...register('gstin')}
-              onChange={(e) => handleGstinChange(e.target.value)}
+              maxLength={ADDRESS_LINE_MAX_LENGTH}
+              {...register('addressLine1', {
+                required: 'Address line 1 is required.',
+                maxLength: {
+                  value: ADDRESS_LINE_MAX_LENGTH,
+                  message: `Address must be ${ADDRESS_LINE_MAX_LENGTH} characters or fewer.`,
+                },
+              })}
             />
           </FloatingField>
-          <p className="text-muted-foreground text-xs mt-1">State is auto-selected once a valid GSTIN is entered.</p>
+          <p className="text-muted-foreground text-xs mt-1 text-right">
+            {watch('addressLine1')?.length ?? 0}/{ADDRESS_LINE_MAX_LENGTH} characters
+          </p>
         </div>
 
-        <FloatingField label="Address" htmlFor="addressLine1" required error={errors.addressLine1?.message}>
-          <Input
-            id="addressLine1"
-            autoComplete="address-line1"
-            className={floatingFieldInputClassName}
-            {...register('addressLine1', { required: 'Address line 1 is required.' })}
-          />
-        </FloatingField>
-
-        <FloatingField label="Apartment, suite, etc (optional)" htmlFor="addressLine2">
-          <Input
-            id="addressLine2"
-            autoComplete="address-line2"
-            className={floatingFieldInputClassName}
-            {...register('addressLine2')}
-          />
-        </FloatingField>
+        <div>
+          <FloatingField
+            label="Apartment, suite, etc (optional)"
+            htmlFor="addressLine2"
+            error={errors.addressLine2?.message}
+          >
+            <Input
+              id="addressLine2"
+              autoComplete="address-line2"
+              className={floatingFieldInputClassName}
+              maxLength={ADDRESS_LINE_MAX_LENGTH}
+              {...register('addressLine2', {
+                maxLength: {
+                  value: ADDRESS_LINE_MAX_LENGTH,
+                  message: `Address must be ${ADDRESS_LINE_MAX_LENGTH} characters or fewer.`,
+                },
+              })}
+            />
+          </FloatingField>
+          <p className="text-muted-foreground text-xs mt-1 text-right">
+            {watch('addressLine2')?.length ?? 0}/{ADDRESS_LINE_MAX_LENGTH} characters
+          </p>
+        </div>
 
         <div className="flex flex-col md:flex-row gap-3">
           <FloatingField label="State" htmlFor="state" required error={errors.state?.message} className="md:w-1/3">
@@ -557,9 +673,15 @@ export const AddressForm: React.FC<Props> = ({
           <Input
             type="tel"
             id="phone"
+            inputMode="numeric"
             autoComplete="mobile tel"
             className={floatingFieldInputClassName}
+            maxLength={PHONE_MAX_LENGTH}
             {...register('phone')}
+            onChange={(e) => {
+              const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, PHONE_MAX_LENGTH)
+              setValue('phone', digitsOnly, { shouldValidate: true })
+            }}
           />
         </FloatingField>
 

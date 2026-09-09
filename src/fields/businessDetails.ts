@@ -40,6 +40,19 @@ export const businessDetailsGroup = (): Field => ({
     description: 'Optional GST/company details provided at checkout, used for the Zoho tax invoice.',
   },
   fields: [
+    {
+      name: 'customerType',
+      type: 'select',
+      defaultValue: 'individual',
+      options: [
+        { label: 'Individual', value: 'individual' },
+        { label: 'Company', value: 'company' },
+      ],
+      admin: {
+        description:
+          'Drives the Zoho contact\'s GST treatment — Individual maps to "consumer" (shows as "Individual" on Zoho invoices/PDFs), Company maps to business_gst/business_none depending on whether a GSTIN was given.',
+      },
+    },
     { name: 'companyName', type: 'text' },
     { name: 'gstin', type: 'text', label: 'GSTIN' },
     { name: 'panNumber', type: 'text', label: 'PAN' },

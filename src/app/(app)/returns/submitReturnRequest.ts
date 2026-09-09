@@ -4,6 +4,7 @@ import { getPostHogClient } from '@/lib/posthog-server'
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 import { headers as getHeaders } from 'next/headers'
+import { after } from 'next/server'
 
 type Args = {
   orderId: string
@@ -64,17 +65,24 @@ export async function submitReturnRequest({
       overrideAccess: true,
     })
 
+    // Runs after the response is already sent to the customer — the return
+    // request itself is already saved above; there's no reason to make them
+    // wait on a PostHog network round-trip. `after()` still guarantees this
+    // completes before the function's execution environment is torn down,
+    // unlike a bare fire-and-forget call.
     const distinctId = user ? String(user.id) : email
-    const posthog = getPostHogClient()
-    posthog.capture({
-      distinctId,
-      event: 'return_request_submitted',
-      properties: {
-        order_id: orderId,
-        reason,
-      },
+    after(async () => {
+      const posthog = getPostHogClient()
+      posthog.capture({
+        distinctId,
+        event: 'return_request_submitted',
+        properties: {
+          order_id: orderId,
+          reason,
+        },
+      })
+      await posthog.shutdown()
     })
-    await posthog.shutdown()
 
     return { success: true }
   } catch (err) {

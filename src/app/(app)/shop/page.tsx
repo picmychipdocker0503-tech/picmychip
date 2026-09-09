@@ -3,7 +3,9 @@ import type { Metadata } from 'next'
 import { ActiveFiltersBar } from '@/components/Search/ActiveFiltersBar'
 import { FacetSidebar } from '@/components/Search/FacetSidebar'
 import { ShopResults } from '@/components/Search/ShopResults'
+import { Categories } from '@/components/layout/search/Categories'
 import { MobileFilterDrawer } from '@/components/layout/search/MobileFilterDrawer'
+import { PriceFacet } from '@/components/layout/search/PriceFacet'
 import { EmptyState } from '@/components/illustrations'
 import { getAverageRatings } from '@/lib/getAverageRatings'
 import { getFacetsForSchema } from '@/lib/facetConfig'
@@ -78,15 +80,32 @@ export default async function ShopPage({ searchParams }: Props) {
     ),
   ).toString()
 
+  // Scoped to the current search so the sidebar only shows categories that
+  // actually contain a match, with counts reflecting just those matches —
+  // rather than always showing the whole catalog's counts regardless of
+  // what's actually on screen. Falls back to the full-catalog view when
+  // there's no active search (plain browsing).
+  const categoryScopedCounts = searchValue ? products.facetDistribution?.categoryIds : undefined
+
   return (
     <div className="flex flex-col gap-8 md:flex-row md:items-start">
-      {products.facetDistribution && facets.length > 0 && (
+      <div className="w-full flex-none flex flex-col gap-6 md:gap-8 basis-1/5 md:sticky md:top-24">
         <MobileFilterDrawer>
-          <Suspense fallback={null}>
-            <FacetSidebar facetDistribution={products.facetDistribution} facets={facets} />
-          </Suspense>
+          <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+            <Categories scopedCounts={categoryScopedCounts} />
+          </div>
+          <div className="bg-card rounded-xl border border-border p-6 shadow-sm">
+            <Suspense fallback={null}>
+              <PriceFacet />
+            </Suspense>
+          </div>
+          {products.facetDistribution && facets.length > 0 && (
+            <Suspense fallback={null}>
+              <FacetSidebar facetDistribution={products.facetDistribution} facets={facets} />
+            </Suspense>
+          )}
         </MobileFilterDrawer>
-      )}
+      </div>
 
       <div className="min-h-screen w-full flex-1">
         {facets.length > 0 && (

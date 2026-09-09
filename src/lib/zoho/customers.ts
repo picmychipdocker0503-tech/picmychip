@@ -2,7 +2,13 @@ import { zohoFetch } from './auth'
 import type { ZohoAddress, ZohoContact } from './types'
 
 export type FindOrCreateZohoCustomerArgs = {
-  /** Zoho customer id already stored against this ecommerce customer, if any — checked first. */
+  /**
+   * Zoho contact id already stored for THIS exact billing identity (see
+   * getZohoIdentityKey) — checked first. A customer who orders once as an
+   * Individual and again as a Registered Business gets two separate Zoho
+   * contacts; each identity has its own stored id here, resolved by the
+   * caller from the customer's zohoContacts array before calling this.
+   */
   existingContactId?: string
   /**
    * The local PICMYCHIP Customer/User id, when this order was placed by a
@@ -24,6 +30,15 @@ export type FindOrCreateZohoCustomerArgs = {
   phone?: string
   /** GSTIN, if the customer provided one. Absence means "unregistered" — see GST logic below. */
   gstin?: string
+  /**
+   * From the checkout Individual/Company toggle. Individual always maps to
+   * Zoho's "consumer" GST treatment (Zoho's own invoice/PDF templates print
+   * this as "Individual") regardless of gstin/companyName — Company maps to
+   * business_gst/business_none depending on whether a GSTIN was given.
+   * Defaults to 'company' when omitted (legacy callers / pre-toggle orders)
+   * to preserve the previous business_gst/business_none-only behavior.
+   */
+  customerType?: 'individual' | 'company'
   billingAddress?: ZohoAddress
   shippingAddress?: ZohoAddress
 }
@@ -32,6 +47,8 @@ export type FindOrCreateZohoCustomerResult = {
   contact: ZohoContact
   wasCreated: boolean
   wasUpdated: boolean
+  /** The identity this contact was resolved/created for — persist alongside contact.contact_id, keyed by this, so the next order under the same identity finds it directly. */
+  identityKey: string
 }
 
 /**
@@ -60,9 +77,43 @@ export function getZohoDisplayName(args: { companyName?: string | null; contactN
   return toTitleCase((args.contactName || '').trim())
 }
 
-// Contacts follow the storefront billing identity: GSTIN means a registered
-// business; no GSTIN means Zoho's unregistered-business treatment. The display
-// name remains company-first, falling back to the customer's own name.
+// Individual (the checkout toggle) always means Zoho's "consumer" GST
+// treatment, regardless of whether a company name/GSTIN somehow still came
+// through — Zoho's own invoice/PDF templates print consumer as "Individual",
+// which is the actual field driving that label. Company follows the
+// pre-existing rule: a GSTIN means a registered business, no GSTIN means
+// Zoho's unregistered-business treatment. Defaults to 'company' when
+// customerType is omitted, matching the behavior before the toggle existed.
+export function getZohoGstTreatment(args: Pick<FindOrCreateZohoCustomerArgs, 'customerType' | 'gstin'>): string {
+  if (args.customerType === 'individual') return 'consumer'
+  return args.gstin ? 'business_gst' : 'business_none'
+}
+
+/**
+ * Three distinct billing identities, per the checkout toggle: Individual
+ * (consumer), Company with no GSTIN (unregistered business), Company with a
+ * GSTIN (registered business — keyed by the GSTIN itself, since one account
+ * could legitimately order under more than one registered business over
+ * time). Each identity gets its own Zoho contact — see
+ * findOrCreateZohoCustomer's identity-conflict check — never sharing or
+ * overwriting another identity's contact just because the same local
+ * account or email placed both orders.
+ */
+export function getZohoIdentityKey(args: Pick<FindOrCreateZohoCustomerArgs, 'customerType' | 'gstin'>): string {
+  if (args.customerType === 'individual') return 'individual'
+  const gstin = (args.gstin || '').trim().toUpperCase()
+  return gstin ? `business_gst:${gstin}` : 'business_none'
+}
+
+function getContactIdentityKey(contact: ZohoContact): string {
+  if (contact.gst_treatment === 'consumer') return 'individual'
+  const gstNo = (contact.gst_no || '').trim().toUpperCase()
+  return gstNo ? `business_gst:${gstNo}` : 'business_none'
+}
+
+// Contacts follow the storefront billing identity — see getZohoGstTreatment
+// for the GST treatment rule. The display name remains company-first,
+// falling back to the customer's own name.
 //
 // `displayNameOverride` lets a caller omit contact_name by passing `null`
 // when Zoho reports a Display Name collision. Email/phone must never be used
@@ -75,7 +126,7 @@ const buildContactPayload = (args: FindOrCreateZohoCustomerArgs, displayNameOver
     ...(contactName ? { contact_name: contactName } : {}),
     company_name: args.companyName || undefined,
     contact_type: 'customer',
-    gst_treatment: args.gstin ? 'business_gst' : 'business_none',
+    gst_treatment: getZohoGstTreatment(args),
     ...(args.gstin ? { gst_no: args.gstin } : {}),
     place_of_contact: args.billingAddress?.state_code || args.shippingAddress?.state_code || undefined,
     billing_address: args.billingAddress,
@@ -110,32 +161,28 @@ const contactNeedsUpdate = (
   const displayName = displayNameOverride === null ? existing.contact_name : (displayNameOverride ?? getZohoDisplayName(args))
   if (existing.contact_name.trim().toLowerCase() !== displayName.toLowerCase()) return true
   if ((existing.gst_no || '') !== (args.gstin || '')) return true
+  if ((existing.gst_treatment || '') !== getZohoGstTreatment(args)) return true
   if ((existing.company_name || '') !== (args.companyName || '')) return true
-  const existingLine1 = existing.billing_address?.address || ''
-  const newLine1 = args.billingAddress?.address || ''
-  if (newLine1 && existingLine1 !== newLine1) return true
+  const existingBillingLine1 = existing.billing_address?.address || ''
+  const newBillingLine1 = args.billingAddress?.address || ''
+  if (newBillingLine1 && existingBillingLine1 !== newBillingLine1) return true
+  const existingShippingLine1 = existing.shipping_address?.address || ''
+  const newShippingLine1 = args.shippingAddress?.address || ''
+  if (newShippingLine1 && existingShippingLine1 !== newShippingLine1) return true
   return false
 }
 
 /**
- * A found-by-email contact represents a genuinely different billing identity
- * (not the same customer's info evolving) when it already carries a GSTIN
- * that conflicts with — or is simply absent from — this order's own
- * details. GSTIN specifically, not company name: a GSTIN uniquely
- * identifies a registered legal entity, so a mismatch is a strong signal of
- * two different real customers sharing a login. Company name alone is not
- * — the same customer legitimately adds/removes a company name over time
- * (see getZohoDisplayName's Display Name rule), and that must update the
- * existing contact in place, not spawn a duplicate. Presence-only asymmetry
- * on GSTIN counts too: reusing a GST-registered contact for a no-GST order
- * would either strand the old GSTIN on it (Zoho leaves omitted fields
- * unchanged on update) or wipe out real GST data for whoever the *other*
- * order belongs to.
+ * A found contact (by email, GSTIN, phone, or name) represents a genuinely
+ * different billing identity — Individual vs. Unregistered Business vs. a
+ * specific Registered Business's GSTIN — from what this order is placing
+ * under. Always blocks reuse on a mismatch, even for a known local account:
+ * the same person legitimately orders once as themselves and again on
+ * behalf of a registered company, and those must never share or overwrite
+ * one Zoho contact — each identity gets (and keeps) its own.
  */
 function identityConflicts(existing: ZohoContact, args: FindOrCreateZohoCustomerArgs): boolean {
-  const existingGstin = (existing.gst_no || '').trim()
-  const argsGstin = (args.gstin || '').trim()
-  return Boolean(existingGstin && existingGstin !== argsGstin)
+  return getContactIdentityKey(existing) !== getZohoIdentityKey(args)
 }
 
 function isZohoDuplicateContactError(err: unknown): boolean {
@@ -367,92 +414,83 @@ async function updateContact(
 
 /**
  * Find-or-create with the priority order the ecommerce integration requires:
- * stored Zoho customer id → email → GSTIN → phone. Never creates a duplicate
- * contact when any of those already resolve to one — updates it in place instead
- * when its GST/company/address/Display Name details have drifted.
+ * stored Zoho customer id (for this exact identity) → email → GSTIN → phone.
+ * Never creates a duplicate contact when any of those already resolve to
+ * one *of the same identity* — updates it in place instead when its
+ * company/address/Display Name details have drifted (contactNeedsUpdate).
  *
- * When `localCustomerId` is supplied (order placed by a logged-in account),
- * an email match is trusted as-is: the account is the identity, full stop —
- * every order from the same account resolves to the same contact, and a
- * differing GSTIN across orders is treated as that account's GST details
- * changing, not a different customer. Without `localCustomerId` (guest
- * checkout, no account to pin identity to), an email match specifically gets
- * a second check: two guest orders can share one email while billing
- * genuinely different identities (a personal address vs. a registered
- * business address with its own GSTIN) — confirmed live, where a shared
- * contact's GSTIN survived onto an order for an address that had none. When
- * the email-matched contact's GST/company conflicts with this order's own
- * details, it's treated as a different identity: matched further only by
- * GSTIN/phone (not reused outright), so the two identities get their own
- * contacts instead of overwriting each other.
+ * Identity — Individual / Unregistered Business / a specific Registered
+ * Business's GSTIN (see getZohoIdentityKey) — always wins over any other
+ * signal, including a known local account: the same person legitimately
+ * places one order as themselves and another on behalf of a registered
+ * company, and those get separate Zoho contacts, never sharing or
+ * overwriting one another just because they share an email/account. A match
+ * found by email/GSTIN/phone/name whose own identity doesn't match this
+ * order's is treated as a non-match — search continues, and if nothing
+ * else turns up, a new contact is created for this identity.
  */
 export async function findOrCreateZohoCustomer(
   args: FindOrCreateZohoCustomerArgs,
 ): Promise<FindOrCreateZohoCustomerResult> {
+  const identityKey = getZohoIdentityKey(args)
   let existing: ZohoContact | undefined
 
-  if (args.existingContactId) existing = await findByContactId(args.existingContactId)
-
-  // Once we know which local account placed this order, that account IS the
-  // identity — an email match is trusted outright even if this order's GSTIN
-  // differs from what's on file (the account's GST details simply changed;
-  // contactNeedsUpdate below syncs it). Without a known account (guest
-  // checkout), a GSTIN mismatch on an email match still means "different
-  // real customer sharing a login" and is treated as a non-match.
-  const identityPinnedToAccount = args.localCustomerId !== undefined && args.localCustomerId !== null
-
-  let matchedByEmailOnly = false
-  if (!existing && args.email) {
-    existing = await findByEmail(args.email, !args.companyName)
-    matchedByEmailOnly = Boolean(existing)
+  if (args.existingContactId) {
+    const pinned = await findByContactId(args.existingContactId)
+    if (pinned && !identityConflicts(pinned, args)) existing = pinned
   }
 
-  if (existing && matchedByEmailOnly && !identityPinnedToAccount && identityConflicts(existing, args)) {
-    const rematched = await findByGstinOrPhone(args.gstin, args.phone)
-    existing = rematched && rematched.contact_id !== existing.contact_id ? rematched : undefined
-  } else if (!existing) {
-    existing = await findByGstinOrPhone(args.gstin, args.phone)
+  if (!existing && args.email) {
+    const byEmail = await findByEmail(args.email, !args.companyName)
+    if (byEmail && !identityConflicts(byEmail, args)) existing = byEmail
+  }
+
+  if (!existing) {
+    const byGstinOrPhone = await findByGstinOrPhone(args.gstin, args.phone)
+    if (byGstinOrPhone && !identityConflicts(byGstinOrPhone, args)) existing = byGstinOrPhone
   }
 
   if (!existing && args.email) {
     const duplicate = await findDuplicateContact(args, `${getZohoDisplayName(args)} (${args.email})`)
-    existing = duplicate && (identityPinnedToAccount || !identityConflicts(duplicate, args)) ? duplicate : undefined
+    if (duplicate && !identityConflicts(duplicate, args)) existing = duplicate
   }
 
   if (existing) {
     existing = await ensureContactActive(existing)
     if (contactNeedsUpdate(existing, args)) {
       const updated = await updateContact(existing.contact_id, args)
-      return { contact: updated, wasCreated: false, wasUpdated: true }
+      return { contact: updated, wasCreated: false, wasUpdated: true, identityKey }
     }
-    return { contact: existing, wasCreated: false, wasUpdated: false }
+    return { contact: existing, wasCreated: false, wasUpdated: false, identityKey }
   }
 
   try {
     const created = await createContact(args)
-    return { contact: created, wasCreated: true, wasUpdated: false }
+    return { contact: created, wasCreated: true, wasUpdated: false, identityKey }
   } catch (err) {
     // Zoho enforces a unique contact_name/Display Name org-wide (code 3062).
-    // Reuse/update an existing contact when phone+name or email matches; if
-    // only the display name collides, create a deterministic email/phone-suffixed
-    // display name so a genuinely different customer can still be created.
+    // Reuse/update an existing contact when phone+name or email matches AND
+    // its identity matches ours; if only the display name collides (e.g.
+    // this is a genuinely different identity that happens to render the
+    // same name), create a deterministic email/phone-suffixed display name
+    // instead so it still gets its own contact.
     if (!isZohoDuplicateContactError(err)) throw err
 
     const duplicateName = extractDuplicateCustomerName(err)
     const matched = await findDuplicateContact(args, duplicateName)
 
-    if (matched && (identityPinnedToAccount || !identityConflicts(matched, args))) {
+    if (matched && !identityConflicts(matched, args)) {
       const active = await ensureContactActive(matched)
       const updated = contactNeedsUpdate(active, args)
         ? await updateContact(active.contact_id, args)
         : active
-      return { contact: updated, wasCreated: false, wasUpdated: updated !== active }
+      return { contact: updated, wasCreated: false, wasUpdated: updated !== active, identityKey }
     }
 
     const uniqueDisplayName = getUniqueDisplayName(args)
     if (uniqueDisplayName) {
       const created = await createContact(args, uniqueDisplayName)
-      return { contact: created, wasCreated: true, wasUpdated: false }
+      return { contact: created, wasCreated: true, wasUpdated: false, identityKey }
     }
 
     throw err

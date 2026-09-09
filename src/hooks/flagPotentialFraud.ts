@@ -26,6 +26,7 @@ export const flagPotentialFraud: CollectionAfterChangeHook = async ({ doc, opera
         flagReason: `Guest checkout over ${doc.currency} ${threshold.toFixed(0)} — no account history to verify buyer.`,
       },
       overrideAccess: true,
+      req,
     })
   } catch (err) {
     req.payload.logger.error({ msg: 'Failed to set fraud review flag', err })

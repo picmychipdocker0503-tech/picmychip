@@ -1,6 +1,7 @@
 import { CheckIcon } from 'lucide-react'
 import React from 'react'
 
+import { SHIPMENT_STATUS_OPTIONS } from '@/lib/shipmentStatusOptions'
 import { cn } from '@/utilities/cn'
 
 type Props = {
@@ -8,6 +9,7 @@ type Props = {
   courierTrackingUrl?: string | null
   status?: string | null
   trackingNumber?: string | null
+  shipmentStatus?: string | null
 }
 
 export const OrderTrackingTimeline: React.FC<Props> = ({
@@ -15,6 +17,7 @@ export const OrderTrackingTimeline: React.FC<Props> = ({
   trackingNumber,
   courierName,
   courierTrackingUrl,
+  shipmentStatus,
 }) => {
   if (status === 'cancelled' || status === 'refunded') {
     return (
@@ -85,6 +88,15 @@ export const OrderTrackingTimeline: React.FC<Props> = ({
             )}
           </span>
           <span className="font-medium">{trackingNumber}</span>
+        </p>
+      )}
+
+      {shipmentStatus && (
+        <p className="text-sm">
+          <span className="text-muted-foreground">Status: </span>
+          <span className="font-medium">
+            {SHIPMENT_STATUS_OPTIONS.find((option) => option.value === shipmentStatus)?.label || shipmentStatus}
+          </span>
         </p>
       )}
     </div>

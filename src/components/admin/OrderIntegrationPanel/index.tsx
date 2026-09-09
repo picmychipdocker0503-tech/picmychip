@@ -1,7 +1,10 @@
 'use client'
 
 import { Drawer, DrawerToggler, useDocumentInfo, useDrawerSlug, useFormFields } from '@payloadcms/ui'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+
+import { SHIPMENT_STATUS_OPTIONS } from '@/lib/shipmentStatusOptions'
+import { getClientSideURL } from '@/utilities/getURL'
 
 type SyncStatus = 'pending' | 'processing' | 'completed' | 'failed' | undefined
 
@@ -68,10 +71,12 @@ export const OrderIntegrationPanel: React.FC = () => {
   const [error, setError] = useState<string | null>(null)
   const [lastResponse, setLastResponse] = useState<ActionResponse | null>(null)
 
+  const orderStatus = useFormFields(([fields]) => fields.status?.value) as string | undefined
   const salesOrderSyncStatus = useFormFields(([fields]) => fields.salesOrderSyncStatus?.value) as SyncStatus
   const zohoSalesOrderNumber = useFormFields(([fields]) => fields.zohoSalesOrderNumber?.value) as
     | string
     | undefined
+  const zohoSalesOrderId = useFormFields(([fields]) => fields.zohoSalesOrderId?.value) as string | undefined
   const zohoSalesOrderStatus = useFormFields(([fields]) => fields.zohoSalesOrderStatus?.value) as
     | string
     | undefined
@@ -100,9 +105,49 @@ export const OrderIntegrationPanel: React.FC = () => {
     | undefined
 
   const trackingNumber = useFormFields(([fields]) => fields.trackingNumber?.value) as string | undefined
-  const courierName = useFormFields(([fields]) => fields.courierName?.value) as string | undefined
-  const shipmentStatus = useFormFields(([fields]) => fields.shipmentStatus?.value) as string | undefined
+  // courierName is a relationship field — its form value is just the
+  // courier's id, not a display name, so it's resolved against the couriers
+  // list fetched below.
+  const courierId = useFormFields(([fields]) => fields.courierName?.value) as string | number | undefined
+  const shipmentStatusValue = useFormFields(([fields]) => fields.shipmentStatus?.value) as string | undefined
+  const shipmentStatus = SHIPMENT_STATUS_OPTIONS.find((option) => option.value === shipmentStatusValue)?.label
   const trackingUrl = useFormFields(([fields]) => fields.courierTrackingUrl?.value) as string | undefined
+
+  const [courierNamesById, setCourierNamesById] = useState<Record<string, string>>({})
+  useEffect(() => {
+    fetch(`${getClientSideURL()}/api/couriers?limit=200&depth=0`, { credentials: 'include' })
+      .then((res) => res.json())
+      .then((data: { docs?: { id: string | number; name: string }[] }) => {
+        const map: Record<string, string> = {}
+        data.docs?.forEach((courier) => {
+          map[String(courier.id)] = courier.name
+        })
+        setCourierNamesById(map)
+      })
+      .catch(() => {})
+  }, [])
+  const courierName = courierId !== undefined ? courierNamesById[String(courierId)] : undefined
+
+  const hasInvoice = invoiceSyncStatus === 'completed' && Boolean(zohoInvoiceNumber)
+  // Zoho Books doesn't push changes here — so the moment this order's admin
+  // page loads is when we find out if the sales order was voided or edited
+  // directly in Zoho Books since the last sync. Only worth checking while
+  // there's a sales order and it hasn't already become an invoice (Zoho
+  // generally won't let a sales order be voided anymore once invoiced).
+  useEffect(() => {
+    if (!id || !zohoSalesOrderId || hasInvoice) return
+    let cancelled = false
+    fetch(`/api/admin/orders/${id}/check-zoho-status`, { method: 'POST', credentials: 'include' })
+      .then((res) => res.json())
+      .then((data: { changed?: boolean }) => {
+        if (!cancelled && data.changed) window.location.reload()
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, zohoSalesOrderId, hasInvoice])
 
   const callAction = async (action: Action) => {
     if (!id) return
@@ -126,8 +171,6 @@ export const OrderIntegrationPanel: React.FC = () => {
     }
   }
 
-  const hasInvoice = invoiceSyncStatus === 'completed' && Boolean(zohoInvoiceNumber)
-
   return (
     <div className="pmc-rounded-box border-base-content/10 bg-base-200 relative z-10 mb-4 flex items-center justify-between gap-4 border p-3 shadow-sm">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
@@ -144,6 +187,15 @@ export const OrderIntegrationPanel: React.FC = () => {
 
       <Drawer slug={drawerSlug} title="Zoho Integration">
         <div className="flex flex-col gap-4">
+          {orderStatus === 'cancelled' && zohoSalesOrderStatus === 'void' && (
+            <div className="border-warning/40 bg-warning/10 rounded border p-2 text-xs">
+              <p className="text-warning font-medium">Cancelled — voided in Zoho Books</p>
+              <p className="text-base-content/70 mt-1">
+                This order was cancelled because its sales order was voided in Zoho Books. Stock has been
+                restored; check the linked return request below for refund status.
+              </p>
+            </div>
+          )}
           <div>
             <div className="mb-1 flex items-center justify-between">
               <span className="text-base-content text-sm font-medium">Zoho Sales Order</span>
@@ -155,9 +207,7 @@ export const OrderIntegrationPanel: React.FC = () => {
                 {zohoSalesOrderStatus ? ` · ${zohoSalesOrderStatus}` : ''}
               </p>
             )}
-            {salesOrderSyncStatus === 'failed' && salesOrderError && (
-              <p className="text-error mt-1 text-xs break-words">{salesOrderError}</p>
-            )}
+            {salesOrderError && <p className="text-error mt-1 text-xs break-words">{salesOrderError}</p>}
             {error && <p className="text-error mt-2 text-xs break-words">{error}</p>}
             {lastResponse && (
               <div className="bg-base-100 border-base-content/10 mt-2 rounded border p-2 text-xs">

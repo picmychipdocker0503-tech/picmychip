@@ -16,7 +16,7 @@ type Body = {
   email: string
   shippingAddress?: Partial<Address>
   billingAddress?: Partial<Address>
-  businessDetails?: { companyName?: string; gstin?: string; panNumber?: string }
+  businessDetails?: { customerType?: 'individual' | 'company'; companyName?: string; gstin?: string; panNumber?: string }
   shippingMethod?: string
 }
 

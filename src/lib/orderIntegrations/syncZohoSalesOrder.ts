@@ -1,8 +1,14 @@
 import type { Payload } from 'payload'
 import { sql } from '@payloadcms/db-postgres'
 
+import { restoreInventoryForOrderItems } from '@/lib/inventory'
 import { zohoIsConfigured } from '@/lib/zoho/auth'
-import { findOrCreateZohoCustomer, markZohoContactActive } from '@/lib/zoho/customers'
+import {
+  findOrCreateZohoCustomer,
+  getZohoGstTreatment,
+  getZohoIdentityKey,
+  markZohoContactActive,
+} from '@/lib/zoho/customers'
 import { findOrCreateZohoItem } from '@/lib/zoho/items'
 import { getZohoOrganizationState } from '@/lib/zoho/organization'
 import { resolveTaxId } from '@/lib/zoho/taxes'
@@ -15,6 +21,7 @@ import {
   findExistingSalesOrderByOrderId,
   formatEcomReferenceNumber,
   getZohoSalesOrder,
+  updateZohoSalesOrderLineItems,
 } from '@/lib/zoho/salesOrders'
 import type { ZohoAddress, ZohoLineItem, ZohoSalesOrder } from '@/lib/zoho/types'
 import { IndianState, resolveIndianState } from '@/lib/indianStates'
@@ -31,17 +38,76 @@ type AddressLike = {
   state?: string | null
 } | null | undefined
 
+// Zoho rejects any address subfield over 100 characters ("Please ensure
+// that the "billing_address" has less than 100 characters") — confirmed
+// live once this app started sending the order's own address instead of
+// relying on whatever was already on the contact. The checkout form has no
+// character limit on addressLine1, so a long single-line address (common
+// with "near <landmark>" style entries) can exceed it. Truncating outright
+// would silently drop real street-address detail that could affect
+// delivery, so overflow past 100 chars spills into `street2` (prepended to
+// whatever addressLine2 already had) instead of being discarded.
+const ZOHO_ADDRESS_LINE_MAX = 100
+
+// Addresses store the checkout form's ISO 3166-1 alpha-2 country code (e.g.
+// "IN"), never a name — so `address.country || 'India'` below could never
+// actually fall through to the name; it always sent the bare code, which
+// Zoho doesn't recognize as a country and rejects with a misleading "less
+// than 100 characters" error (confirmed live: a short, valid address still
+// failed with that exact message once addressLine1 truncation stopped being
+// the cause). Same code list as the checkout form's country select
+// (@payloadcms/plugin-ecommerce's defaultCountries) — mirrored here rather
+// than imported since that export lives under the plugin's client bundle.
+const COUNTRY_CODE_TO_NAME: Record<string, string> = {
+  AT: 'Austria', AU: 'Australia', BE: 'Belgium', BG: 'Bulgaria', BR: 'Brazil',
+  CA: 'Canada', CH: 'Switzerland', CY: 'Cyprus', CZ: 'Czech Republic', DE: 'Germany',
+  DK: 'Denmark', EE: 'Estonia', ES: 'Spain', FI: 'Finland', FR: 'France',
+  GB: 'United Kingdom', GR: 'Greece', HK: 'Hong Kong', HU: 'Hungary', IE: 'Ireland',
+  IN: 'India', IT: 'Italy', JP: 'Japan', LT: 'Lithuania', LU: 'Luxembourg',
+  LV: 'Latvia', MT: 'Malta', MX: 'Mexico', MY: 'Malaysia', NL: 'Netherlands',
+  NO: 'Norway', NZ: 'New Zealand', PL: 'Poland', PT: 'Portugal', RO: 'Romania',
+  SE: 'Sweden', SG: 'Singapore', SI: 'Slovenia', SK: 'Slovakia', US: 'United States',
+}
+
+const toCountryName = (country?: string | null): string => {
+  if (!country) return 'India'
+  return COUNTRY_CODE_TO_NAME[country.toUpperCase()] || country
+}
+
+// Confirmed live by extensive testing directly against Zoho's /salesorders
+// API (bisecting field-by-field, repeated to rule out a fluke): a Sales
+// Order's own billing/shipping address throws {"code":15,"message":"...
+// billing_address... less than 100 characters"} — a mislabeled error not
+// actually about 100 characters — whenever more than 4 address fields are
+// populated together and `address` (line 1) is more than ~12 characters. A
+// Contact's billing_address has no such limit (confirmed separately — the
+// identical full payload saves there without issue). Rather than fight that
+// (dropping fields on Sales Orders loses real address detail either way),
+// Sales Orders are no longer sent an address at all — see
+// syncZohoSalesOrderForOrderUnguarded, which omits billingAddress/
+// shippingAddress from salesOrderArgs entirely and lets Zoho inherit it from
+// the Contact. That's safe now that each billing identity (Individual /
+// Unregistered / Registered Business+GSTIN, see getZohoIdentityKey) gets its
+// own dedicated Contact that's never shared across identities — so the
+// Contact's address is always accurate for whichever identity placed this
+// order. This function is still used to build the Contact's own address,
+// which has no length bug to work around.
 export const toZohoAddress = (address: AddressLike, state?: IndianState): ZohoAddress | undefined => {
   if (!address) return undefined
+
+  const line1 = address.addressLine1 || ''
+  const overflow = line1.length > ZOHO_ADDRESS_LINE_MAX ? line1.slice(ZOHO_ADDRESS_LINE_MAX) : ''
+  const street2 = [overflow, address.addressLine2].filter(Boolean).join(', ').slice(0, ZOHO_ADDRESS_LINE_MAX)
+
   const zohoAddress: ZohoAddress = {
-    attention: `${address.firstName || ''} ${address.lastName || ''}`.trim() || undefined,
-    address: address.addressLine1 || '',
-    street2: address.addressLine2 || undefined,
-    city: address.city || '',
-    state: state?.name || address.state || '',
+    attention: `${address.firstName || ''} ${address.lastName || ''}`.trim().slice(0, ZOHO_ADDRESS_LINE_MAX) || undefined,
+    address: line1.slice(0, ZOHO_ADDRESS_LINE_MAX),
+    street2: street2 || undefined,
+    city: (address.city || '').slice(0, ZOHO_ADDRESS_LINE_MAX),
+    state: (state?.name || address.state || '').slice(0, ZOHO_ADDRESS_LINE_MAX),
     state_code: state?.zohoStateCode,
     zip: address.postalCode || '',
-    country: address.country || 'India',
+    country: toCountryName(address.country),
     phone: address.phone || undefined,
   }
   // Belt-and-suspenders: ZohoAddress has no email field by type, but this
@@ -218,24 +284,30 @@ async function resolveCustomerForOrder(
 
   const gstin: string | undefined = order.businessDetails?.gstin || undefined
   const companyName: string | undefined = order.businessDetails?.companyName || undefined
+  const customerType: 'individual' | 'company' | undefined = order.businessDetails?.customerType || undefined
   const customerName =
     `${billing?.firstName || ''} ${billing?.lastName || ''}`.trim() || order.customerEmail || 'Customer'
 
-  // Account identity, not order details, decides the Zoho contact: two
-  // logins can legitimately share a name/address/phone without being the
-  // same customer, so dedup never keys on address, and two orders from the
-  // same account must always land on the same contact. The account's own
-  // stored zohoCustomerId (order fetched at depth: 1, so this is the full
-  // customer doc when set) is checked first and trusted outright; failing
-  // that, findOrCreateZohoCustomer falls back to an exact email match. Only
-  // a brand-new account with no match at all reaches contact creation, where
+  // Account identity, not order details, decides which Zoho contact to
+  // reuse — but identity (Individual / Unregistered Business / a specific
+  // Registered Business's GSTIN, see getZohoIdentityKey) always wins first:
+  // the same account placing an order as themselves and another on behalf
+  // of a registered company gets two separate Zoho contacts, never one
+  // shared/overwritten record. zohoContacts (order fetched at depth: 1, so
+  // this is the full customer doc when set) is a list of exactly that —
+  // one contact id per identity this account has ordered under — checked
+  // here for an entry matching THIS order's identity before falling back to
+  // findOrCreateZohoCustomer's own email/GSTIN/phone matching. Only a
+  // brand-new identity for this account reaches contact creation, where
   // localCustomerId makes the Display Name collision-proof (see
-  // getUniqueDisplayName) instead of the old email/phone suffix, which used
-  // to let concurrent first orders from the same new account race into two
+  // getUniqueDisplayName) instead of an email/phone suffix, which used to
+  // let concurrent first orders from the same new account race into two
   // contacts.
   const customer = order.customer && typeof order.customer === 'object' ? order.customer : undefined
   const customerId = customer?.id as string | number | undefined
-  const existingContactId = (customer?.zohoCustomerId as string | undefined) || undefined
+  const identityKey = getZohoIdentityKey({ customerType, gstin })
+  const zohoContacts = (customer?.zohoContacts as { identityKey: string; contactId: string }[] | undefined) ?? []
+  const existingContactId = zohoContacts.find((c) => c.identityKey === identityKey)?.contactId
 
   const { contact } = await findOrCreateZohoCustomer({
     existingContactId,
@@ -247,25 +319,80 @@ async function resolveCustomerForOrder(
     email: order.customerEmail || undefined,
     phone: billing?.phone || shipping?.phone || undefined,
     gstin,
+    customerType,
     billingAddress: toZohoAddress(billing, billingState),
     shippingAddress: toZohoAddress(shipping, shippingState),
   })
 
   if (customerId && existingContactId !== contact.contact_id) {
+    const nextZohoContacts = [
+      ...zohoContacts.filter((c) => c.identityKey !== identityKey),
+      { identityKey, contactId: contact.contact_id },
+    ]
     await payload
       .update({
         collection: 'users',
         id: customerId,
-        data: { zohoCustomerId: contact.contact_id },
+        data: { zohoContacts: nextZohoContacts },
         overrideAccess: true,
         context: { disableRevalidate: true },
       })
       .catch((err) => {
-        payload.logger.error({ msg: 'Failed to persist zohoCustomerId on customer', err, customerId })
+        payload.logger.error({ msg: 'Failed to persist zohoContacts on customer', err, customerId })
       })
   }
 
   return { contactId: contact.contact_id }
+}
+
+/**
+ * Compares only the *product* line items (matched by Zoho item_id) between
+ * a freshly-built list and what a sales order currently has in Zoho —
+ * ignoring the shipping line, which never carries an item_id on either side
+ * and would otherwise always look "different" (this app never sets one when
+ * building it; Zoho returns an empty string for it). Order-independent and
+ * quantity-sensitive: catches an item removed entirely, added, or its
+ * quantity changed.
+ */
+function zohoLineItemsDiffer(local: ZohoLineItem[], remote: ZohoLineItem[]): boolean {
+  const toQuantityMap = (items: ZohoLineItem[]) => {
+    const map = new Map<string, number>()
+    for (const item of items) {
+      if (!item.item_id) continue
+      map.set(item.item_id, (map.get(item.item_id) ?? 0) + (item.quantity ?? 0))
+    }
+    return map
+  }
+
+  const localMap = toQuantityMap(local)
+  const remoteMap = toQuantityMap(remote)
+  if (localMap.size !== remoteMap.size) return true
+
+  for (const [itemId, quantity] of localMap) {
+    if (remoteMap.get(itemId) !== quantity) return true
+  }
+  return false
+}
+
+/**
+ * A sales order's line rates are always rebuilt from the product's CURRENT
+ * priceInINR at sync time (see buildZohoLineItems) — there's no per-order
+ * price snapshot — so Zoho's own `total` is the freshest number available
+ * once a sales order exists, strictly more current than order.amount, which
+ * is only ever set once at checkout and otherwise never touched again.
+ * Returns an `{ amount }` patch only when they actually differ, so an
+ * unrelated retry doesn't churn the field for no reason.
+ */
+function zohoAmountPatch(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  order: any,
+  salesOrder: ZohoSalesOrder,
+): { amount?: number } {
+  const zohoAmountPaise = Math.round((salesOrder.total ?? 0) * 100)
+  if (zohoAmountPaise > 0 && zohoAmountPaise !== order.amount) {
+    return { amount: zohoAmountPaise }
+  }
+  return {}
 }
 
 function isInactiveZohoCustomerError(err: unknown): boolean {
@@ -409,41 +536,56 @@ async function syncZohoSalesOrderForOrderUnguarded(payload: Payload, orderId: nu
     // a retried hook or manual retry never produces a duplicate sales order.
     // amount is stored in paise (matches priceInINR elsewhere); Zoho's own
     // total is in rupees.
-    let salesOrder = await findExistingSalesOrderByOrderId(orderId, (order.amount ?? 0) / 100)
+    let salesOrder = await findExistingSalesOrderByOrderId(
+      orderId,
+      (order.amount ?? 0) / 100,
+      order.zohoSalesOrderId || undefined,
+    )
+
+    const siteSettings = await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
+    const defaultGstPercent = siteSettings?.taxSettings?.gstRatePercent ?? 18
+
+    const billing = order.billingAddress?.addressLine1 ? order.billingAddress : order.shippingAddress
+    const shipping = order.shippingAddress
+    const billingState = resolveIndianState(billing?.state)
+    const shippingState = resolveIndianState(shipping?.state)
+    const customerState = shippingState || billingState
+    // The org's registered state is asked from Zoho itself rather than
+    // trusted from Site Settings/env — those go stale the moment the
+    // connected Zoho org changes (confirmed live: a leftover
+    // ZOHO_BUSINESS_STATE from a previous org caused every sales order to
+    // get the intra/inter-state tax backwards and be rejected either way).
+    const sellerState = (await getZohoOrganizationState()) || siteSettings?.taxSettings?.businessState
+    const taxType = resolveOrderTaxType(sellerState, customerState?.name)
+
+    // Computed unconditionally (not just for a brand-new sales order) so an
+    // existing one can be checked for drift below — e.g. an item removed
+    // from the order in our own admin after the sales order was already
+    // created in Zoho. Only runs on order creation or an explicit admin
+    // Retry, never on every order save, so the extra Zoho item/tax lookups
+    // this does are not a hot-path cost.
+    const lineItems = await buildZohoLineItems(payload, order, taxType, defaultGstPercent)
+    if (order.shippingAmount && order.shippingAmount > 0) {
+      const shippingTaxId = await resolveTaxId(defaultGstPercent, taxType)
+      lineItems.push({
+        name: order.shippingMethod === 'express' ? 'Express Shipping' : 'Standard Shipping',
+        hsn_or_sac: '9968',
+        rate: order.shippingAmount / 100,
+        quantity: 1,
+        tax_id: shippingTaxId,
+      })
+    }
+    if (lineItems.length === 0) throw new Error('No valid line items for a sales order.')
 
     if (!salesOrder) {
       const { contactId } = await resolveCustomerForOrder(payload, order)
 
-      const siteSettings = await payload.findGlobal({ slug: 'site-settings', depth: 0, overrideAccess: true })
-      const defaultGstPercent = siteSettings?.taxSettings?.gstRatePercent ?? 18
-
-      const billing = order.billingAddress?.addressLine1 ? order.billingAddress : order.shippingAddress
-      const shipping = order.shippingAddress
-      const customerState = resolveIndianState(shipping?.state) || resolveIndianState(billing?.state)
-      // The org's registered state is asked from Zoho itself rather than
-      // trusted from Site Settings/env — those go stale the moment the
-      // connected Zoho org changes (confirmed live: a leftover
-      // ZOHO_BUSINESS_STATE from a previous org caused every sales order to
-      // get the intra/inter-state tax backwards and be rejected either way).
-      const sellerState = (await getZohoOrganizationState()) || siteSettings?.taxSettings?.businessState
-      const taxType = resolveOrderTaxType(sellerState, customerState?.name)
-
-      const lineItems = await buildZohoLineItems(payload, order, taxType, defaultGstPercent)
-      if (order.shippingAmount && order.shippingAmount > 0) {
-        const shippingTaxId = await resolveTaxId(defaultGstPercent, taxType)
-        lineItems.push({
-          name: order.shippingMethod === 'express' ? 'Express Shipping' : 'Standard Shipping',
-          hsn_or_sac: '9968',
-          rate: order.shippingAmount / 100,
-          quantity: 1,
-          tax_id: shippingTaxId,
-        })
-      }
-      if (lineItems.length === 0) throw new Error('No valid line items for a sales order.')
-
       const gstin: string | undefined = order.businessDetails?.gstin || undefined
-      const gstTreatment = gstin ? 'business_gst' : 'business_none'
+      const gstTreatment = getZohoGstTreatment({ customerType: order.businessDetails?.customerType, gstin })
 
+      // No billingAddress/shippingAddress here — see toZohoAddress's comment.
+      // Zoho inherits the Sales Order's address from the Contact, which is
+      // now always correct for this identity.
       const salesOrderArgs = {
         customerId: contactId,
         referenceNumber: formatEcomReferenceNumber(orderId),
@@ -476,7 +618,11 @@ async function syncZohoSalesOrderForOrderUnguarded(payload: Payload, orderId: nu
         },
         overrideAccess: true,
       })
-    } else {
+    } else if (salesOrder.invoices?.length || salesOrder.status === 'void') {
+      // Already invoiced (or voided) — line items can no longer be safely
+      // rewritten here (a credit note or manual edit in Zoho Books is the
+      // correct tool at that point). Just keep status/metadata (and amount,
+      // if Zoho's total has since drifted) fresh.
       await payload.update({
         collection: 'orders',
         id: orderId,
@@ -487,6 +633,51 @@ async function syncZohoSalesOrderForOrderUnguarded(payload: Payload, orderId: nu
           salesOrderSyncStatus: 'completed',
           integrationError: { ...order.integrationError, salesOrder: null },
           lastSyncAt: new Date().toISOString(),
+          ...zohoAmountPatch(order, salesOrder),
+        },
+        overrideAccess: true,
+      })
+    } else if (zohoLineItemsDiffer(lineItems, salesOrder.line_items ?? [])) {
+      // The order changed locally (e.g. an item removed in the admin) since
+      // this sales order was created — push the corrected line items so
+      // Zoho Books matches what this app now considers the order to be.
+      salesOrder = await updateZohoSalesOrderLineItems(salesOrder.salesorder_id, lineItems)
+
+      await payload.update({
+        collection: 'orders',
+        id: orderId,
+        data: {
+          zohoSalesOrderId: salesOrder.salesorder_id,
+          zohoSalesOrderNumber: salesOrder.salesorder_number,
+          zohoSalesOrderStatus: salesOrder.status,
+          salesOrderSyncStatus: 'completed',
+          integrationError: { ...order.integrationError, salesOrder: null },
+          lastSyncAt: new Date().toISOString(),
+          // Zoho's own total (built from the line items just pushed above)
+          // is authoritative here, not a locally-recomputed one — avoids the
+          // two ever disagreeing over rounding or a Zoho-side adjustment.
+          ...zohoAmountPatch(order, salesOrder),
+        },
+        overrideAccess: true,
+      })
+    } else {
+      // Items match, but a retry still re-pulls Zoho's own total — the sales
+      // order's line rates are always rebuilt from CURRENT product prices
+      // (there's no per-order price snapshot), so a product price change
+      // since this sales order was last synced is exactly the kind of drift
+      // this catches: order.amount otherwise stays frozen at whatever was
+      // charged at checkout forever, even after a manual Retry.
+      await payload.update({
+        collection: 'orders',
+        id: orderId,
+        data: {
+          zohoSalesOrderId: salesOrder.salesorder_id,
+          zohoSalesOrderNumber: salesOrder.salesorder_number,
+          zohoSalesOrderStatus: salesOrder.status,
+          salesOrderSyncStatus: 'completed',
+          integrationError: { ...order.integrationError, salesOrder: null },
+          lastSyncAt: new Date().toISOString(),
+          ...zohoAmountPatch(order, salesOrder),
         },
         overrideAccess: true,
       })
@@ -541,6 +732,159 @@ export async function refreshZohoCreditNoteForOrder(payload: Payload, orderId: n
   })
 }
 /**
+ * Zoho Books never pushes changes to this app — so a sales order voided or
+ * edited directly in Zoho Books' UI is invisible here until something
+ * actively checks. This is that check, called both when an admin opens the
+ * order in the admin panel and right before "Accept" (see
+ * acceptZohoSalesOrder below and /api/admin/orders/[id]/check-zoho-status).
+ *
+ * Two cases:
+ *   - The whole sales order was voided: the local order is cancelled, which
+ *     restocks every line item via the existing restoreInventoryOnCancellation
+ *     afterChange hook, and an auto-approved return request is created so
+ *     any payment already collected is refunded the same way an approved
+ *     customer return is (PayU auto-refund; COD/gift-card flagged
+ *     manual-required — see processReturnRefund).
+ *   - Individual line items were removed or had their quantity reduced by
+ *     editing the sales order (not voided): only the removed/reduced
+ *     quantity is restocked and the local order's items are updated to
+ *     match. The order's stated amount/tax is intentionally NOT
+ *     recalculated here (that needs re-deriving tax/shipping allocation,
+ *     out of scope) — flagged in integrationError.salesOrder as a note for
+ *     manual review instead of silently guessing a new total.
+ *
+ * Idempotent either way: re-running against an already-reconciled order
+ * finds nothing left to change and returns { changed: false }.
+ */
+export async function reconcileOrderWithZohoSalesOrder(
+  payload: Payload,
+  orderId: number | string,
+  salesOrder: ZohoSalesOrder,
+): Promise<{ changed: boolean; voided: boolean }> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const order: any = await payload.findByID({ collection: 'orders', id: orderId, depth: 1, overrideAccess: true })
+  if (!order) return { changed: false, voided: false }
+
+  const alreadyTerminal = order.status === 'cancelled' || order.status === 'refunded'
+
+  if (alreadyTerminal) {
+    if (order.zohoSalesOrderStatus !== salesOrder.status) {
+      await payload.update({
+        collection: 'orders',
+        id: orderId,
+        overrideAccess: true,
+        data: { zohoSalesOrderStatus: salesOrder.status },
+      })
+    }
+    return { changed: false, voided: salesOrder.status === 'void' }
+  }
+
+  if (salesOrder.status === 'void') {
+    await payload.update({
+      collection: 'orders',
+      id: orderId,
+      overrideAccess: true,
+      data: { status: 'cancelled', zohoSalesOrderStatus: salesOrder.status },
+    })
+
+    await payload
+      .create({
+        collection: 'return-requests',
+        overrideAccess: true,
+        data: {
+          order: Number(orderId),
+          customerEmail: order.customerEmail || 'unknown@picmychip.in',
+          reason: 'zoho-void',
+          description: `Sales order ${salesOrder.salesorder_number || salesOrder.salesorder_id} was voided in Zoho Books — order auto-cancelled and stock restored.`,
+          status: 'approved',
+        },
+      })
+      .catch((err) => {
+        payload.logger.error({
+          msg: 'Failed to create auto-refund return request for voided Zoho sales order',
+          err,
+          orderId,
+        })
+      })
+
+    return { changed: true, voided: true }
+  }
+
+  const zohoQuantityByItemId = new Map<string, number>()
+  for (const lineItem of salesOrder.line_items ?? []) {
+    if (!lineItem.item_id) continue
+    zohoQuantityByItemId.set(lineItem.item_id, (zohoQuantityByItemId.get(lineItem.item_id) ?? 0) + (lineItem.quantity ?? 0))
+  }
+
+  const restockItems: {
+    product?: number | string | { id: number | string } | null
+    variant?: number | string | { id: number | string } | null
+    quantity: number
+  }[] = []
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const nextItems: any[] = []
+  let itemsChanged = false
+
+  for (const item of order.items || []) {
+    const product = typeof item.product === 'object' ? item.product : undefined
+    const zohoItemId: string | undefined = product?.zohoItemId || undefined
+    const oldQuantity = item.quantity ?? 0
+
+    // Never synced to Zoho (no item id) — nothing to reconcile it against.
+    if (!zohoItemId) {
+      nextItems.push(item)
+      continue
+    }
+
+    const zohoQuantity = zohoQuantityByItemId.get(zohoItemId) ?? 0
+    if (zohoQuantity >= oldQuantity) {
+      nextItems.push(item)
+      continue
+    }
+
+    const delta = oldQuantity - zohoQuantity
+    restockItems.push({ product: item.product, variant: item.variant, quantity: delta })
+    itemsChanged = true
+    if (zohoQuantity > 0) nextItems.push({ ...item, quantity: zohoQuantity })
+    // zohoQuantity === 0 → line item was removed entirely from the sales order, drop it locally too.
+  }
+
+  if (!itemsChanged) {
+    const amountPatch = zohoAmountPatch(order, salesOrder)
+    if (order.zohoSalesOrderStatus !== salesOrder.status || Object.keys(amountPatch).length > 0) {
+      await payload.update({
+        collection: 'orders',
+        id: orderId,
+        overrideAccess: true,
+        data: { zohoSalesOrderStatus: salesOrder.status, ...amountPatch },
+      })
+    }
+    return { changed: false, voided: false }
+  }
+
+  await restoreInventoryForOrderItems(payload, restockItems)
+
+  await payload.update({
+    collection: 'orders',
+    id: orderId,
+    overrideAccess: true,
+    data: {
+      // items is included here, which computeGstTaxBreakdown (beforeChange
+      // on orders) picks up to recalculate `amount` itself from the reduced
+      // item list — see that hook for the details/caveats.
+      items: nextItems,
+      zohoSalesOrderStatus: salesOrder.status,
+      integrationError: {
+        ...order.integrationError,
+        salesOrder: `Some items were removed or had their quantity reduced in Zoho Books sales order ${salesOrder.salesorder_number || salesOrder.salesorder_id} — updated here to match, restocked, and the order amount recalculated.`,
+      },
+    },
+  })
+
+  return { changed: true, voided: false }
+}
+
+/**
  * The "Accept" action: converts the order's sales order into an invoice —
  * called from the admin panel once stock/availability has been confirmed.
  * Idempotent: if the sales order already has a linked invoice (e.g. it was
@@ -564,6 +908,13 @@ export async function acceptZohoSalesOrder(payload: Payload, orderId: number | s
 
   try {
     const current = await getZohoSalesOrder(order.zohoSalesOrderId)
+
+    const reconciled = await reconcileOrderWithZohoSalesOrder(payload, orderId, current)
+    if (reconciled.voided) {
+      throw new Error(
+        'This sales order was voided in Zoho Books — the order has been cancelled and stock restored. It cannot be accepted.',
+      )
+    }
 
     if (!current.invoices?.length) {
       await convertSalesOrderToInvoice(order.zohoSalesOrderId)

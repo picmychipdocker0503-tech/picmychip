@@ -79,6 +79,10 @@ import * as migration_20260904_020000_add_price_tiers_max_quantity from './20260
 import * as migration_20260904_030000_add_price_tiers_max_quantity_versions from './20260904_030000_add_price_tiers_max_quantity_versions';
 import * as migration_20260904_040000_add_product_override_keywords from './20260904_040000_add_product_override_keywords';
 import * as migration_20260907_183600_add_tawk_business_hours_settings from './20260907_183600_add_tawk_business_hours_settings';
+import * as migration_20260908_133200_add_business_details_customer_type from './20260908_133200_add_business_details_customer_type';
+import * as migration_20260908_140000_add_couriers_collection from './20260908_140000_add_couriers_collection';
+import * as migration_20260909_150000_add_zoho_contacts_per_identity from './20260909_150000_add_zoho_contacts_per_identity';
+import * as migration_20260909_190000_add_zoho_void_return_reason from './20260909_190000_add_zoho_void_return_reason';
 
 export const migrations = [
   {
@@ -485,5 +489,25 @@ export const migrations = [
     up: migration_20260907_183600_add_tawk_business_hours_settings.up,
     down: migration_20260907_183600_add_tawk_business_hours_settings.down,
     name: '20260907_183600_add_tawk_business_hours_settings',
+  },
+  {
+    up: migration_20260908_133200_add_business_details_customer_type.up,
+    down: migration_20260908_133200_add_business_details_customer_type.down,
+    name: '20260908_133200_add_business_details_customer_type',
+  },
+  {
+    up: migration_20260908_140000_add_couriers_collection.up,
+    down: migration_20260908_140000_add_couriers_collection.down,
+    name: '20260908_140000_add_couriers_collection',
+  },
+  {
+    up: migration_20260909_150000_add_zoho_contacts_per_identity.up,
+    down: migration_20260909_150000_add_zoho_contacts_per_identity.down,
+    name: '20260909_150000_add_zoho_contacts_per_identity',
+  },
+  {
+    up: migration_20260909_190000_add_zoho_void_return_reason.up,
+    down: migration_20260909_190000_add_zoho_void_return_reason.down,
+    name: '20260909_190000_add_zoho_void_return_reason',
   },
 ];

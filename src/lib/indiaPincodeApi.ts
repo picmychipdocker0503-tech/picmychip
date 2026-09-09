@@ -71,7 +71,44 @@ export async function fetchOffices(stateSlug: string, districtSlug: string): Pro
   return data.offices || []
 }
 
-const toSlug = (name: string) =>
+export type PincodeLookupResult = {
+  state: string
+  district: string
+  offices: PincodeApiOffice[]
+}
+
+/**
+ * Direct pincode -> state/district/offices lookup — this dataset hosts a
+ * flat file per pincode alongside its per-district ones, so resolving a
+ * known pincode costs one request instead of fetching every district's full
+ * office list in a state to find which one contains it (what the district
+ * reverse-lookup used to do — ~38 parallel requests for Tamil Nadu alone).
+ * `district` here comes from the same dataset as fetchDistricts, so it's
+ * safe to match directly against a district list's name/slug — unlike
+ * India Post's own official API (used by the forward pincode lookup below),
+ * which spells some districts differently (e.g. "Tiruvallur" vs this
+ * dataset's "Thiruvallur") and would silently fail to match.
+ */
+export async function fetchByPincode(pincode: string): Promise<PincodeLookupResult | undefined> {
+  try {
+    const res = await fetchWithRetry(`${BASE_URL}/pincodes/${pincode}.json`)
+    const data = (await res.json()) as {
+      state: string
+      district: string
+      offices: Omit<PincodeApiOffice, 'pincode'>[]
+    }
+    if (!data.district) return undefined
+    return {
+      state: data.state,
+      district: data.district,
+      offices: (data.offices || []).map((office) => ({ ...office, pincode })),
+    }
+  } catch {
+    return undefined
+  }
+}
+
+export const toSlug = (name: string) =>
   name
     .trim()
     .toLowerCase()

@@ -123,13 +123,23 @@ export const Users: CollectionConfig = {
       },
     },
     {
-      name: 'zohoCustomerId',
-      type: 'text',
+      name: 'zohoContacts',
+      type: 'array',
       admin: {
         position: 'sidebar',
         readOnly: true,
-        description: 'Zoho Books contact id — checked first when matching this customer on future orders.',
+        description:
+          'One Zoho Books contact per billing identity this customer has ordered under (Individual / Unregistered Business / a specific Registered Business GSTIN) — checked first, by identity, when matching this customer on future orders. Never shared or overwritten across identities.',
       },
+      fields: [
+        {
+          name: 'identityKey',
+          type: 'text',
+          required: true,
+          admin: { description: `"individual", "business_none", or "business_gst:<GSTIN>".` },
+        },
+        { name: 'contactId', type: 'text', required: true },
+      ],
     },
     {
       name: 'themePreference',
