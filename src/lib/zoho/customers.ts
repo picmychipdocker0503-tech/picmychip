@@ -105,7 +105,7 @@ export function getZohoIdentityKey(args: Pick<FindOrCreateZohoCustomerArgs, 'cus
   return gstin ? `business_gst:${gstin}` : 'business_none'
 }
 
-function getContactIdentityKey(contact: ZohoContact): string {
+export function getContactIdentityKey(contact: ZohoContact): string {
   if (contact.gst_treatment === 'consumer') return 'individual'
   const gstNo = (contact.gst_no || '').trim().toUpperCase()
   return gstNo ? `business_gst:${gstNo}` : 'business_none'
@@ -298,7 +298,7 @@ async function findByContactId(contactId: string): Promise<ZohoContact | undefin
  * preferred over one that does, since the latter represents a distinct
  * registered-business identity, not this order's plain individual one.
  */
-async function findByEmail(email: string, preferNoCompany: boolean): Promise<ZohoContact | undefined> {
+export async function findByEmail(email: string, preferNoCompany: boolean): Promise<ZohoContact | undefined> {
   const params = new URLSearchParams({ email, filter_by: 'Status.All' })
   const data = await zohoFetch<{ contacts: ZohoContact[] }>(`/contacts?${params.toString()}`)
   const matches = (data.contacts ?? []).filter((c) => contactEmailMatches(c, email))
