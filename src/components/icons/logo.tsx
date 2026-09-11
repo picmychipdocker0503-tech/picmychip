@@ -1,16 +1,19 @@
-import { Aldrich, Comic_Neue } from 'next/font/google'
+import { Aldrich, Inter } from 'next/font/google'
 import React from 'react'
 
 import { cn } from '@/utilities/cn'
 
-// Comic Sans MS itself is a proprietary system font and can't be embedded as
-// a webfont — Comic Neue is the freely-licensed redesign built for this.
-// Bold (700) keeps the "MY" badge legible at the small sizes it's used at —
-// the Light weight it used to ship with all but disappeared below ~28px.
-// Exported so Wordmark (and anything else rendering the "Pic"/"chip" text
-// around this mark) can reuse the exact same font-family instead of loading
-// Comic Neue a second time under a different Next font-optimization handle.
-export const comicNeue = Comic_Neue({ subsets: ['latin'], weight: ['700'] })
+// Loaded standalone (rather than reusing the app's `inter` instance from
+// (app)/layout.tsx) so this mark still renders correctly inside the Payload
+// admin panel, which doesn't load the storefront's Tailwind/font build.
+// Extrabold keeps the "MY" badge legible at the small sizes it's used at.
+export const brandFont = Inter({ subsets: ['latin'], weight: ['800'] })
+
+// Fixed brand accent for the circular "MY" badge — intentionally NOT tied to
+// the 32-theme daisyUI system (currentColor/text-primary), so the mark reads
+// the same everywhere regardless of active theme. Matches the `pmc.orange.500`
+// token already defined in tailwind.config.mjs.
+export const LOGO_ACCENT = '#F97316'
 
 // Squared, geometric "tech" face used for the brand-variant wordmark (see
 // Wordmark's `variant="brand"`) — the reference logo's flat-cut "C" and
@@ -61,9 +64,9 @@ export function LogoIcon({ size = 16, style, variant = 'filled', ...props }: Pro
         x="16"
         y="20.8"
         textAnchor="middle"
-        style={{ fontFamily: comicNeue.style.fontFamily }}
-        fontWeight="700"
-        fontSize="13.5"
+        style={{ fontFamily: brandFont.style.fontFamily }}
+        fontWeight="800"
+        fontSize="13"
         letterSpacing="-0.2"
         fill={isOutline ? 'black' : 'white'}
       >

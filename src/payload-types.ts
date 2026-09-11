@@ -230,6 +230,10 @@ export interface User {
    */
   avatar?: (number | null) | Media;
   roles?: ('admin' | 'customer')[] | null;
+  /**
+   * Google account ID linked via "Sign in with Google". Blank means this account only uses email/password.
+   */
+  googleId?: string | null;
   orders?: {
     docs?: (number | Order)[];
     hasNextPage?: boolean;
@@ -2885,6 +2889,7 @@ export interface UsersSelect<T extends boolean = true> {
   name?: T;
   avatar?: T;
   roles?: T;
+  googleId?: T;
   orders?: T;
   cart?: T;
   addresses?: T;

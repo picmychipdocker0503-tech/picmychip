@@ -1,13 +1,11 @@
 import React from 'react'
 
-import { comicNeue, LogoIcon } from './logo'
-
-const BRAND_GREEN = '#005d1e'
+import { brandFont, LogoIcon } from './logo'
 
 /**
  * Payload admin.components.graphics.Logo — shown on the login screen.
  *
- * Mirrors the "Pic[MY]chip" wordmark treatment used on the storefront
+ * Mirrors the "PIC [MY] CHIP" wordmark treatment used on the storefront
  * (see components/icons/Wordmark) rather than a separate icon-then-name
  * lockup — same brand mark everywhere. Hand-rolled with inline styles
  * instead of reusing Wordmark directly since the admin panel doesn't load
@@ -18,17 +16,19 @@ export const AdminLogo: React.FC = () => (
     style={{
       alignItems: 'center',
       display: 'inline-flex',
-      fontFamily: comicNeue.style.fontFamily,
-      fontSize: '18px',
+      fontFamily: brandFont.style.fontFamily,
+      fontSize: '20px',
+      fontWeight: 800,
+      gap: '0.4em',
       justifyContent: 'center',
       textTransform: 'uppercase',
     }}
   >
     Pic
-    <LogoIcon size={32} style={{ color: BRAND_GREEN, margin: '0 0.15em' }} />
+    <LogoIcon size={32} />
     chip
   </div>
 )
 
 /** Payload admin.components.graphics.Icon — shown in the collapsed nav bar. */
-export const AdminIcon: React.FC = () => <LogoIcon size={28} style={{ color: BRAND_GREEN }} />
+export const AdminIcon: React.FC = () => <LogoIcon size={28} />

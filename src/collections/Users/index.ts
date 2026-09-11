@@ -8,6 +8,9 @@ import { checkRole } from '@/access/utilities'
 import { accountActivationEmailHtml, resetPasswordEmailHtml } from '@/lib/email'
 import { getServerSideURL } from '@/utilities/getURL'
 
+import { googleOAuthCallbackEndpoint } from './endpoints/googleOAuthCallback'
+import { googleOAuthStartEndpoint } from './endpoints/googleOAuthStart'
+import { googleOneTapEndpoint } from './endpoints/googleOneTap'
 import { ensureFirstUserIsAdmin } from './hooks/ensureFirstUserIsAdmin'
 
 export const Users: CollectionConfig = {
@@ -20,6 +23,7 @@ export const Users: CollectionConfig = {
     unlock: adminOnly,
     update: adminOrSelf,
   },
+  endpoints: [googleOAuthStartEndpoint, googleOAuthCallbackEndpoint, googleOneTapEndpoint],
   admin: {
     group: 'Users',
     defaultColumns: ['name', 'email', 'roles'],
@@ -91,6 +95,22 @@ export const Users: CollectionConfig = {
           value: 'customer',
         },
       ],
+    },
+    {
+      name: 'googleId',
+      type: 'text',
+      access: {
+        create: adminOnlyFieldAccess,
+        read: adminOnlyFieldAccess,
+        update: adminOnlyFieldAccess,
+      },
+      admin: {
+        position: 'sidebar',
+        readOnly: true,
+        description: 'Google account ID linked via "Sign in with Google". Blank means this account only uses email/password.',
+      },
+      index: true,
+      unique: true,
     },
     {
       name: 'orders',

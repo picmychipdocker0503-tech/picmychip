@@ -15,12 +15,13 @@ import { RenderHero } from '@/heros/RenderHero'
 import { generateMeta } from '@/utilities/generateMeta'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { getServerSideURL } from '@/utilities/getURL'
-import { buildBreadcrumbListJsonLd } from '@/utilities/jsonLd'
+import { buildBreadcrumbListJsonLd, DEFAULT_ORGANIZATION_DESCRIPTION } from '@/utilities/jsonLd'
 import configPromise from '@payload-config'
 import { draftMode } from 'next/headers'
 import { getPayload } from 'payload'
 
 import type { Page, SiteSetting } from '@/payload-types'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { Suspense } from 'react'
 
@@ -118,6 +119,23 @@ export default async function Page({ params }: Args) {
               every section after it, and the whole page's TTFB becomes the sum of all
               of them instead of the slowest one. */}
           <RenderBlocks blocks={firstBlock} noTopSpacing />
+
+          {/* A plain, quotable one-sentence definition of the business —
+              hardcoded (not CMS layout content) so it always renders near
+              the top of the home page regardless of what admins configure
+              in the hero carousel above. Kept word-for-word in sync with
+              DEFAULT_ORGANIZATION_DESCRIPTION in utilities/jsonLd.ts, which
+              an AEO/SEO audit checks for both as prose and as Organization
+              JSON-LD structured data. */}
+          <div className="container my-8 text-center sm:my-14">
+            <p className="text-foreground mx-auto max-w-3xl text-sm sm:text-base">
+              {DEFAULT_ORGANIZATION_DESCRIPTION}{' '}
+              <Link className="text-primary font-semibold hover:underline" href="/shop">
+                Browse live pricing &amp; catalog &rarr;
+              </Link>
+            </p>
+          </div>
+
           <ScrollReveal>
             <Suspense fallback={null}>
               <FeaturedCategories />

@@ -13,7 +13,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     display: 'standalone',
     orientation: 'any',
     background_color: '#ffffff',
-    theme_color: '#005d1e',
+    theme_color: '#F97316',
     categories: ['shopping', 'business'],
     shortcuts: [
       {

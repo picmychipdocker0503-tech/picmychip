@@ -2,7 +2,7 @@ import React from 'react'
 
 import { cn } from '@/utilities/cn'
 
-import { aldrich, comicNeue, LogoIcon } from './logo'
+import { aldrich, brandFont, LogoIcon } from './logo'
 
 type Props = {
   className?: string
@@ -11,9 +11,9 @@ type Props = {
   iconSize?: number
   name?: string
   /**
-   * 'default' (unchanged): Comic Neue, `text-foreground`-driven color — used
-   * everywhere this component already appears. 'brand': the reference brand
-   * logo's look — bold geometric Russo One face, fixed green "Pic"/"chip"
+   * 'default' (unchanged): extrabold Inter, `text-foreground`-driven color —
+   * used everywhere this component already appears. 'brand': the reference
+   * brand logo's look — geometric Aldrich face, fixed green "Pic"/"chip"
    * text, and the outline-style "MY" badge (white circle, black text). Only
    * pass this at the specific call sites that should pick up the new look
    * (storefront Header/Footer) — every other usage keeps rendering exactly
@@ -28,8 +28,9 @@ type Props = {
 const BRAND_GREEN = '#22C55E'
 
 const WORDMARK_STYLE: React.CSSProperties = {
-  fontFamily: comicNeue.style.fontFamily,
-  fontSize: '18px',
+  fontFamily: brandFont.style.fontFamily,
+  fontSize: '20px',
+  fontWeight: 800,
   textTransform: 'uppercase',
 }
 
@@ -42,13 +43,14 @@ const BRAND_WORDMARK_STYLE: React.CSSProperties = {
 
 /**
  * Renders the site name with the circular "MY" mark standing in for the
- * literal "my" inside "Picmychip" — Pic[MY]chip — instead of sitting as a
- * separate icon before the word. Falls back to icon-then-name if the given
- * name doesn't contain "my" (e.g. a differently configured SITE_NAME).
+ * literal "my" inside "Picmychip" — PIC [MY] CHIP — spaced out as three
+ * distinct words rather than one squeezed-together wordmark. Falls back to
+ * icon-then-name if the given name doesn't contain "my" (e.g. a differently
+ * configured SITE_NAME).
  *
- * Typography (uppercase, 18px, Comic Neue by default) is fixed here rather
- * than left to each call site's className, so every usage across the site —
- * storefront header/footer, admin login — renders the same wordmark
+ * Typography (uppercase, 20px, extrabold Inter by default) is fixed here
+ * rather than left to each call site's className, so every usage across the
+ * site — storefront header/footer, admin login — renders the same wordmark
  * consistently, unless a call site opts into `variant="brand"`.
  */
 export function Wordmark({ className, iconClassName, iconSize = 20, name = 'Picmychip', variant = 'default' }: Props) {

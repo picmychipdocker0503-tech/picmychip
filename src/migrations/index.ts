@@ -83,6 +83,7 @@ import * as migration_20260908_133200_add_business_details_customer_type from '.
 import * as migration_20260908_140000_add_couriers_collection from './20260908_140000_add_couriers_collection';
 import * as migration_20260909_150000_add_zoho_contacts_per_identity from './20260909_150000_add_zoho_contacts_per_identity';
 import * as migration_20260909_190000_add_zoho_void_return_reason from './20260909_190000_add_zoho_void_return_reason';
+import * as migration_20260911_180000_add_users_google_id from './20260911_180000_add_users_google_id';
 
 export const migrations = [
   {
@@ -509,5 +510,10 @@ export const migrations = [
     up: migration_20260909_190000_add_zoho_void_return_reason.up,
     down: migration_20260909_190000_add_zoho_void_return_reason.down,
     name: '20260909_190000_add_zoho_void_return_reason',
+  },
+  {
+    up: migration_20260911_180000_add_users_google_id.up,
+    down: migration_20260911_180000_add_users_google_id.down,
+    name: '20260911_180000_add_users_google_id',
   },
 ];

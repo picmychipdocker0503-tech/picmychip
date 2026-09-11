@@ -21,6 +21,7 @@ import { getCategoryBreadcrumb } from '@/utilities/getCategoryBreadcrumb'
 import { getCachedGlobal } from '@/utilities/getGlobals'
 import { getServerSideURL } from '@/utilities/getURL'
 import { buildBreadcrumbListJsonLd, buildProductJsonLd } from '@/utilities/jsonLd'
+import { mergeOpenGraph } from '@/utilities/mergeOpenGraph'
 import { extractKeywordsFromTitle } from '@/utilities/extractKeywordsFromTitle'
 import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 import configPromise from '@payload-config'
@@ -120,18 +121,20 @@ export async function generateMetadata({ params }: Args): Promise<Metadata> {
     // Not a Google ranking signal — kept for internal search/filtering and
     // structured-data consistency, same as the JSON-LD "keywords" below.
     keywords: product.keywords?.length ? product.keywords : extractKeywordsFromTitle(product.title),
-    openGraph: seoImage?.url
-      ? {
-          images: [
+    openGraph: mergeOpenGraph({
+      title: product.meta?.title || product.title,
+      description: metaDescription || undefined,
+      images: seoImage?.url
+        ? [
             {
               alt: seoImage?.alt || undefined,
               height: seoImage.height!,
               url: seoImage?.url,
               width: seoImage.width!,
             },
-          ],
-        }
-      : null,
+          ]
+        : undefined,
+    }),
     robots: {
       follow: canIndex,
       googleBot: {

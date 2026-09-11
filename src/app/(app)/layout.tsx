@@ -1,8 +1,10 @@
-import type { Viewport } from 'next'
+import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
 
+import { getServerSideURL } from '@/utilities/getURL'
+
 import { Footer } from '@/components/Footer'
-import { CompareBar, InstallPrompt, TawkCartOffsetSync } from '@/components/GlobalOverlays'
+import { CompareBar, GoogleOneTapPrompt, InstallPrompt, TawkCartOffsetSync } from '@/components/GlobalOverlays'
 import { Header } from '@/components/Header'
 import { JsonLd } from '@/components/JsonLd'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
@@ -49,32 +51,34 @@ export const viewport: Viewport = {
   ],
 }
 
-/* const { SITE_NAME, TWITTER_CREATOR, TWITTER_SITE } = process.env
-const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
-  ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
-  : 'http://localhost:3000'
-const twitterCreator = TWITTER_CREATOR ? ensureStartsWith(TWITTER_CREATOR, '@') : undefined
-const twitterSite = TWITTER_SITE ? ensureStartsWith(TWITTER_SITE, 'https://') : undefined
- */
-/* export const metadata = {
-  metadataBase: new URL(baseUrl),
+// Site-wide fallback — inherited by any page that doesn't set its own
+// metadata, and merged (not replaced) into pages that do. In particular this
+// is the only place `twitter` and `metadataBase` are set anywhere in the
+// app, so every page gets a proper Twitter card for free (Twitter/X falls
+// back to the page's own OG title/image/description when card-specific
+// fields aren't set — only `card` needs to be declared).
+//
+// `robots` is gated on VERCEL_ENV rather than NODE_ENV: Vercel sets this
+// automatically to 'production' | 'preview' | 'development', so preview
+// deployments get noindexed with zero extra deployment config, while local
+// dev and any non-Vercel host (where the var is unset) default to indexable.
+const isVercelPreview = process.env.VERCEL_ENV === 'preview'
+
+export const metadata: Metadata = {
+  metadataBase: new URL(getServerSideURL()),
+  description: 'Genuine electronic components, connectors, and cables, sourced and shipped fast.',
   robots: {
-    follow: true,
-    index: true,
+    follow: !isVercelPreview,
+    index: !isVercelPreview,
   },
   title: {
-    default: SITE_NAME,
-    template: `%s | ${SITE_NAME}`,
+    default: 'Picmychip',
+    template: '%s | Picmychip',
   },
-  ...(twitterCreator &&
-    twitterSite && {
-      twitter: {
-        card: 'summary_large_image',
-        creator: twitterCreator,
-        site: twitterSite,
-      },
-    }),
-} */
+  twitter: {
+    card: 'summary_large_image',
+  },
+}
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   const [siteSettings, locale, messages, { isEnabled: isDraftMode }] = await Promise.all([
@@ -164,6 +168,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             <Footer />
             <CompareBar />
             <InstallPrompt />
+            <GoogleOneTapPrompt clientId={process.env.GOOGLE_CLIENT_ID} />
             <TawkCartOffsetSync />
             <MobileTabBar />
           </Providers>

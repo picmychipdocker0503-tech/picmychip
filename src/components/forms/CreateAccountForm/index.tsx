@@ -2,6 +2,7 @@
 
 import { FormError } from '@/components/forms/FormError'
 import { FormItem } from '@/components/forms/FormItem'
+import { GoogleSignInButton } from '@/components/GoogleSignInButton'
 import { Message } from '@/components/Message'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -121,6 +122,14 @@ export const CreateAccountForm: React.FC = () => {
       <Button disabled={loading} type="submit" variant="default">
         {loading ? 'Processing' : 'Create Account'}
       </Button>
+
+      <div className="flex items-center gap-4 my-8">
+        <div className="h-px grow bg-base-300" />
+        <span className="text-primary/70 text-sm">or</span>
+        <div className="h-px grow bg-base-300" />
+      </div>
+
+      <GoogleSignInButton className="w-full" />
 
       <div className="prose dark:prose-invert mt-8">
         <p>

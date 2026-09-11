@@ -3,6 +3,17 @@ import type { SiteSetting } from '@/payload-types'
 import { getServerSideURL } from '@/utilities/getURL'
 import { richTextToPlainText } from '@/utilities/richTextToPlainText'
 
+// Falls back to a fixed name/description when the CMS fields haven't been
+// filled in yet (Site Settings > organizationName/description) — an AEO/SEO
+// audit flags a Organization entity missing these as an incomplete schema,
+// and an admin leaving them blank shouldn't mean the site emits no
+// description at all. Kept in sync with the homepage's definitional intro
+// paragraph (see the "isHome" branch of src/app/(app)/[slug]/page.tsx) so
+// the same sentence appears both in prose and in structured data.
+export const DEFAULT_ORGANIZATION_NAME = 'Picmychip'
+export const DEFAULT_ORGANIZATION_DESCRIPTION =
+  'Picmychip is an electronic components store that supplies datasheet-verified resistors, capacitors, connectors, ICs, and drone parts to engineers and makers, with transparent per-unit pricing and same-day dispatch on every order.'
+
 export const buildOrganizationJsonLd = (siteSettings: SiteSetting | null) => {
   const logo = typeof siteSettings?.logo === 'object' ? siteSettings.logo?.url : undefined
   const address = siteSettings?.officeAddress
@@ -14,8 +25,8 @@ export const buildOrganizationJsonLd = (siteSettings: SiteSetting | null) => {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: siteSettings?.organizationName || undefined,
-    description: siteSettings?.description || undefined,
+    name: siteSettings?.organizationName || DEFAULT_ORGANIZATION_NAME,
+    description: siteSettings?.description || DEFAULT_ORGANIZATION_DESCRIPTION,
     foundingDate: siteSettings?.foundingDate || undefined,
     logo: logo ? `${getServerSideURL()}${logo}` : undefined,
     email: siteSettings?.supportEmail || undefined,

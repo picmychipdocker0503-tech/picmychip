@@ -18,12 +18,15 @@ type Create = (args: { email: string; password: string; passwordConfirm: string 
 
 type Login = (args: { email: string; password: string }) => Promise<User> // eslint-disable-line no-unused-vars
 
+type LoginWithGoogleCredential = (credential: string) => Promise<User> // eslint-disable-line no-unused-vars
+
 type Logout = () => Promise<void>
 
 type AuthContext = {
   create: Create
   forgotPassword: ForgotPassword
   login: Login
+  loginWithGoogleCredential: LoginWithGoogleCredential
   logout: Logout
   resetPassword: ResetPassword
   setUser: (user: User | null) => void // eslint-disable-line no-unused-vars
@@ -113,6 +116,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (!res.ok || hasPayloadErrors(data) || !user) {
       throw new Error(getPayloadErrorMessage(data, 'The email or password provided is incorrect.'))
+    }
+
+    setUser(user)
+    setStatus('loggedIn')
+    return user
+  }, [])
+
+  const loginWithGoogleCredential = useCallback<LoginWithGoogleCredential>(async (credential) => {
+    const res = await fetch(`${getClientSideURL()}/api/users/oauth/google/onetap`, {
+      body: JSON.stringify({ credential }),
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    })
+
+    const data = await res.json().catch(() => undefined)
+    const user = getLoginUser(data)
+
+    if (!res.ok || hasPayloadErrors(data) || !user) {
+      throw new Error(getPayloadErrorMessage(data, 'Google sign-in failed. Please try again.'))
     }
 
     setUser(user)
@@ -224,6 +249,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         create,
         forgotPassword,
         login,
+        loginWithGoogleCredential,
         logout,
         resetPassword,
         setUser,

@@ -27,6 +27,7 @@ const NEXT_PUBLIC_ASSET_DOMAIN = process.env.NEXT_PUBLIC_ASSET_DOMAIN || 'https:
 
 const nextConfig: NextConfig = {
   skipTrailingSlashRedirect: true,
+  poweredByHeader: false,
   // Temporarily required on Windows until Next.js fixes Turbopack Sass resolution.
   // See: https://github.com/vercel/next.js/issues/86431
   sassOptions: {

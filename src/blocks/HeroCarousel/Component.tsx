@@ -134,7 +134,7 @@ export const HeroCarouselBlock: React.FC<
 
               return (
                 <PromoCard
-                  className="min-h-[140px] flex-1 sm:min-h-[180px] lg:min-h-0"
+                  className="min-h-[140px] flex-1 sm:min-h-[200px]"
                   disabled={product.stockStatus === 'out-of-stock'}
                   eyebrow={category?.title || 'Featured'}
                   heading={product.title}

@@ -7,6 +7,7 @@ import { CategoryResults } from '@/components/Search/CategoryResults'
 import { FacetSidebar } from '@/components/Search/FacetSidebar'
 import { getIllustration } from '@/components/illustrations'
 import { MobileFilterDrawer } from '@/components/layout/search/MobileFilterDrawer'
+import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage } from '@/components/ui/breadcrumb'
 import { getAverageRatings } from '@/lib/getAverageRatings'
 import { getFacetsForSchema } from '@/lib/facetConfig'
 import { parseFacetFilters } from '@/lib/facetParams'
@@ -117,6 +118,24 @@ export default async function CategoryPage({ params, searchParams }: Args) {
     <div className="pt-16 pb-24">
       <JsonLd data={buildBreadcrumbListJsonLd(breadcrumb)} />
       <JsonLd data={collectionPageJsonLd} />
+      <div className="container pt-6">
+        <Breadcrumb className="mb-5">
+          <BreadcrumbList>
+            {breadcrumb.map((item, index) => (
+              <React.Fragment key={item.url}>
+                {index > 0 && <li className="text-border">/</li>}
+                <BreadcrumbItem>
+                  {index === breadcrumb.length - 1 ? (
+                    <BreadcrumbPage className="line-clamp-1">{item.name}</BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink href={new URL(item.url).pathname}>{item.name}</BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+              </React.Fragment>
+            ))}
+          </BreadcrumbList>
+        </Breadcrumb>
+      </div>
       <div className="container mb-14 flex flex-col items-center gap-3 text-center">
         <div className="bg-muted text-muted-foreground flex size-20 items-center justify-center rounded-full">
           <Illustration className="size-10" />
