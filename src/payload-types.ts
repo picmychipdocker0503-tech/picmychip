@@ -92,6 +92,7 @@ export interface Config {
     wishlists: Wishlist;
     'return-requests': ReturnRequest;
     'rfq-submissions': RfqSubmission;
+    'technician-requests': TechnicianRequest;
     'email-events': EmailEvent;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -142,6 +143,7 @@ export interface Config {
     wishlists: WishlistsSelect<false> | WishlistsSelect<true>;
     'return-requests': ReturnRequestsSelect<false> | ReturnRequestsSelect<true>;
     'rfq-submissions': RfqSubmissionsSelect<false> | RfqSubmissionsSelect<true>;
+    'technician-requests': TechnicianRequestsSelect<false> | TechnicianRequestsSelect<true>;
     'email-events': EmailEventsSelect<false> | EmailEventsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -588,6 +590,14 @@ export interface Product {
    */
   compatibleProducts?: (number | Product)[] | null;
   /**
+   * Store-wide breaks are set in Settings → Feature Flags. Variants follow this setting, using their own Price Tiers when set.
+   */
+  bulkPricingMode?: ('default' | 'custom' | 'off') | null;
+  /**
+   * Optional. Marks this quantity in the bulk pricing table (e.g. 100 per reel/tray).
+   */
+  standardPackQuantity?: number | null;
+  /**
    * Bulk/reseller pricing tiers by quantity (e.g. hobbyist vs reseller quantities). The price actually charged at checkout resolves from these — see src/lib/priceTiers.ts.
    */
   priceTiers?:
@@ -861,6 +871,8 @@ export interface Product {
     customLabel3?: string | null;
     customLabel4?: string | null;
   };
+  deliveryMinDays?: number | null;
+  deliveryMaxDays?: number | null;
   leadTimeDays?: number | null;
   /**
    * When enabled, the slug will auto-generate from the title field on save and autosave.
@@ -2630,6 +2642,42 @@ export interface RfqSubmission {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "technician-requests".
+ */
+export interface TechnicianRequest {
+  id: number;
+  ticketId: string;
+  /**
+   * Set automatically when the submitter was logged in — blank for guest submissions.
+   */
+  customer?: (number | null) | User;
+  status?: ('new' | 'contacted' | 'matched' | 'deployed' | 'closed') | null;
+  name: string;
+  email: string;
+  phone: string;
+  company?: string | null;
+  /**
+   * Comma-separated skills the customer selected on the form.
+   */
+  skills?: string | null;
+  technicians?: number | null;
+  engagement?: ('onsite' | 'facility' | 'either') | null;
+  duration?: ('day' | 'week' | 'month' | 'long-term' | 'not-sure') | null;
+  /**
+   * City or site where the technician is needed.
+   */
+  location?: string | null;
+  startDate?: string | null;
+  message?: string | null;
+  /**
+   * Internal follow-up notes — never shown to the customer.
+   */
+  adminNotes?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "email-events".
  */
 export interface EmailEvent {
@@ -2794,6 +2842,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'rfq-submissions';
         value: number | RfqSubmission;
+      } | null)
+    | ({
+        relationTo: 'technician-requests';
+        value: number | TechnicianRequest;
       } | null)
     | ({
         relationTo: 'email-events';
@@ -3780,6 +3832,29 @@ export interface RfqSubmissionsSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "technician-requests_select".
+ */
+export interface TechnicianRequestsSelect<T extends boolean = true> {
+  ticketId?: T;
+  customer?: T;
+  status?: T;
+  name?: T;
+  email?: T;
+  phone?: T;
+  company?: T;
+  skills?: T;
+  technicians?: T;
+  engagement?: T;
+  duration?: T;
+  location?: T;
+  startDate?: T;
+  message?: T;
+  adminNotes?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "email-events_select".
  */
 export interface EmailEventsSelect<T extends boolean = true> {
@@ -4085,6 +4160,8 @@ export interface ProductsSelect<T extends boolean = true> {
   priceInINR?: T;
   relatedProducts?: T;
   compatibleProducts?: T;
+  bulkPricingMode?: T;
+  standardPackQuantity?: T;
   priceTiers?:
     | T
     | {
@@ -4238,6 +4315,8 @@ export interface ProductsSelect<T extends boolean = true> {
         customLabel3?: T;
         customLabel4?: T;
       };
+  deliveryMinDays?: T;
+  deliveryMaxDays?: T;
   leadTimeDays?: T;
   generateSlug?: T;
   slug?: T;
@@ -4763,6 +4842,8 @@ export interface SiteSetting {
      * Amount in rupees, e.g. 300 for ₹300.00.
      */
     expressShippingRate?: number | null;
+    deliveryMinDays?: number | null;
+    deliveryMaxDays?: number | null;
   };
   /**
    * Controls the customer-facing order number shown on the storefront, in emails, and in admin (e.g. "ECOM0001") — the underlying order id used internally (URLs, relations) is unaffected.
@@ -4840,6 +4921,20 @@ export interface FeatureFlag {
   rewardsProgram?: boolean | null;
   freeShippingBanner?: boolean | null;
   productCompare?: boolean | null;
+  /**
+   * Master switch. Off = every product is charged its flat per-piece price and the bulk pricing table is hidden, regardless of per-product settings.
+   */
+  bulkPricing?: boolean | null;
+  /**
+   * Store-wide default price breaks, as a % off each product's own price (e.g. 10 → 5%, 100 → 12%). Applied to every product whose Bulk Pricing is "Default" and that has no Price Tiers of its own. The highest break is open-ended. Leave empty to only use per-product tiers.
+   */
+  bulkPricingTiers?:
+    | {
+        minQuantity: number;
+        discountPercent: number;
+        id?: string | null;
+      }[]
+    | null;
   /**
    * Off until ZOHO_PAYMENTS_ACCOUNT_ID/API_KEY/CLIENT_ID/CLIENT_SECRET/REFRESH_TOKEN are set in the environment — turning this on before then just shows customers a payment option that will fail to initiate.
    */
@@ -4984,6 +5079,8 @@ export interface SiteSettingsSelect<T extends boolean = true> {
     | {
         standardShippingRate?: T;
         expressShippingRate?: T;
+        deliveryMinDays?: T;
+        deliveryMaxDays?: T;
       };
   orderNumberSettings?:
     | T
@@ -5037,6 +5134,14 @@ export interface FeatureFlagsSelect<T extends boolean = true> {
   rewardsProgram?: T;
   freeShippingBanner?: T;
   productCompare?: T;
+  bulkPricing?: T;
+  bulkPricingTiers?:
+    | T
+    | {
+        minQuantity?: T;
+        discountPercent?: T;
+        id?: T;
+      };
   zohoPayments?: T;
   updatedAt?: T;
   createdAt?: T;

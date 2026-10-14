@@ -19,8 +19,25 @@ const DEFAULTS: FeatureFlag = {
   freeShippingBanner: false,
   compareProducts: true,
   zohoPayments: false,
+  bulkPricing: true,
+  bulkPricingTiers: [],
   updatedAt: '',
   createdAt: '',
+}
+
+// One request per page load, shared by every caller — cart lines each read
+// the bulk pricing settings, and shouldn't each refetch the global.
+let flagsRequest: Promise<FeatureFlag> | null = null
+
+const loadFlags = () => {
+  flagsRequest ??= fetch(`${getClientSideURL()}/api/globals/feature-flags`, { credentials: 'include' })
+    .then((res) => res.json())
+    .then((data) => ({ ...DEFAULTS, ...data }))
+    .catch(() => {
+      flagsRequest = null
+      return DEFAULTS
+    })
+  return flagsRequest
 }
 
 /** Client-side reader for the `feature-flags` global (publicly readable). */
@@ -28,10 +45,13 @@ export const useFeatureFlags = (): FeatureFlag => {
   const [flags, setFlags] = useState<FeatureFlag>(DEFAULTS)
 
   useEffect(() => {
-    fetch(`${getClientSideURL()}/api/globals/feature-flags`, { credentials: 'include' })
-      .then((res) => res.json())
-      .then((data) => setFlags({ ...DEFAULTS, ...data }))
-      .catch(() => {})
+    let active = true
+    loadFlags().then((data) => {
+      if (active) setFlags(data)
+    })
+    return () => {
+      active = false
+    }
   }, [])
 
   return flags

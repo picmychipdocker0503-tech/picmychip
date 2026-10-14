@@ -16,7 +16,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 
 import { redirectToPayU, type PayuRedirectFields } from '@/lib/redirectToPayU'
 import { createZohoPaymentsInstance } from '@/lib/loadZohoPaymentsWidget'
-import { resolveTieredUnitPrice } from '@/lib/priceTiers'
+import { bulkPricingSettingsFromFlags, getItemPriceTiers, resolveTieredUnitPrice } from '@/lib/priceTiers'
 import { useAddresses, useCart, usePayments } from '@payloadcms/plugin-ecommerce/client/react'
 import { CheckoutAddresses } from '@/components/checkout/CheckoutAddresses'
 import { CreateAddressModal } from '@/components/addresses/CreateAddressModal'
@@ -53,6 +53,7 @@ export const CheckoutPage: React.FC<{
   const tCart = useTranslations('cart')
   const { cart, clearCart, refreshCart } = useCart()
   const flags = useFeatureFlags()
+  const bulkPricingSettings = bulkPricingSettingsFromFlags(flags)
   const [error, setError] = useState<null | string>(null)
   /**
    * State to manage the email input for guest checkout.
@@ -120,7 +121,7 @@ export const CheckoutPage: React.FC<{
             const basePrice = isVariant
               ? (item.variant.priceInINR ?? item.product.priceInINR ?? 0)
               : (item.product.priceInINR ?? 0)
-            const tiers = isVariant ? item.variant.priceTiers : item.product.priceTiers
+            const tiers = getItemPriceTiers(item.product, isVariant ? item.variant : undefined, bulkPricingSettings)
             const unitPrice = resolveTieredUnitPrice(basePrice, tiers, item.quantity)
             acc.push({
               gstPercent: item.product.gstPercent ?? defaultGstPercent,
@@ -768,13 +769,11 @@ export const CheckoutPage: React.FC<{
 
               let image = gallery?.[0]?.image || meta?.image
               let basePrice = product?.priceInINR
-              let tiers = product?.priceTiers
 
               const isVariant = Boolean(variant) && typeof variant === 'object'
 
               if (isVariant) {
                 basePrice = variant?.priceInINR
-                tiers = variant?.priceTiers
 
                 const imageVariant = product.gallery?.find((item: GalleryItem) => {
                   if (!item.variantOption) return false
@@ -796,6 +795,11 @@ export const CheckoutPage: React.FC<{
                 }
               }
 
+              const tiers = getItemPriceTiers(
+                product,
+                isVariant && typeof variant === 'object' ? variant : undefined,
+                bulkPricingSettings,
+              )
               const price = typeof basePrice === 'number' ? resolveTieredUnitPrice(basePrice, tiers, quantity) : undefined
 
               return (

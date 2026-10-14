@@ -269,6 +269,30 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
               hasMany: true,
               relationTo: 'products',
             },
+            {
+              name: 'bulkPricingMode',
+              type: 'select',
+              label: 'Bulk Pricing',
+              defaultValue: 'default',
+              options: [
+                { label: 'Default — own Price Tiers, else store-wide breaks', value: 'default' },
+                { label: 'Custom only — own Price Tiers, never store-wide', value: 'custom' },
+                { label: 'Off — always flat price', value: 'off' },
+              ],
+              admin: {
+                description:
+                  'Store-wide breaks are set in Settings → Feature Flags. Variants follow this setting, using their own Price Tiers when set.',
+              },
+            },
+            {
+              name: 'standardPackQuantity',
+              type: 'number',
+              label: 'Manufacturer Standard Package Qty',
+              min: 1,
+              admin: {
+                description: 'Optional. Marks this quantity in the bulk pricing table (e.g. 100 per reel/tray).',
+              },
+            },
             priceTiers,
             {
               name: 'customSpecs',
@@ -617,6 +641,19 @@ export const ProductsCollection: CollectionOverride = ({ defaultCollection }) =>
           name: 'customLabel4',
           type: 'text',
         },
+      ],
+    },
+    {
+      type: 'collapsible',
+      label: 'Delivery Time',
+      admin: {
+        position: 'sidebar',
+        description:
+          'Business days shown in "Check estimated delivery" on the product page. Leave blank to use the default from Site Settings → Shipping Charges.',
+      },
+      fields: [
+        { name: 'deliveryMinDays', type: 'number', label: 'Min Business Days', min: 0 },
+        { name: 'deliveryMaxDays', type: 'number', label: 'Max Business Days', min: 0 },
       ],
     },
     {

@@ -5,13 +5,13 @@ import Script from 'next/script'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { toast } from 'sonner'
 
+// Only the dismissed-moment methods — the display/skipped ones
+// (isNotDisplayed, getNotDisplayedReason, getSkippedReason, …) aren't
+// supported under FedCM and make GSI log a deprecation warning.
+// https://developers.google.com/identity/gsi/web/guides/fedcm-migration
 type GoogleMomentNotification = {
   getDismissedReason: () => string
-  getNotDisplayedReason: () => string
-  getSkippedReason: () => string
   isDismissedMoment: () => boolean
-  isNotDisplayed: () => boolean
-  isSkippedMoment: () => boolean
 }
 
 declare global {
@@ -79,17 +79,14 @@ export const GoogleOneTapPrompt: React.FC<{ clientId?: string }> = ({ clientId }
       client_id: clientId,
       use_fedcm_for_prompt: true,
     })
+    // When the browser can't supply a credential (no Google session, a
+    // cooldown after prior dismissals, third-party sign-in blocked, or an
+    // origin missing from the client's Authorized JavaScript origins), GSI
+    // logs its own "FedCM get() rejects with NetworkError" and shows nothing
+    // — FedCM doesn't expose why, so there's nothing more to log here.
     window.google.accounts.id.prompt((notification) => {
-      // Google suppresses the prompt silently (no error thrown) for reasons
-      // like an unregistered origin, a suppressed_by_user cooldown after
-      // prior dismissals, or no active Google session in the browser — log
-      // them so a "it just doesn't show up" report is diagnosable.
-      if (notification.isNotDisplayed()) {
-        console.warn('[GoogleOneTap] not displayed:', notification.getNotDisplayedReason())
-      } else if (notification.isSkippedMoment()) {
-        console.warn('[GoogleOneTap] skipped:', notification.getSkippedReason())
-      } else if (notification.isDismissedMoment()) {
-        console.warn('[GoogleOneTap] dismissed:', notification.getDismissedReason())
+      if (notification.isDismissedMoment() && notification.getDismissedReason() !== 'credential_returned') {
+        console.info('[GoogleOneTap] dismissed:', notification.getDismissedReason())
       }
     })
   }, [clientId, scriptLoaded, user, handleCredentialResponse])

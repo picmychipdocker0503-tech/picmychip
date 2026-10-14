@@ -8,7 +8,21 @@ const PINCODE_PATTERN = /^\d{6}$/
 type PostOffice = { Name?: string; District?: string; State?: string }
 type PincodeApiResponse = { Status?: string; PostOffice?: PostOffice[] | null }[]
 
-export const DeliveryEstimate: React.FC = () => {
+type Days = number | null | undefined
+
+/**
+ * The product's own delivery time wins when either end is set (a lone value
+ * is used as both ends); otherwise the store default from Site Settings,
+ * and finally 3–5 days if neither is configured.
+ */
+export function formatDeliveryWindow(product: { min?: Days; max?: Days }, fallback?: { min?: Days; max?: Days }) {
+  const source = product.min != null || product.max != null ? product : (fallback ?? {})
+  const min = source.min ?? source.max ?? 3
+  const max = Math.max(min, source.max ?? source.min ?? 5)
+  return min === max ? `${min} business day${min === 1 ? '' : 's'}` : `${min}–${max} business days`
+}
+
+export const DeliveryEstimate: React.FC<{ window: string }> = ({ window: deliveryWindow }) => {
   const [pincode, setPincode] = useState('')
   const [isChecking, setIsChecking] = useState(false)
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null)
@@ -40,7 +54,7 @@ export const DeliveryEstimate: React.FC = () => {
       const place = [postOffice.District, postOffice.State].filter(Boolean).join(', ')
       setResult({
         ok: true,
-        message: `Estimated delivery in 3–5 business days to ${place || pincode}.`,
+        message: `Estimated delivery in ${deliveryWindow} to ${place || pincode}.`,
       })
     } catch {
       setResult({ ok: false, message: 'Could not check that pincode right now — please try again.' })
@@ -55,6 +69,7 @@ export const DeliveryEstimate: React.FC = () => {
         <TruckIcon className="size-4" />
         Check estimated delivery
       </div>
+      <p className="text-muted-foreground text-xs">Usually delivered in {deliveryWindow}.</p>
       <form className="flex gap-2" onSubmit={checkPincode}>
         <input
           className="border-border bg-background w-32 rounded-lg border px-3 py-2 text-sm"

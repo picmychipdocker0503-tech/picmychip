@@ -5,7 +5,8 @@ import type { Product, Variant } from '@/payload-types'
 
 import { Media } from '@/components/Media'
 import { Price } from '@/components/Price'
-import { resolveTieredUnitPrice } from '@/lib/priceTiers'
+import { bulkPricingSettingsFromFlags, getItemPriceTiers, resolveTieredUnitPrice } from '@/lib/priceTiers'
+import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import { useCartDrawer } from '@/providers/CartDrawer'
 import { useCart } from '@payloadcms/plugin-ecommerce/client/react'
 import { CheckCircle2Icon, XIcon } from 'lucide-react'
@@ -107,6 +108,7 @@ export const MiniCartPopover: React.FC = () => {
 }
 
 const MiniCartItem: React.FC<{ item: CartItem }> = ({ item }) => {
+  const flags = useFeatureFlags()
   const product = item.product
   const variant = item.variant
 
@@ -119,13 +121,11 @@ const MiniCartItem: React.FC<{ item: CartItem }> = ({ item }) => {
 
   let image = firstGalleryImage || metaImage
   let basePrice = product.priceInINR
-  let tiers = product.priceTiers
 
   const isVariant = Boolean(variant) && typeof variant === 'object'
 
   if (isVariant) {
     basePrice = variant?.priceInINR
-    tiers = variant?.priceTiers
 
     const imageVariant = product.gallery?.find((galleryItem: GalleryItem) => {
       if (!galleryItem.variantOption) return false
@@ -143,6 +143,11 @@ const MiniCartItem: React.FC<{ item: CartItem }> = ({ item }) => {
     }
   }
 
+  const tiers = getItemPriceTiers(
+    product,
+    isVariant && typeof variant === 'object' ? variant : undefined,
+    bulkPricingSettingsFromFlags(flags),
+  )
   const price =
     typeof basePrice === 'number' ? resolveTieredUnitPrice(basePrice, tiers, item.quantity ?? 1) : undefined
 

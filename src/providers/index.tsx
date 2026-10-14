@@ -50,6 +50,7 @@ export const Providers: React.FC<{
                     inventory: true,
                     gstPercent: true,
                     priceTiers: true,
+                    bulkPricingMode: true,
                   },
                   variants: {
                     title: true,

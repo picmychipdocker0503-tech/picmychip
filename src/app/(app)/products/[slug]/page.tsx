@@ -304,6 +304,7 @@ export default async function ProductPage({ params }: Args) {
             <ProductDescription
               averageRating={averageRating}
               categoryName={firstCategory?.title}
+              defaultDelivery={siteSettings?.shippingSettings}
               categorySlug={firstCategory?.slug}
               highlightStyle={siteSettings?.highlightStyle}
               product={product}

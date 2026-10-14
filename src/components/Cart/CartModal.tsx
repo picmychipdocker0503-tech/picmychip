@@ -19,7 +19,13 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { setCartItemQuantity } from '@/lib/cart/setCartItemQuantity'
-import { clampTieredQuantity, getTierStep, resolveTieredUnitPrice } from '@/lib/priceTiers'
+import {
+  bulkPricingSettingsFromFlags,
+  clampTieredQuantity,
+  getItemPriceTiers,
+  getTierStep,
+  resolveTieredUnitPrice,
+} from '@/lib/priceTiers'
 import { FREE_SHIPPING_THRESHOLD } from '@/lib/shipping'
 import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import { Product, Variant } from '@/payload-types'
@@ -133,6 +139,7 @@ export function CartModal() {
 
 const CartModalItem: React.FC<{ item: CartItem }> = ({ item }) => {
   const { cart, refreshCart } = useCart()
+  const flags = useFeatureFlags()
   const product = item.product
   const variant = item.variant
 
@@ -180,7 +187,7 @@ const CartModalItem: React.FC<{ item: CartItem }> = ({ item }) => {
 
   const target = isVariant && variant ? variant : product
   const inventory = target?.inventory
-  const tiers = target?.priceTiers
+  const tiers = getItemPriceTiers(product, isVariant && typeof variant === 'object' ? variant : undefined, bulkPricingSettingsFromFlags(flags))
   const price = typeof basePrice === 'number' ? resolveTieredUnitPrice(basePrice, tiers, item.quantity ?? 1) : undefined
 
   const clampQuantity = (next: number) => clampTieredQuantity(next, tiers, inventory ?? undefined)

@@ -200,6 +200,25 @@ export const SiteSettings: GlobalConfig = {
             description: 'Amount in rupees, e.g. 300 for ₹300.00.',
           },
         },
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'deliveryMinDays',
+              type: 'number',
+              label: 'Default Delivery — Min Business Days',
+              defaultValue: 3,
+              min: 0,
+            },
+            {
+              name: 'deliveryMaxDays',
+              type: 'number',
+              label: 'Default Delivery — Max Business Days',
+              defaultValue: 5,
+              min: 0,
+            },
+          ],
+        },
       ],
     },
     {

@@ -85,6 +85,9 @@ import * as migration_20260909_150000_add_zoho_contacts_per_identity from './202
 import * as migration_20260909_190000_add_zoho_void_return_reason from './20260909_190000_add_zoho_void_return_reason';
 import * as migration_20260911_180000_add_users_google_id from './20260911_180000_add_users_google_id';
 
+import * as migration_20260930_120000_add_bulk_pricing_settings from './20260930_120000_add_bulk_pricing_settings';
+import * as migration_20260930_140000_add_product_delivery_time from './20260930_140000_add_product_delivery_time';
+import * as migration_20261014_120000_add_technician_requests from './20261014_120000_add_technician_requests';
 export const migrations = [
   {
     up: migration_20260717_084221_initial_schema.up,
@@ -515,5 +518,20 @@ export const migrations = [
     up: migration_20260911_180000_add_users_google_id.up,
     down: migration_20260911_180000_add_users_google_id.down,
     name: '20260911_180000_add_users_google_id',
+  },
+  {
+    up: migration_20260930_120000_add_bulk_pricing_settings.up,
+    down: migration_20260930_120000_add_bulk_pricing_settings.down,
+    name: '20260930_120000_add_bulk_pricing_settings',
+  },
+  {
+    up: migration_20260930_140000_add_product_delivery_time.up,
+    down: migration_20260930_140000_add_product_delivery_time.down,
+    name: '20260930_140000_add_product_delivery_time',
+  },
+  {
+    up: migration_20261014_120000_add_technician_requests.up,
+    down: migration_20261014_120000_add_technician_requests.down,
+    name: '20261014_120000_add_technician_requests',
   },
 ];

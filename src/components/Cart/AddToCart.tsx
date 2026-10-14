@@ -4,7 +4,14 @@ import { Button } from '@/components/ui/button'
 import { Price } from '@/components/Price'
 import { useGuestCartAddNotification } from '@/hooks/useGuestCartAddNotification'
 import { setCartItemQuantity } from '@/lib/cart/setCartItemQuantity'
-import { clampTieredQuantity, getTierStep, resolveTieredUnitPrice } from '@/lib/priceTiers'
+import {
+  bulkPricingSettingsFromFlags,
+  clampTieredQuantity,
+  getItemPriceTiers,
+  getTierStep,
+  resolveTieredUnitPrice,
+} from '@/lib/priceTiers'
+import { useFeatureFlags } from '@/lib/useFeatureFlags'
 import type { Product, Variant } from '@/payload-types'
 
 import { useCart, useCurrency } from '@payloadcms/plugin-ecommerce/client/react'
@@ -26,6 +33,7 @@ export function AddToCart({ product }: Props) {
   // below tracks its own pending state instead.
   const { addItem, cart, refreshCart } = useCart()
   const { currency } = useCurrency()
+  const flags = useFeatureFlags()
   const { notifyGuestAddedToCart } = useGuestCartAddNotification()
   const t = useTranslations('cart')
   const router = useRouter()
@@ -60,9 +68,9 @@ export function AddToCart({ product }: Props) {
   // as before) for any other currency, same as PayU/Zoho only supporting INR.
   const tiers = useMemo(() => {
     if (currency.code !== 'INR') return []
-    const source = product.enableVariants && selectedVariant ? selectedVariant : product
-    return source?.priceTiers ?? []
-  }, [currency.code, product, selectedVariant])
+    const variant = product.enableVariants ? selectedVariant : undefined
+    return getItemPriceTiers(product, variant, bulkPricingSettingsFromFlags(flags))
+  }, [currency.code, flags, product, selectedVariant])
   const tierStep = getTierStep(tiers)
 
   const [quantity, setQuantity] = useState(tierStep)

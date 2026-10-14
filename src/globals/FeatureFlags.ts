@@ -90,6 +90,30 @@ export const FeatureFlags: GlobalConfig = {
       label: 'Enable product comparison (header icon, "Add to compare" buttons, compare bar)',
     },
     {
+      name: 'bulkPricing',
+      type: 'checkbox',
+      defaultValue: true,
+      label: 'Enable bulk (quantity-break) pricing',
+      admin: {
+        description:
+          'Master switch. Off = every product is charged its flat per-piece price and the bulk pricing table is hidden, regardless of per-product settings.',
+      },
+    },
+    {
+      name: 'bulkPricingTiers',
+      type: 'array',
+      labels: { singular: 'Default Price Break', plural: 'Default Price Breaks' },
+      admin: {
+        condition: (data) => Boolean(data?.bulkPricing),
+        description:
+          'Store-wide default price breaks, as a % off each product\'s own price (e.g. 10 → 5%, 100 → 12%). Applied to every product whose Bulk Pricing is "Default" and that has no Price Tiers of its own. The highest break is open-ended. Leave empty to only use per-product tiers.',
+      },
+      fields: [
+        { name: 'minQuantity', type: 'number', label: 'Min Quantity', required: true, min: 1 },
+        { name: 'discountPercent', type: 'number', label: 'Discount %', required: true, min: 0, max: 100 },
+      ],
+    },
+    {
       name: 'zohoPayments',
       type: 'checkbox',
       admin: {

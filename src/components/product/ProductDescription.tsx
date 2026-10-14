@@ -18,7 +18,7 @@ import { Suspense } from 'react'
 
 import { BackInStockForm } from '@/components/product/BackInStockForm'
 import { BulkOrderContact } from '@/components/product/BulkOrderContact'
-import { DeliveryEstimate } from '@/components/product/DeliveryEstimate'
+import { DeliveryEstimate, formatDeliveryWindow } from '@/components/product/DeliveryEstimate'
 import { PriceTiers } from '@/components/product/PriceTiers'
 import { StockIndicator } from '@/components/product/StockIndicator'
 import { TrustBadges } from '@/components/product/TrustBadges'
@@ -29,6 +29,10 @@ import { VariantSelector } from './VariantSelector'
 type Props = {
   product: Product
   supportEmail?: string | null
+  defaultDelivery?: {
+    deliveryMinDays?: number | null
+    deliveryMaxDays?: number | null
+  } | null
   averageRating?: number
   reviewCount?: number
   categoryName?: string
@@ -47,6 +51,7 @@ type Props = {
 export function ProductDescription({
   product,
   supportEmail,
+  defaultDelivery,
   averageRating = 0,
   reviewCount = 0,
   categoryName,
@@ -202,7 +207,9 @@ export function ProductDescription({
           )}
         </div>
 
-        {!hasVariants && <PriceTiers product={product} />}
+        <Suspense fallback={null}>
+          <PriceTiers product={product} />
+        </Suspense>
 
         {hasVariants && (
           <Suspense fallback={null}>
@@ -264,7 +271,12 @@ export function ProductDescription({
           </button>
         </div>
 
-        <DeliveryEstimate />
+        <DeliveryEstimate
+          window={formatDeliveryWindow(
+            { min: product.deliveryMinDays, max: product.deliveryMaxDays },
+            { min: defaultDelivery?.deliveryMinDays, max: defaultDelivery?.deliveryMaxDays },
+          )}
+        />
       </div>
 
       <BulkOrderContact supportEmail={supportEmail} />

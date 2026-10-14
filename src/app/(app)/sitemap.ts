@@ -76,6 +76,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/shop` },
     { url: `${baseUrl}/guides` },
     { url: `${baseUrl}/blog` },
+    { url: `${baseUrl}/line-card` },
+    { url: `${baseUrl}/request-technician` },
     ...pageEntries,
     ...productEntries,
     ...categoryEntries,
