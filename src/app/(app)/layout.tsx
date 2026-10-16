@@ -36,6 +36,8 @@ const inter = Inter({
 })
 
 const GA_MEASUREMENT_ID = 'G-65M0W91R3Q'
+// Google Ads conversion tracking — shares the gtag.js loader above.
+const GOOGLE_ADS_ID = 'AW-16581452689'
 // Falls back to the widget already live in Tawk.to if the env vars aren't set.
 const TAWK_PROPERTY_ID = process.env.NEXT_PUBLIC_TAWK_PROPERTY_ID || '6a880f991e47873444f4db0f'
 const TAWK_WIDGET_ID = process.env.NEXT_PUBLIC_TAWK_WIDGET_ID || '1k0hnpsg3'
@@ -112,6 +114,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
             gtag('config', '${GA_MEASUREMENT_ID}');
+            gtag('config', '${GOOGLE_ADS_ID}');
           `}
             </Script>
             {/* lazyOnload (not afterInteractive) — live chat isn't needed in the
